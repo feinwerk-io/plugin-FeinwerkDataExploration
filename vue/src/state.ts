@@ -19,7 +19,7 @@ export const NUMBER_OPERATORS: FilterOperator[] = ['gt', 'lt'];
 export const RATE_METRICS = ['bounce_rate', 'conversion_rate'];
 export const VIEWS: ChartView[] = ['table', 'chart', 'both'];
 
-interface Limits {
+export interface Limits {
   defaultRows: number;
   maxRows: number;
 }
@@ -88,6 +88,7 @@ const KIND_METRICS: Record<string, string> = {
   event: 'nb_events',
   download: 'nb_downloads',
   outlink: 'nb_outlinks',
+  search: 'nb_searches',
 };
 
 /**

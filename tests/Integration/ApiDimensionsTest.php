@@ -22,8 +22,10 @@ use Piwik\Tests\Framework\TestCase\IntegrationTestCase;
 class ApiDimensionsTest extends IntegrationTestCase
 {
     private const CORE_POSITIVE_LIST = [
-        'channelType', 'referrerName', 'campaignName', 'visitorType', 'country', 'region', 'city', 'language',
-        'deviceType', 'operatingSystem', 'browser', 'resolution', 'date', 'weekday', 'hour',
+        'channelType', 'referrerName', 'referrerKeyword', 'referrerUrl', 'campaignName', 'visitorType', 'visitCount',
+        'continent', 'country', 'region', 'city', 'language',
+        'deviceType', 'deviceBrand', 'deviceModel', 'operatingSystem', 'operatingSystemVersion', 'browser', 'browserVersion',
+        'resolution', 'date', 'weekday', 'hour',
         'entryPageUrl', 'entryPageTitle', 'exitPageUrl', 'exitPageTitle', 'visitConverted',
         'pageUrl', 'pageTitle', 'eventCategory', 'eventAction', 'eventName', 'downloadUrl', 'outlinkUrl', 'siteSearchKeyword',
     ];
@@ -68,6 +70,9 @@ class ApiDimensionsTest extends IntegrationTestCase
         $this->assertSame('visit', $byId['customDimension' . $this->visitDimension]['scope']);
         $this->assertSame('action', $byId['customDimension' . $this->actionDimension]['scope']);
         $this->assertSame('Page author', $byId['customDimension' . $this->actionDimension]['name']);
+        $this->assertSame('Visit number', $byId['visitCount']['name']);
+        $this->assertSame('Browser version', $byId['browserVersion']['name']);
+        $this->assertSame('technology', $byId['deviceModel']['group']);
         $this->assertArrayNotHasKey('customDimension' . $this->inactiveDimension, $byId);
     }
 

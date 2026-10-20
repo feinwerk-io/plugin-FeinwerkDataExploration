@@ -49,7 +49,7 @@ class ExplorationDefinitionTest extends TestCase
 
     public function testUnknownDimensionIsRejected(): void
     {
-        $this->assertRejected('{"dimensions": ["browserVersion"], "metrics": ["nb_visits"]}', 'FeinwerkDataExploration_ErrorUnknownDimension', ['browserVersion']);
+        $this->assertRejected('{"dimensions": ["browserEngine"], "metrics": ["nb_visits"]}', 'FeinwerkDataExploration_ErrorUnknownDimension', ['browserEngine']);
     }
 
     public function testSameDimensionTwiceIsRejected(): void

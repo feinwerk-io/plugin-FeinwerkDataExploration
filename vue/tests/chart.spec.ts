@@ -165,6 +165,22 @@ describe('chartModel, lines', () => {
     expect(rates.series.find((s) => s.label === 'A')?.points.map((p) => p.value)).toEqual([0.5, null]);
   });
 
+  it('leaves a gap for averages and maxima too', () => {
+    const rows = [
+      {
+        label: '2026-03-27', secondary_label: 'A', avg_event_value: 1.5, max_actions: 4,
+      },
+      {
+        label: '2026-03-28', secondary_label: 'B', avg_event_value: 2, max_actions: 2,
+      },
+    ];
+    ['avg_event_value', 'max_actions'].forEach((metric) => {
+      const model = chartModel(rows, state({ fwdeDims: 'date,channelType', fwdeMetrics: metric }),
+        metric, options());
+      expect(model.series.find((s) => s.label === 'A')?.points[1].value).toBeNull();
+    });
+  });
+
   it('leaves a gap instead of zero when the result was cut at the row limit', () => {
     const rows = [
       { label: '2026-03-27', secondary_label: 'A', nb_visits: 1 },

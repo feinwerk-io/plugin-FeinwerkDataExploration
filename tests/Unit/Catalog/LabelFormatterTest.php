@@ -34,10 +34,24 @@ class LabelFormatterTest extends TestCase
 
     public function testLocationAndDeviceKindsShowEmptyAsUnknown(): void
     {
-        foreach (['country', 'region', 'city', 'language', 'deviceType', 'operatingSystem', 'browser'] as $kind) {
+        $kinds = [
+            'country', 'region', 'city', 'language', 'deviceType', 'operatingSystem', 'browser',
+            'continent', 'browserVersion', 'operatingSystemVersion', 'deviceBrand', 'deviceModel',
+        ];
+        foreach ($kinds as $kind) {
             $this->assertSame('General_Unknown', $this->labels->format($kind, '', 'Name', 1), $kind);
             $this->assertSame('General_Unknown', $this->labels->format($kind, null, 'Name', 1), $kind);
         }
+    }
+
+    public function testVersionsBrandAndModelLikeDevicesDetection(): void
+    {
+        require_once PIWIK_INCLUDE_PATH . '/plugins/DevicesDetection/functions.php';
+
+        $this->assertSame('Chrome 120.0', $this->labels->format('browserVersion', 'CH;120.0', 'Browser version', 1));
+        $this->assertSame('Windows 10', $this->labels->format('operatingSystemVersion', 'WIN;10', 'OS version', 1));
+        $this->assertSame('Apple', $this->labels->format('deviceBrand', 'AP', 'Device brand', 1));
+        // the model's label needs Matomo's translations: VisitDimensionParityTest compares it with the model report
     }
 
     public function testVisitorType(): void

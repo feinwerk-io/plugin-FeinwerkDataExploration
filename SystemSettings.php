@@ -36,6 +36,9 @@ class SystemSettings extends \Piwik\Settings\Plugin\SystemSettings
 
     protected function init()
     {
+        // the heading in Administration > General settings (Matomo shows the technical name otherwise)
+        $this->title = 'Feinwerk Data Exploration';
+
         $this->maxDays = $this->makeWholeNumberSetting('maxDays', 31, 1, 31);
         $this->maxRows = $this->makeWholeNumberSetting('maxRows', 1000, 10, 1000);
         $this->timeoutSeconds = $this->makeWholeNumberSetting('timeoutSeconds', 30, 5, 300);

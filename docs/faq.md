@@ -1,8 +1,16 @@
 __How is this different from archived reports?__
 
-Archived reports last, keep a long history and serve dashboard widgets and scheduled emails. FeinwerkDataExploration
-is for questions you ask once or now: no setup, no waiting for archiving, at most 31 days, nothing is saved as a
-report.
+Archived reports last, keep a long history and serve dashboard widgets and scheduled emails. Feinwerk Data
+Exploration is for questions you ask once or now: no setup, no waiting for archiving, at most 31 days, nothing is
+saved as a report.
+
+__What does a saved exploration keep, and who sees it?__
+
+Its dimensions, metrics, goal, filters, sorting, number of rows, view and chart metric, and its segment. Not the
+period: it opens with the period you have selected, so one exploration serves last week as well as today. A private
+exploration is seen only by you; a shared one by everyone who may use explorations on the website (never by
+anonymous users). Only the person who saved it, or a super user, can change or delete it. Each person can save up
+to 100 explorations per website.
 
 __Why at most 31 days?__
 

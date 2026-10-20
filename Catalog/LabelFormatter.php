@@ -18,7 +18,10 @@ use Piwik\Piwik;
 final class LabelFormatter
 {
     /** Kinds whose empty value Matomo's own reports show as "Unknown". */
-    private const EMPTY_IS_UNKNOWN = ['country', 'region', 'city', 'language', 'deviceType', 'operatingSystem', 'browser'];
+    private const EMPTY_IS_UNKNOWN = [
+        'continent', 'country', 'region', 'city', 'language', 'deviceType', 'deviceBrand', 'deviceModel', 'operatingSystem',
+        'operatingSystemVersion', 'browser', 'browserVersion',
+    ];
 
     /** @var callable */
     private $translate;
@@ -63,6 +66,8 @@ final class LabelFormatter
                 return \Piwik\Plugins\VisitTime\getTimeLabel((int) $raw);
             case 'channelType':
                 return \Piwik\Plugins\Referrers\getReferrerTypeLabel((int) $raw);
+            case 'continent':
+                return \Piwik\Plugins\UserCountry\continentTranslate($raw);
             case 'country':
                 return \Piwik\Plugins\UserCountry\countryTranslate($raw);
             case 'region':
@@ -77,6 +82,14 @@ final class LabelFormatter
                 return \Piwik\Plugins\DevicesDetection\getOsFullName($raw . ';');
             case 'browser':
                 return \Piwik\Plugins\DevicesDetection\getBrowserName($raw);
+            case 'browserVersion':
+                return \Piwik\Plugins\DevicesDetection\getBrowserNameWithVersion($raw);
+            case 'operatingSystemVersion':
+                return \Piwik\Plugins\DevicesDetection\getOsFullName($raw);
+            case 'deviceBrand':
+                return \Piwik\Plugins\DevicesDetection\getDeviceBrandLabel($raw);
+            case 'deviceModel':
+                return \Piwik\Plugins\DevicesDetection\getModelName($raw);
             default:
                 return $raw;
         }

@@ -9,7 +9,9 @@
 
 namespace Piwik\Plugins\FeinwerkDataExploration;
 
+use Piwik\Common;
 use Piwik\Plugins\FeinwerkDataExploration\Reports\OpenInExploration;
+use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationStore;
 
 class FeinwerkDataExploration extends \Piwik\Plugin
 {
@@ -21,7 +23,37 @@ class FeinwerkDataExploration extends \Piwik\Plugin
             'Translate.getClientSideTranslationKeys' => 'getClientSideTranslationKeys',
             'ViewDataTable.configure.end' => 'addOpenInExploration',
             'API.getPagesComparisonsDisabledFor' => 'disableComparison',
+            'Db.getTablesInstalled' => 'getTablesInstalled',
+            'UsersManager.deleteUser' => 'deleteUser',
+            'SitesManager.deleteSite.end' => 'deleteSite',
         ];
+    }
+
+    public function install()
+    {
+        (new SavedExplorationStore())->install();
+    }
+
+    public function uninstall()
+    {
+        (new SavedExplorationStore())->uninstall();
+    }
+
+    public function getTablesInstalled(&$allTablesInstalled)
+    {
+        $allTablesInstalled[] = Common::prefixTable(SavedExplorationStore::TABLE);
+    }
+
+    /** The saved explorations of a deleted user go with the user. */
+    public function deleteUser($userLogin)
+    {
+        (new SavedExplorationStore())->deleteForUser((string) $userLogin);
+    }
+
+    /** The saved explorations of a deleted website go with the website. */
+    public function deleteSite($idSite)
+    {
+        (new SavedExplorationStore())->deleteForSite((int) $idSite);
     }
 
     /**
@@ -66,6 +98,7 @@ class FeinwerkDataExploration extends \Piwik\Plugin
             $translationKeys[] = 'FeinwerkDataExploration_' . $key;
         }
         array_push($translationKeys, 'General_Unknown', 'CoreHome_ThereIsNoDataForThisReport', 'General_Export', 'General_Search');
+        array_push($translationKeys, 'General_Save', 'General_Cancel', 'General_Delete');
         // the chart orders weekdays by Matomo's own names
         for ($day = 1; $day <= 7; $day++) {
             $translationKeys[] = 'Intl_Day_Long_StandAlone_' . $day;

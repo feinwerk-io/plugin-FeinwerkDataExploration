@@ -77,6 +77,12 @@ class SettingsAndAccessTest extends IntegrationTestCase
         $this->assertContains('FeinwerkDataExploration_Explorations.FeinwerkDataExploration_FreeFormTable', $pages);
     }
 
+    public function testGeneralSettingsShowTheNameWithSpaces(): void
+    {
+        // the section heading in Administration > General settings, which texts refer to
+        $this->assertSame('Feinwerk Data Exploration', (new SystemSettings())->getTitle());
+    }
+
     public function testSettingsExplainLimitsAndTheMissingReplica(): void
     {
         $settings = new SystemSettings();

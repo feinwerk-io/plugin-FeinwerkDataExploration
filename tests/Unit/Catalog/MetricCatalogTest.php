@@ -26,6 +26,7 @@ class MetricCatalogTest extends TestCase
             'bounce_rate' => 'visit',
             'avg_time_on_site' => 'visit',
             'nb_actions_per_visit' => 'visit',
+            'max_actions' => 'visit',
             'nb_conversions' => 'goal',
             'conversion_rate' => 'goal',
             'revenue' => 'goal',
@@ -33,8 +34,10 @@ class MetricCatalogTest extends TestCase
             'nb_uniq_pageviews' => 'action',
             'nb_events' => 'action',
             'sum_event_value' => 'action',
+            'avg_event_value' => 'action',
             'nb_downloads' => 'action',
             'nb_outlinks' => 'action',
+            'nb_searches' => 'action',
         ];
 
         $scopes = [];
@@ -66,6 +69,9 @@ class MetricCatalogTest extends TestCase
         $this->assertSame('event', $kinds['sum_event_value']);
         $this->assertSame('download', $kinds['nb_downloads']);
         $this->assertSame('outlink', $kinds['nb_outlinks']);
+        $this->assertSame('event', $kinds['avg_event_value']);
+        $this->assertSame('search', $kinds['nb_searches']);
+        $this->assertNull($kinds['max_actions']);
         $this->assertNull($kinds['nb_visits']);
         $this->assertNull($kinds['revenue']);
     }

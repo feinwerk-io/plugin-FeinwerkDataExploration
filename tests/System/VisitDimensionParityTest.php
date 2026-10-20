@@ -53,6 +53,64 @@ class VisitDimensionParityTest extends SystemTestCase
         }
     }
 
+    public function testMaxActionsMatchesSegmentedVisitsSummary(): void
+    {
+        $ours = $this->ourRows(['dimensions' => ['browser'], 'metrics' => ['max_actions']], 'range', ExplorationFixture::RANGE);
+        foreach ($this->coreRows('DevicesDetection.getBrowsers', 'range', ExplorationFixture::RANGE) as $browser => $row) {
+            $summary = $this->coreRows('VisitsSummary.get', 'range', ExplorationFixture::RANGE, ['segment' => $row['__metadata']['segment']]);
+            $core = reset($summary);
+            $this->assertEquals((int) $core['max_actions'], (int) $ours[$browser]['max_actions'], $browser);
+        }
+    }
+
+    public function testBrowserAndOperatingSystemVersionsMatch(): void
+    {
+        foreach (ExplorationFixture::DATES as $date) {
+            $this->assertVisitMetricsMatch('DevicesDetection.getBrowserVersions', [], 'browserVersion', 'day', $date, true);
+            $this->assertVisitMetricsMatch('DevicesDetection.getOsVersions', [], 'operatingSystemVersion', 'day', $date, true);
+        }
+        $this->assertVisitMetricsMatch('DevicesDetection.getBrowserVersions', [], 'browserVersion', 'range', ExplorationFixture::RANGE, false);
+        $this->assertVisitMetricsMatch('DevicesDetection.getOsVersions', [], 'operatingSystemVersion', 'range', ExplorationFixture::RANGE, false);
+    }
+
+    public function testDeviceBrandAndModelMatch(): void
+    {
+        foreach (ExplorationFixture::DATES as $date) {
+            $this->assertVisitMetricsMatch('DevicesDetection.getBrand', [], 'deviceBrand', 'day', $date, true);
+            $this->assertVisitMetricsMatch('DevicesDetection.getModel', [], 'deviceModel', 'day', $date, true);
+        }
+        $this->assertVisitMetricsMatch('DevicesDetection.getModel', [], 'deviceModel', 'range', ExplorationFixture::RANGE, false);
+    }
+
+    public function testContinentMatches(): void
+    {
+        foreach (ExplorationFixture::DATES as $date) {
+            $this->assertVisitMetricsMatch('UserCountry.getContinent', [], 'continent', 'day', $date, true);
+        }
+        $this->assertVisitMetricsMatch('UserCountry.getContinent', [], 'continent', 'range', ExplorationFixture::RANGE, false);
+    }
+
+    public function testReferrerKeywordMatchesSearchKeywords(): void
+    {
+        // Matomo's keyword report has the search engine visits; the dimension also holds campaign keywords
+        $this->assertVisitMetricsMatch(
+            'Referrers.getKeywords', [], 'referrerKeyword', 'range', ExplorationFixture::RANGE, false, null, [], 'referrerType==search'
+        );
+    }
+
+    public function testReferrerUrlAndVisitCountCountTheFixturesVisits(): void
+    {
+        $urls = self::pick($this->ourRows(['dimensions' => ['referrerUrl'], 'metrics' => ['nb_visits']], 'range', ExplorationFixture::RANGE), ['nb_visits']);
+        $this->assertEquals([
+            'https://partner-blog.example.org/post' => ['nb_visits' => 3.0],
+            'https://www.google.com/search?q=matomo' => ['nb_visits' => 3.0],
+        ], array_intersect_key($urls, array_flip(['https://partner-blog.example.org/post', 'https://www.google.com/search?q=matomo'])));
+
+        // visitors A, B, C, D, E and J come twice: their second visits have the visit number 2
+        $counts = self::pick($this->ourRows(['dimensions' => ['visitCount'], 'metrics' => ['nb_visits']], 'range', ExplorationFixture::RANGE), ['nb_visits']);
+        $this->assertEquals(['1' => ['nb_visits' => 11.0], '2' => ['nb_visits' => 6.0]], $counts);
+    }
+
     public function testCountryRegionCityMatch(): void
     {
         foreach (ExplorationFixture::DATES as $date) {

@@ -18,6 +18,9 @@ export const CATALOG: Catalog = {
     { id: 'pageTitle', name: 'Page title', group: 'behaviour', scope: 'action', kinds: ['pageview'] },
     { id: 'downloadUrl', name: 'Download URL', group: 'behaviour', scope: 'action', kinds: ['download'] },
     { id: 'eventCategory', name: 'Event category', group: 'behaviour', scope: 'action', kinds: ['event'] },
+    {
+      id: 'siteSearchKeyword', name: 'Keyword', group: 'behaviour', scope: 'action', kinds: ['search'],
+    },
     { id: 'customDimension4', name: 'Author', group: 'custom', scope: 'action', kinds: ACTION_KINDS },
   ],
   metrics: [
@@ -30,6 +33,13 @@ export const CATALOG: Catalog = {
     { id: 'nb_pageviews', scope: 'action', name: 'Pageviews', nameInActionScope: null, kind: 'pageview' },
     { id: 'nb_events', scope: 'action', name: 'Events', nameInActionScope: null, kind: 'event' },
     { id: 'nb_downloads', scope: 'action', name: 'Downloads', nameInActionScope: null, kind: 'download' },
+    {
+      id: 'max_actions', scope: 'visit', name: 'Max. actions', nameInActionScope: 'Max. actions of these', kind: null,
+    },
+    {
+      id: 'avg_event_value', scope: 'action', name: 'Avg. event value', nameInActionScope: null, kind: 'event',
+    },
+    { id: 'nb_searches', scope: 'action', name: 'Searches', nameInActionScope: null, kind: 'search' },
   ],
 };
 

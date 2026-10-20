@@ -232,6 +232,53 @@ class ExplorationQueryBuilderTest extends TestCase
         $this->assertStringContainsString('ROUND(COALESCE(SUM(fwde_a.fwde_event_value), 0), 2) AS sum_event_value', $query['sql']);
     }
 
+    public function testAverageEventValueDividesByTheEventsWithAValue(): void
+    {
+        // like Matomo's Events reports: sum of the values / events that have a value
+        $query = $this->build('{"dimensions": ["eventCategory"], "metrics": ["avg_event_value"]}');
+
+        $this->assertStringContainsString(' AS fwde_event_value', $this->stageACalls[0][0]);
+        $this->assertStringContainsString(
+            'COUNT(DISTINCT CASE WHEN log_link_visit_action.idaction_event_category IS NOT NULL'
+            . ' AND log_link_visit_action.custom_float IS NOT NULL THEN log_link_visit_action.idlink_va END) AS fwde_events_with_value',
+            $this->stageACalls[0][0]
+        );
+        $this->assertStringContainsString(
+            'ROUND(COALESCE(SUM(fwde_a.fwde_event_value) / NULLIF(SUM(fwde_a.fwde_events_with_value), 0), 0), 2) AS avg_event_value',
+            $query['sql']
+        );
+    }
+
+    public function testSearchesCountSiteSearchActions(): void
+    {
+        $query = $this->build('{"dimensions": ["browser"], "metrics": ["nb_searches"]}');
+
+        $this->assertContains(
+            ['table' => 'log_action', 'tableAlias' => 'fwde_search',
+                'joinOn' => 'fwde_search.idaction = log_link_visit_action.idaction_name AND fwde_search.type = 8'],
+            $this->stageACalls[0][1]
+        );
+        $this->assertStringContainsString(
+            'COUNT(DISTINCT CASE WHEN fwde_search.idaction IS NOT NULL THEN log_link_visit_action.idlink_va END) AS fwde_searches',
+            $this->stageACalls[0][0]
+        );
+        $this->assertStringContainsString('SUM(fwde_a.fwde_searches) AS nb_searches', $query['sql']);
+
+        // the join only when searches are counted
+        $this->build('{"dimensions": ["browser"], "metrics": ["nb_pageviews"]}');
+        $this->assertNotContains('fwde_search', array_column(array_filter($this->stageACalls[1][1], 'is_array'), 'tableAlias'));
+    }
+
+    public function testMaxActionsInVisitAndActionScope(): void
+    {
+        $visit = $this->build('{"dimensions": ["browser"], "metrics": ["max_actions"]}');
+        $this->assertStringContainsString('log_visit.visit_total_actions AS fwde_actions', $this->stageACalls[0][0]);
+        $this->assertStringContainsString('MAX(fwde_a.fwde_actions) AS max_actions', $visit['sql']);
+
+        $action = $this->build('{"dimensions": ["pageUrl"], "metrics": ["max_actions"]}');
+        $this->assertStringContainsString('MAX(fwde_v.visit_total_actions) AS max_actions', $action['sql']);
+    }
+
     public function testAllAliasesAreLowercase(): void
     {
         $sql = $this->build('{"dimensions": ["pageUrl", "entryPageTitle"], "metrics": ["nb_visits", "nb_uniq_visitors", "nb_pageviews", "revenue", "sum_event_value"]}')['sql'];

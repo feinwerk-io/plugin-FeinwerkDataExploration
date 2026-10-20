@@ -56,6 +56,9 @@ final class MetricCatalog
         'nb_uniq_pageviews' => 'General_ColumnUniquePageviewsDocumentation',
         'nb_events' => 'Events_TotalEventsDocumentation',
         'sum_event_value' => 'Events_TotalValueDocumentation',
+        'avg_event_value' => 'FeinwerkDataExploration_MetricDescriptionAvgEventValue',
+        'nb_searches' => 'FeinwerkDataExploration_MetricDescriptionSearches',
+        'max_actions' => 'FeinwerkDataExploration_MetricDescriptionMaxActions',
         'nb_downloads' => 'FeinwerkDataExploration_MetricDescriptionDownloads',
         'nb_outlinks' => 'FeinwerkDataExploration_MetricDescriptionOutlinks',
     ];
@@ -84,6 +87,7 @@ final class MetricCatalog
             ['bounce_rate', self::SCOPE_VISIT, 'General_ColumnBounceRate', 'FeinwerkDataExploration_BounceRateOfTheseVisits'],
             ['avg_time_on_site', self::SCOPE_VISIT, 'General_ColumnAvgTimeOnSite', 'FeinwerkDataExploration_AvgTimeOnSiteOfTheseVisits'],
             ['nb_actions_per_visit', self::SCOPE_VISIT, 'General_ColumnActionsPerVisit', 'FeinwerkDataExploration_ActionsPerVisitOfTheseVisits'],
+            ['max_actions', self::SCOPE_VISIT, 'General_ColumnMaxActions', 'FeinwerkDataExploration_MaxActionsOfTheseVisits'],
             ['nb_conversions', self::SCOPE_GOAL, 'Goals_ColumnConversions', null],
             ['conversion_rate', self::SCOPE_GOAL, 'General_ColumnConversionRate', null],
             ['revenue', self::SCOPE_GOAL, 'General_ColumnRevenue', null],
@@ -91,8 +95,10 @@ final class MetricCatalog
             ['nb_uniq_pageviews', self::SCOPE_ACTION, 'General_ColumnUniquePageviews', null, 'pageview'],
             ['nb_events', self::SCOPE_ACTION, 'Events_TotalEvents', null, 'event'],
             ['sum_event_value', self::SCOPE_ACTION, 'Events_TotalValue', null, 'event'],
+            ['avg_event_value', self::SCOPE_ACTION, 'FeinwerkDataExploration_MetricAvgEventValue', null, 'event'],
             ['nb_downloads', self::SCOPE_ACTION, 'General_Downloads', null, 'download'],
             ['nb_outlinks', self::SCOPE_ACTION, 'General_Outlinks', null, 'outlink'],
+            ['nb_searches', self::SCOPE_ACTION, 'Actions_ColumnSearches', null, 'search'],
         ];
     }
 }

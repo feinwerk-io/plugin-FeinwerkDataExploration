@@ -148,8 +148,10 @@
   background: @theme-color-background-tinyContrast;
 }
 
-.fwde-picker__none {
+// Matomo's btn-flat writes its text in capitals; "None" reads like the entries below it
+.fwde-page .fwde-picker__none.btn-flat {
   margin-bottom: 6px;
+  text-transform: none;
 }
 
 .fwde-picker__goal {
@@ -217,7 +219,8 @@
 
 // one size for every entry; Matomo's checkbox and radio styles would use 16px and a 25px line
 .fwde-page .fwde-list__item [type="checkbox"] + span.fwde-list__label,
-.fwde-page .fwde-list__item [type="radio"] + span.fwde-list__label {
+.fwde-page .fwde-list__item [type="radio"] + span.fwde-list__label,
+.fwde-page .fwde-savedialog__option [type="radio"] + span.fwde-list__label {
   display: inline-block;
   height: auto;
   min-height: 20px;
@@ -234,7 +237,9 @@
 }
 
 .fwde-page .fwde-list__item [type="radio"] + span.fwde-list__label::before,
-.fwde-page .fwde-list__item [type="radio"] + span.fwde-list__label::after {
+.fwde-page .fwde-list__item [type="radio"] + span.fwde-list__label::after,
+.fwde-page .fwde-savedialog__option [type="radio"] + span.fwde-list__label::before,
+.fwde-page .fwde-savedialog__option [type="radio"] + span.fwde-list__label::after {
   margin: 2px;
 }
 
@@ -410,6 +415,113 @@
     background: @theme-color-background-lowContrast;
     color: @theme-color-text;
   }
+}
+
+// Saved explorations: picker in the build card, save dialog in the result header
+
+.fwde-saved .fwde-field__label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.fwde-savedialog {
+  position: relative;
+  flex: 0 0 auto;
+  // stays at the right edge when the header wraps (phones), so the panel opens inside the screen
+  margin-left: auto;
+}
+
+// the title and, next to it, the "unsaved changes" mark of a saved exploration
+.fwde-card__heading {
+  display: flex;
+  flex: 1 1 200px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  min-width: 0;
+
+  .fwde-page & h2.fwde-card__title {
+    flex: 0 1 auto;
+  }
+}
+
+.fwde-card__changed {
+  color: @theme-color-text-light;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.fwde-page .fwde-savedialog__panel {
+  position: absolute;
+  top: ~"calc(100% + 4px)";
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 340px;
+  max-width: ~"calc(100vw - 32px)";
+  padding: 14px;
+  border: 1px solid @theme-color-border-alternative;
+  border-radius: 4px;
+  background: @theme-color-widget-background;
+  box-shadow: 0 4px 12px var(--fwde-shadow);
+  text-align: left;
+}
+
+.fwde-savedialog__note {
+  margin: 0;
+  color: @theme-color-text-light;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.fwde-page .fwde-savedialog__visibility {
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  legend {
+    margin-bottom: 4px;
+    padding: 0;
+  }
+}
+
+// Materialize gives labels a light grey and Matomo's buttons capitals; the dialog reads like the rest of the page
+.fwde-page .fwde-savedialog__option {
+  display: block;
+  padding: 3px 0;
+  color: @theme-color-text;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.fwde-page .fwde-savedialog__panel .btn {
+  text-transform: none;
+}
+
+.fwde-savedialog__error {
+  margin: 0;
+  color: #c62828;
+  font-size: 13px;
+  line-height: 1.4;
+
+  .inDarkMode({
+    color: #ef9a9a;
+  });
+}
+
+.fwde-savedialog__buttons,
+.fwde-savedialog__delete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.fwde-savedialog__delete {
+  padding-top: 10px;
+  border-top: 1px solid @theme-color-widget-border;
 }
 
 .fwde-main__stale {

@@ -84,6 +84,7 @@ describe('defaultMetricsFor', () => {
     expect(defaultMetricsFor('pageTitle', CATALOG)).toEqual(['nb_pageviews', 'nb_visits']);
     expect(defaultMetricsFor('eventCategory', CATALOG)).toEqual(['nb_events', 'nb_visits']);
     expect(defaultMetricsFor('downloadUrl', CATALOG)).toEqual(['nb_downloads', 'nb_visits']);
+    expect(defaultMetricsFor('siteSearchKeyword', CATALOG)).toEqual(['nb_searches', 'nb_visits']);
     expect(defaultMetricsFor('customDimension4', CATALOG)).toEqual(['nb_pageviews', 'nb_visits']);
   });
 

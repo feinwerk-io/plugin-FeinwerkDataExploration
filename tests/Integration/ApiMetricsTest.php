@@ -46,12 +46,16 @@ class ApiMetricsTest extends IntegrationTestCase
     {
         $metrics = API::getInstance()->getAvailableMetrics(1);
 
-        $this->assertCount(15, $metrics);
+        $this->assertCount(18, $metrics);
         $this->assertSame([
             'id' => 'nb_visits', 'scope' => 'visit', 'name' => 'Visits', 'nameInActionScope' => 'Visits with this action', 'kind' => null,
             'description' => Piwik::translate('General_ColumnNbVisitsDocumentation'),
         ], $metrics[0]);
-        $this->assertSame('nb_outlinks', $metrics[14]['id']);
+        $this->assertSame('nb_searches', $metrics[17]['id']);
+        $names = array_column($metrics, 'name', 'id');
+        $this->assertSame('Maximum actions in one visit', $names['max_actions']);
+        $this->assertSame('Average event value', $names['avg_event_value']);
+        $this->assertSame('Searches', $names['nb_searches']);
         foreach ($metrics as $metric) {
             $this->assertNotSame('', $metric['name']);
             $this->assertStringNotContainsString('FeinwerkDataExploration_', $metric['name']);

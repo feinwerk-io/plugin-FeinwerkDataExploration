@@ -61,6 +61,65 @@ export function loadSuggestedPeriod(): Promise<SuggestedPeriod> {
   }, OPTIONS);
 }
 
+/** A saved exploration as the API lists it (own ones and those shared by others). */
+export interface SavedExploration {
+  id: number;
+  name: string;
+  shared: boolean;
+  owner: string;
+  canEdit: boolean;
+  /** the page's state parameters (fwdeDims, fwdeMetrics, ...) */
+  state: Record<string, string>;
+  segment: string;
+}
+
+export function loadSaved(): Promise<SavedExploration[]> {
+  return AjaxHelper.fetch<SavedExploration[]>({
+    method: 'FeinwerkDataExploration.getSavedExplorations', filter_limit: -1,
+  }, OPTIONS).then((list) => (Array.isArray(list) ? list : []));
+}
+
+/** What a save sends: the stored segment goes as segmentDefinition (Matomo fills "segment"). */
+interface SaveFields {
+  name: string;
+  state: Record<string, string>;
+  segment: string;
+  shared: boolean;
+}
+
+function saveBody(fields: SaveFields): Record<string, string> {
+  return {
+    name: fields.name,
+    state: JSON.stringify(fields.state),
+    segmentDefinition: fields.segment,
+    shared: fields.shared ? '1' : '0',
+  };
+}
+
+export function addSaved(fields: SaveFields): Promise<{ id: number }> {
+  return AjaxHelper.post<{ id: number }>(
+    { method: 'FeinwerkDataExploration.addSavedExploration' },
+    saveBody(fields),
+    OPTIONS,
+  );
+}
+
+export function updateSaved(id: number, fields: SaveFields): Promise<unknown> {
+  return AjaxHelper.post(
+    { method: 'FeinwerkDataExploration.updateSavedExploration' },
+    { ...saveBody(fields), idSaved: String(id) },
+    OPTIONS,
+  );
+}
+
+export function deleteSaved(id: number): Promise<unknown> {
+  return AjaxHelper.post(
+    { method: 'FeinwerkDataExploration.deleteSavedExploration' },
+    { idSaved: String(id) },
+    OPTIONS,
+  );
+}
+
 /** The site's goals; an empty list when they cannot be read. */
 export function loadGoals(): Promise<Goal[]> {
   return AjaxHelper.fetch<{ idgoal: string|number, name: string }[]>({

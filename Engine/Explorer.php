@@ -31,7 +31,7 @@ final class Explorer
     /** Metrics that are counts or whole seconds; all others are rates or amounts. */
     private const INTEGER_METRICS = [
         'nb_visits', 'nb_uniq_visitors', 'nb_actions', 'avg_time_on_site', 'nb_conversions',
-        'nb_pageviews', 'nb_uniq_pageviews', 'nb_events', 'nb_downloads', 'nb_outlinks',
+        'nb_pageviews', 'nb_uniq_pageviews', 'nb_events', 'nb_downloads', 'nb_outlinks', 'nb_searches', 'max_actions',
     ];
 
     public function __construct(

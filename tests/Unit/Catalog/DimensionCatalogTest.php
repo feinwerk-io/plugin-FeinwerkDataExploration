@@ -22,9 +22,12 @@ use Piwik\Plugins\FeinwerkDataExploration\Query\QueryContext;
 class DimensionCatalogTest extends TestCase
 {
     private const POSITIVE_LIST = [
-        'channelType' => 'visit', 'referrerName' => 'visit', 'campaignName' => 'visit',
-        'visitorType' => 'visit', 'country' => 'visit', 'region' => 'visit', 'city' => 'visit', 'language' => 'visit',
-        'deviceType' => 'visit', 'operatingSystem' => 'visit', 'browser' => 'visit', 'resolution' => 'visit',
+        'channelType' => 'visit', 'referrerName' => 'visit', 'referrerKeyword' => 'visit', 'referrerUrl' => 'visit',
+        'campaignName' => 'visit',
+        'visitorType' => 'visit', 'visitCount' => 'visit', 'continent' => 'visit', 'country' => 'visit', 'region' => 'visit',
+        'city' => 'visit', 'language' => 'visit',
+        'deviceType' => 'visit', 'deviceBrand' => 'visit', 'deviceModel' => 'visit', 'operatingSystem' => 'visit',
+        'operatingSystemVersion' => 'visit', 'browser' => 'visit', 'browserVersion' => 'visit', 'resolution' => 'visit',
         'date' => 'visit', 'weekday' => 'visit', 'hour' => 'visit',
         'entryPageUrl' => 'visit', 'entryPageTitle' => 'visit', 'exitPageUrl' => 'visit', 'exitPageTitle' => 'visit',
         'visitConverted' => 'visit',
@@ -107,6 +110,65 @@ class DimensionCatalogTest extends TestCase
         $this->assertArrayNotHasKey('browser', $catalog->availableFor(1));
         $this->assertNull($catalog->get(1, 'browser'));
         $this->assertNotNull($catalog->get(1, 'deviceType'));
+    }
+
+    public function testKeysOfVersionsDevicesReferrerDetailsAndVisitCount(): void
+    {
+        $catalog = $this->catalog();
+        $visit = $this->context('visit');
+        $key = fn (string $id): string => $catalog->get(1, $id)->keySql($visit, 'fwde_k1');
+
+        // the labels Matomo's DevicesDetection reports build from "code;version" and "brand;model"
+        $this->assertSame(
+            "CASE WHEN log_visit.config_browser_name IS NULL OR log_visit.config_browser_name IN ('', 'UNK') THEN NULL"
+            . " ELSE CONCAT(log_visit.config_browser_name, ';', COALESCE(log_visit.config_browser_version, '')) END",
+            $key('browserVersion')
+        );
+        $this->assertSame(
+            "CASE WHEN log_visit.config_os IS NULL OR log_visit.config_os IN ('', 'UNK') THEN NULL"
+            . " ELSE CONCAT(log_visit.config_os, ';', COALESCE(log_visit.config_os_version, '')) END",
+            $key('operatingSystemVersion')
+        );
+        $this->assertSame("NULLIF(log_visit.config_device_brand, '')", $key('deviceBrand'));
+        $this->assertSame(
+            "CASE WHEN COALESCE(log_visit.config_device_brand, '') = '' AND COALESCE(log_visit.config_device_model, '') = ''"
+            . " THEN NULL ELSE CONCAT(COALESCE(log_visit.config_device_brand, ''), ';', COALESCE(log_visit.config_device_model, '')) END",
+            $key('deviceModel')
+        );
+        $this->assertSame("NULLIF(log_visit.referer_keyword, '')", $key('referrerKeyword'));
+        $this->assertSame("NULLIF(log_visit.referer_url, '')", $key('referrerUrl'));
+        $this->assertSame('log_visit.visitor_count_visits', $key('visitCount'));
+    }
+
+    public function testDeviceModelIsHiddenWhenMatomoTurnsModelDetectionOff(): void
+    {
+        // Matomo's compliance policy disables its device model report per site; the exploration follows
+        $catalog = $this->catalog(null, [], false, fn (int $idSite): bool => $idSite === 1);
+
+        $this->assertArrayNotHasKey('deviceModel', $catalog->availableFor(1));
+        $this->assertArrayHasKey('deviceBrand', $catalog->availableFor(1));
+        $this->assertArrayHasKey('deviceModel', $catalog->availableFor(2));
+    }
+
+    public function testSegmentsOfVersionsDevicesReferrerDetailsAndVisitCount(): void
+    {
+        require_once PIWIK_INCLUDE_PATH . '/plugins/DevicesDetection/functions.php';
+        $catalog = $this->catalog();
+        $segment = fn (string $id, string $raw): ?string => $catalog->get(1, $id)->segmentFor($raw);
+
+        $this->assertSame('browserCode==CH;browserVersion==120.0', $segment('browserVersion', 'CH;120.0'));
+        $this->assertSame('operatingSystemCode==WIN;operatingSystemVersion==10', $segment('operatingSystemVersion', 'WIN;10'));
+        $this->assertSame('operatingSystemCode==LIN;operatingSystemVersion==', $segment('operatingSystemVersion', 'LIN;'));
+        // Matomo's deviceBrand segment takes the brand's name
+        $this->assertSame('deviceBrand==Apple', $segment('deviceBrand', 'AP'));
+        $this->assertNull($segment('deviceBrand', 'no-such-brand'));
+        $this->assertSame('deviceBrand==Apple;deviceModel==iPhone%2B15', $segment('deviceModel', 'AP;iPhone 15'));
+        // a brand code DeviceDetector no longer knows: Matomo's segment cannot select it ("Unknown" means no brand)
+        $this->assertNull($segment('deviceModel', 'no-such-brand;Phone 1'));
+        $this->assertSame('referrerKeyword==matomo%2Banalytics', $segment('referrerKeyword', 'matomo analytics'));
+        $this->assertSame('referrerUrl==' . urlencode(urlencode('https://a.example/x?y=1')), $segment('referrerUrl', 'https://a.example/x?y=1'));
+        $this->assertSame('continentCode==eur', $segment('continent', 'eur'));
+        $this->assertSame('visitCount==3', $segment('visitCount', '3'));
     }
 
     public function testUnknownCodesAreNormalisedToNull(): void
@@ -355,8 +417,12 @@ class DimensionCatalogTest extends TestCase
     /**
      * @param string[] $visitColumns the log_visit columns of other plugins that exist
      */
-    private function catalog(?callable $coreName = null, array $visitColumns = [], bool $lowerCampaigns = false): DimensionCatalog
-    {
+    private function catalog(
+        ?callable $coreName = null,
+        array $visitColumns = [],
+        bool $lowerCampaigns = false,
+        ?callable $modelDetectionOff = null
+    ): DimensionCatalog {
         $customDimensions = new class implements CustomDimensionSource {
             public function activeFor(int $idSite): array
             {
@@ -375,7 +441,8 @@ class DimensionCatalogTest extends TestCase
             $customDimensions,
             new LabelFormatter(fn (string $key, array $params = []) => $key),
             new ColumnProbe(fn (string $table) => $table === 'log_visit' ? $visitColumns : []),
-            fn () => $lowerCampaigns
+            fn () => $lowerCampaigns,
+            $modelDetectionOff ?? fn (int $idSite): bool => false
         );
     }
 }

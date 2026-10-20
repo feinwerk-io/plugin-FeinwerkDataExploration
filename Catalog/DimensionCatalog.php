@@ -93,6 +93,8 @@ final class DimensionCatalog
     private ColumnProbe $columns;
     /** @var callable fn(): bool, whether campaign values are compared in lower case (MarketingCampaignsReporting) */
     private $lowerCampaignCase;
+    /** @var callable fn(int $idSite): bool, whether Matomo's compliance policy turns device model detection off */
+    private $deviceModelOff;
 
     /** @var array<int, array<string, DimensionDefinition>> */
     private array $bySite = [];
@@ -102,7 +104,8 @@ final class DimensionCatalog
         ?CustomDimensionSource $customDimensions = null,
         ?LabelFormatter $labels = null,
         ?ColumnProbe $columns = null,
-        ?callable $lowerCampaignCase = null
+        ?callable $lowerCampaignCase = null,
+        ?callable $deviceModelOff = null
     ) {
         $this->coreDimensionName = $coreDimensionName ?? static function (string $coreDimensionId): ?string {
             $dimension = (new DimensionsProvider())->factory($coreDimensionId);
@@ -112,6 +115,13 @@ final class DimensionCatalog
         $this->labels = $labels ?? new LabelFormatter();
         $this->columns = $columns ?? new ColumnProbe();
         $this->lowerCampaignCase = $lowerCampaignCase ?? [self::class, 'campaignCaseLowered'];
+        $this->deviceModelOff = $deviceModelOff ?? static function (int $idSite): bool {
+            try {
+                return \Piwik\Plugins\DevicesDetection\DevicesDetection::isDeviceModelDetectionDisabledByCompliancePolicy($idSite);
+            } catch (\Throwable $e) {
+                return false;
+            }
+        };
     }
 
     /**
@@ -179,6 +189,10 @@ final class DimensionCatalog
             if (isset(self::PLUGIN_COLUMNS[$id]) && !$this->columns->hasColumn('log_visit', self::PLUGIN_COLUMNS[$id])) {
                 continue;
             }
+            // like Matomo's device model report, which its compliance policy turns off per site
+            if ($id === 'deviceModel' && ($this->deviceModelOff)($idSite)) {
+                continue;
+            }
             $campaignColumn = $id === 'campaignName' && $mcrCampaignName ? 'campaign_name' : (self::MCR_COLUMNS[$id] ?? null);
             if ($campaignColumn !== null) {
                 if (!$this->columns->hasColumn('log_visit', $campaignColumn)) {
@@ -232,6 +246,11 @@ final class DimensionCatalog
                 $column('CASE WHEN log_visit.referer_type IS NULL OR log_visit.referer_type = 0 THEN 1 ELSE log_visit.referer_type END'), null],
             ['referrerName', 'acquisition', self::SCOPE_VISIT, 'Referrers.ReferrerName', null, 'raw',
                 $column('log_visit.referer_name'), null],
+            // search keywords and the keywords of campaign visits, like Matomo's segment referrerKeyword
+            ['referrerKeyword', 'acquisition', self::SCOPE_VISIT, 'Referrers.Keyword', null, 'raw',
+                $column("NULLIF(log_visit.referer_keyword, '')"), null],
+            ['referrerUrl', 'acquisition', self::SCOPE_VISIT, 'Referrers.ReferrerUrl', null, 'raw',
+                $column("NULLIF(log_visit.referer_url, '')"), null],
             // with MarketingCampaignsReporting the campaign columns are read instead (build())
             ['campaignName', 'acquisition', self::SCOPE_VISIT, 'Referrers.Campaign', 'FeinwerkDataExploration_DimensionCampaignName', 'campaign',
                 $column('CASE WHEN log_visit.referer_type = 6 THEN log_visit.referer_name END'), null],
@@ -245,6 +264,10 @@ final class DimensionCatalog
 
             ['visitorType', 'visitor', self::SCOPE_VISIT, 'CoreHome.VisitorReturning', 'FeinwerkDataExploration_DimensionVisitorType', 'visitorType',
                 $column('CASE WHEN log_visit.visitor_returning = 0 THEN 0 ELSE 1 END'), null],
+            ['visitCount', 'visitor', self::SCOPE_VISIT, 'CoreHome.VisitsCount', 'FeinwerkDataExploration_DimensionVisitCount', 'raw',
+                $column('log_visit.visitor_count_visits'), null],
+            ['continent', 'visitor', self::SCOPE_VISIT, 'UserCountry.Continent', null, 'continent',
+                static fn (QueryContext $c, string $alias): string => ContinentSql::forMatomo(), null],
             ['country', 'visitor', self::SCOPE_VISIT, 'UserCountry.Country', null, 'country',
                 // 'xx' and '' are both "Unknown"; NULL gives them one row
                 $column("CASE WHEN log_visit.location_country IN ('xx', '') THEN NULL WHEN log_visit.location_country = 'ti' THEN 'cn'"
@@ -260,10 +283,22 @@ final class DimensionCatalog
 
             ['deviceType', 'technology', self::SCOPE_VISIT, 'DevicesDetection.DeviceType', null, 'deviceType',
                 $column('log_visit.config_device_type'), null],
+            ['deviceBrand', 'technology', self::SCOPE_VISIT, 'DevicesDetection.DeviceBrand', null, 'deviceBrand',
+                $column("NULLIF(log_visit.config_device_brand, '')"), null],
+            // "brand;model" and "code;version" as Matomo's DevicesDetection reports label them
+            ['deviceModel', 'technology', self::SCOPE_VISIT, 'DevicesDetection.DeviceModel', null, 'deviceModel',
+                $column("CASE WHEN COALESCE(log_visit.config_device_brand, '') = '' AND COALESCE(log_visit.config_device_model, '') = ''"
+                    . " THEN NULL ELSE CONCAT(COALESCE(log_visit.config_device_brand, ''), ';', COALESCE(log_visit.config_device_model, '')) END"), null],
             ['operatingSystem', 'technology', self::SCOPE_VISIT, 'DevicesDetection.Os', null, 'operatingSystem',
                 $column("NULLIF(NULLIF(log_visit.config_os, ''), 'UNK')"), null],
+            ['operatingSystemVersion', 'technology', self::SCOPE_VISIT, 'DevicesDetection.OsVersion', null, 'operatingSystemVersion',
+                $column("CASE WHEN log_visit.config_os IS NULL OR log_visit.config_os IN ('', 'UNK') THEN NULL"
+                    . " ELSE CONCAT(log_visit.config_os, ';', COALESCE(log_visit.config_os_version, '')) END"), null],
             ['browser', 'technology', self::SCOPE_VISIT, 'DevicesDetection.BrowserName', null, 'browser',
                 $column("NULLIF(NULLIF(log_visit.config_browser_name, ''), 'UNK')"), null],
+            ['browserVersion', 'technology', self::SCOPE_VISIT, 'DevicesDetection.BrowserVersion', null, 'browserVersion',
+                $column("CASE WHEN log_visit.config_browser_name IS NULL OR log_visit.config_browser_name IN ('', 'UNK') THEN NULL"
+                    . " ELSE CONCAT(log_visit.config_browser_name, ';', COALESCE(log_visit.config_browser_version, '')) END"), null],
             ['resolution', 'technology', self::SCOPE_VISIT, 'Resolution.Resolution', null, 'raw',
                 $column('log_visit.config_resolution'), null],
 
@@ -361,6 +396,28 @@ final class DimensionCatalog
                     $names = array_flip(\DeviceDetector\Parser\Device\AbstractDeviceParser::getAvailableDeviceTypes());
                     return isset($names[(int) $raw]) ? 'deviceType==' . self::value($names[(int) $raw]) : null;
                 };
+            case 'browserVersion':
+                return self::codeAndVersion('browserCode', 'browserVersion');
+            case 'operatingSystemVersion':
+                return self::codeAndVersion('operatingSystemCode', 'operatingSystemVersion');
+            case 'deviceBrand':
+                // Matomo's segment takes the brand's name
+                return static function (string $raw): ?string {
+                    $brands = \DeviceDetector\Parser\Device\AbstractDeviceParser::$deviceBrands;
+                    return isset($brands[$raw]) ? 'deviceBrand==' . self::value($brands[$raw]) : null;
+                };
+            case 'deviceModel':
+                return static function (string $raw): ?string {
+                    [$code, $model] = array_pad(explode(';', $raw, 2), 2, '');
+                    $brands = \DeviceDetector\Parser\Device\AbstractDeviceParser::$deviceBrands;
+                    if ($code !== '' && !isset($brands[$code])) {
+                        // a brand DeviceDetector no longer knows: Matomo's segment has no value for it
+                        return null;
+                    }
+                    // "Unknown" is what Matomo's segment takes for visits without a brand (its model report does the same)
+                    $brand = $code === '' ? Piwik::translate('General_Unknown') : $brands[$code];
+                    return 'deviceBrand==' . self::value($brand) . ';deviceModel==' . self::value($model);
+                };
             case 'date':
             case 'weekday':
             case 'hour':
@@ -368,6 +425,8 @@ final class DimensionCatalog
         }
         $segments = [
             'referrerName' => 'referrerName', 'operatingSystem' => 'operatingSystemCode', 'browser' => 'browserCode',
+            'referrerKeyword' => 'referrerKeyword', 'referrerUrl' => 'referrerUrl', 'visitCount' => 'visitCount',
+            'continent' => 'continentCode',
             'resolution' => 'resolution', 'entryPageUrl' => 'entryPageUrl', 'entryPageTitle' => 'entryPageTitle',
             'exitPageUrl' => 'exitPageUrl', 'exitPageTitle' => 'exitPageTitle', 'visitConverted' => 'visitConverted',
             'pageUrl' => 'pageUrl', 'pageTitle' => 'pageTitle', 'eventCategory' => 'eventCategory',
@@ -375,6 +434,15 @@ final class DimensionCatalog
             'outlinkUrl' => 'outlinkUrl', 'siteSearchKeyword' => 'siteSearchKeyword', 'channelGroup' => 'channelGrouping',
         ];
         return isset($segments[$id]) ? self::equals($segments[$id]) : null;
+    }
+
+    /** "code;version" keys: both segments of Matomo's version reports. */
+    private static function codeAndVersion(string $codeSegment, string $versionSegment): \Closure
+    {
+        return static function (string $raw) use ($codeSegment, $versionSegment): string {
+            [$code, $version] = array_pad(explode(';', $raw, 2), 2, '');
+            return $codeSegment . '==' . self::value($code) . ';' . $versionSegment . '==' . self::value($version);
+        };
     }
 
     private static function equals(string $segmentName): \Closure

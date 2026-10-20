@@ -21,6 +21,17 @@
         class="fwde-card fwde-sidebar"
         :aria-label="translate('FeinwerkDataExploration_Setup')"
       >
+        <section
+          v-if="savedLoaded"
+          class="fwde-section fwde-section--saved"
+        >
+          <SavedPicker
+            :saved="saved"
+            :current="currentSaved"
+            :login="login"
+            @open="openSaved"
+          />
+        </section>
         <section class="fwde-section">
           <h3 class="fwde-section__title">
             {{ translate('FeinwerkDataExploration_Dimensions') }}
@@ -61,7 +72,13 @@
       </aside>
       <section class="fwde-card fwde-main">
         <header class="fwde-card__header">
-          <h2 class="fwde-card__title">{{ title }}</h2>
+          <div class="fwde-card__heading">
+            <h2 class="fwde-card__title">{{ title }}</h2>
+            <span
+              v-if="savedChanged"
+              class="fwde-card__changed"
+            >{{ translate('FeinwerkDataExploration_SavedChanged') }}</span>
+          </div>
           <ExplorationToolbar
             class="fwde-card__actions"
             :state="state"
@@ -70,6 +87,17 @@
             :can-chart="canChart"
             @limit="update({ limit: $event })"
             @view="update({ view: $event })"
+          />
+          <SaveDialog
+            v-if="savedLoaded"
+            class="fwde-card__save"
+            :current="currentSaved"
+            :suggested-name="resultName"
+            :busy="saveBusy"
+            :error="saveError"
+            @open="saveError = ''"
+            @save="saveExploration"
+            @delete="deleteCurrent"
           />
         </header>
         <div class="fwde-card__body">
@@ -173,6 +201,11 @@ import MetricPicker from './MetricPicker.vue';
 import FilterEditor from './FilterEditor.vue';
 import ResultTable from './ResultTable.vue';
 import ExplorationToolbar from './ExplorationToolbar.vue';
+import SavedPicker from './SavedPicker.vue';
+import SaveDialog from './SaveDialog.vue';
+import {
+  differsFromSaved, findSaved, linkNamesOnlySaved, savedHashParams, stateToSave, STATE_KEYS,
+} from './saved';
 import ResultChart from './ResultChart.vue';
 import { Catalog, ChartView, ExplorationState } from './types';
 import { parseState, toDefinition, toHashParams } from './state';
@@ -184,8 +217,9 @@ import { periodDays as daysOfPeriod, rangeFromDay, startsBefore } from './period
 import { createRequestGuard } from './requestGuard';
 import { createRunQueue } from './runQueue';
 import {
-  errorText, Goal, loadCatalog, loadGoals, loadPeriodVisits, loadSuggestedPeriod, PeriodVisits,
-  ResultRow, runExploration, SuggestedPeriod,
+  addSaved, deleteSaved, errorText, Goal, loadCatalog, loadGoals, loadPeriodVisits, loadSaved,
+  loadSuggestedPeriod, PeriodVisits, ResultRow, runExploration, SavedExploration, SuggestedPeriod,
+  updateSaved,
 } from './api';
 
 const HASH_KEYS = [
@@ -195,7 +229,7 @@ const HASH_KEYS = [
 
 /** Globals of Matomo's Live plugin (segmented visits log). */
 interface WindowWithLive {
-  piwik?: { visitorLogEnabled?: boolean, hasSuperUserAccess?: boolean|number };
+  piwik?: { visitorLogEnabled?: boolean, hasSuperUserAccess?: boolean|number, userLogin?: string };
   SegmentedVisitorLog?: {
     show(apiMethod: string, segment: string, params: Record<string, unknown>): void,
   };
@@ -208,6 +242,10 @@ interface PickerRef {
 }
 
 interface Data {
+  saved: SavedExploration[];
+  savedLoaded: boolean;
+  saveBusy: boolean;
+  saveError: string;
   catalog: Catalog|null;
   goals: Goal[];
   state: ExplorationState|null;
@@ -244,6 +282,8 @@ export default defineComponent({
     ResultTable,
     ResultChart,
     ExplorationToolbar,
+    SavedPicker,
+    SaveDialog,
   },
   props: {
     idSite: { type: Number, required: true },
@@ -256,6 +296,10 @@ export default defineComponent({
   },
   data(): Data {
     return {
+      saved: [],
+      savedLoaded: false,
+      saveBusy: false,
+      saveError: '',
       catalog: null,
       goals: [],
       state: null,
@@ -277,6 +321,7 @@ export default defineComponent({
     };
   },
   created() {
+    this.loadSavedList(true);
     Promise.all([loadCatalog(), loadGoals()]).then(([catalog, goals]) => {
       this.catalog = catalog;
       this.goals = goals;
@@ -368,7 +413,32 @@ export default defineComponent({
       return !!(piwik && piwik.visitorLogEnabled);
     },
     title(): string {
+      return this.currentSaved ? this.currentSaved.name : this.resultName;
+    },
+    resultName(): string {
       return this.catalog && this.state ? resultTitle(this.state, this.catalog) : '';
+    },
+    currentSaved(): SavedExploration|null {
+      return findSaved(this.saved, String(MatomoUrl.parsed.value.fwdeSaved || ''));
+    },
+    /** The page shows another setup than the open saved exploration (changed, or an older link). */
+    savedChanged(): boolean {
+      if (!this.currentSaved || !this.state || !this.catalog) {
+        return false;
+      }
+      const limits = { defaultRows: this.defaultRows, maxRows: this.maxRows };
+      const segment = String(MatomoUrl.parsed.value.segment || '');
+      return differsFromSaved(
+        this.currentSaved,
+        toHashParams(this.state),
+        segment,
+        this.catalog,
+        limits,
+      );
+    },
+    login(): string {
+      const { piwik } = window as unknown as WindowWithLive;
+      return String((piwik && piwik.userLogin) || '');
     },
     periodDays(): string[]|null {
       const parsed = MatomoUrl.parsed.value;
@@ -461,6 +531,76 @@ export default defineComponent({
     /** Another period for the same exploration: a range of days (the page reloads its widget). */
     showFrom(range: string) {
       MatomoUrl.updateHash({ ...MatomoUrl.hashParsed.value, period: 'range', date: range });
+    },
+    /**
+     * The saved explorations the user may open; without them the page works as before.
+     *
+     * @param openFromLink a link that names only a saved exploration (a bookmark) opens its setup
+     */
+    loadSavedList(openFromLink = false): Promise<void> {
+      return loadSaved().then((list) => {
+        this.saved = list;
+        this.savedLoaded = true;
+        const linked = this.currentSaved;
+        if (openFromLink && linked && linkNamesOnlySaved(MatomoUrl.hashParsed.value)) {
+          this.openSaved(linked);
+        }
+      }).catch(() => undefined);
+    },
+    /** Opens a saved exploration (its state and segment), or a new one with the default state. */
+    openSaved(saved: SavedExploration|null) {
+      const hash = { ...MatomoUrl.hashParsed.value };
+      if (saved) {
+        MatomoUrl.updateHash({ ...hash, ...savedHashParams(saved) });
+        return;
+      }
+      STATE_KEYS.forEach((key) => {
+        hash[key] = '';
+      });
+      MatomoUrl.updateHash({ ...hash, fwdeSaved: '' });
+    },
+    saveExploration(event: { name: string, shared: boolean, asNew: boolean }) {
+      if (!this.state) {
+        return;
+      }
+      const fields = {
+        name: event.name,
+        state: stateToSave(toHashParams(this.state)),
+        segment: String(MatomoUrl.parsed.value.segment || ''),
+        shared: event.shared,
+      };
+      const current = this.currentSaved;
+      const request = current && current.canEdit && !event.asNew
+        ? updateSaved(current.id, fields).then(() => current.id)
+        : addSaved(fields).then((result) => Number(result.id));
+      this.saveBusy = true;
+      this.saveError = '';
+      request.then((id) => this.loadSavedList().then(() => {
+        MatomoUrl.updateHash({ ...MatomoUrl.hashParsed.value, fwdeSaved: String(id) });
+      })).catch((e) => {
+        this.saveError = errorText(e);
+      }).finally(() => {
+        this.saveBusy = false;
+      });
+    },
+    deleteCurrent() {
+      const current = this.currentSaved;
+      if (!current) {
+        return;
+      }
+      this.saveBusy = true;
+      this.saveError = '';
+      deleteSaved(current.id)
+        .then(() => this.loadSavedList())
+        .then(() => {
+          MatomoUrl.updateHash({ ...MatomoUrl.hashParsed.value, fwdeSaved: '' });
+        })
+        .catch((e) => {
+          this.saveError = errorText(e);
+        })
+        .finally(() => {
+          this.saveBusy = false;
+        });
     },
     filterToRow(row: ResultRow) {
       if (this.state) {

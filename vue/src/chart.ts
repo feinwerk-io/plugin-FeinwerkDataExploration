@@ -11,13 +11,15 @@ export const TIME_DIMENSIONS = ['date', 'hour', 'weekday'];
 
 /** Metrics where a missing row is not zero (a rate or an average of no visits): lines get a gap. */
 const NO_ZERO_METRICS = [
-  'bounce_rate', 'conversion_rate', 'avg_time_on_site', 'nb_actions_per_visit',
+  'bounce_rate', 'conversion_rate', 'avg_time_on_site', 'nb_actions_per_visit', 'avg_event_value',
+  'max_actions',
 ];
 
 /** Metrics counted in whole numbers (and seconds): their axis steps by whole numbers. */
 const INTEGER_METRICS = [
   'nb_visits', 'nb_uniq_visitors', 'nb_actions', 'nb_conversions', 'nb_pageviews',
   'nb_uniq_pageviews', 'nb_events', 'nb_downloads', 'nb_outlinks', 'avg_time_on_site',
+  'nb_searches', 'max_actions',
 ];
 
 const NICE_STEPS = [1, 2, 2.5, 5, 10];

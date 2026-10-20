@@ -21,6 +21,10 @@ use Piwik\Plugins\FeinwerkDataExploration\Engine\ExplorationWindow;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\PeriodSuggestion;
 use Piwik\Plugins\FeinwerkDataExploration\Query\QueryRunner;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\LimitsProvider;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\ExplorationException;
+use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationRules;
+use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationStore;
+use Piwik\Segment;
 
 /**
  * Data Exploration: ad hoc tables straight from the raw log data of one site.
@@ -151,6 +155,119 @@ class API extends \Piwik\Plugin\API
             ];
         }
         return $metrics;
+    }
+
+    /**
+     * The saved explorations the current user may open on the site: their own and those shared by others.
+     *
+     * @param int $idSite
+     * @return array list of explorations with id, name, shared, owner, canEdit, state (the page's parameters) and segment
+     */
+    public function getSavedExplorations(int $idSite): array
+    {
+        self::checkAccess($idSite);
+
+        $login = Piwik::getCurrentUserLogin();
+        return array_map(fn (array $row) => [
+            'id' => $row['idsaved'],
+            'name' => $row['name'],
+            'shared' => $row['shared'],
+            'owner' => $row['login'],
+            'canEdit' => self::canEdit($row),
+            'state' => $row['state'],
+            'segment' => $row['segment'],
+        ], (new SavedExplorationStore())->listVisible($idSite, $login));
+    }
+
+    /**
+     * Saves the exploration as a new one of the current user.
+     *
+     * @param int $idSite
+     * @param string $name 1 to 100 characters
+     * @param string $state JSON of the page's parameters (fwdeDims, fwdeMetrics, ...)
+     * @param string $segmentDefinition Matomo segment the exploration opens with (not "segment": Matomo fills that
+     *                                  parameter with the page's segment)
+     * @param int $shared 1 shows it to everyone who may use explorations on the site
+     * @return array the new exploration's id
+     * @unsanitized name and state are kept as typed (shown with text bindings only), the state is JSON
+     */
+    public function addSavedExploration(int $idSite, string $name, string $state, string $segmentDefinition = '', int $shared = 0): array
+    {
+        self::checkAccess($idSite);
+
+        $name = SavedExplorationRules::name($name);
+        $parsed = SavedExplorationRules::state($state);
+        self::checkSegment($segmentDefinition, $idSite);
+
+        $store = new SavedExplorationStore();
+        $login = Piwik::getCurrentUserLogin();
+        if ($store->countFor($idSite, $login) >= SavedExplorationRules::MAX_PER_USER_AND_SITE) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedLimit', [SavedExplorationRules::MAX_PER_USER_AND_SITE]);
+        }
+        return ['id' => $store->add($idSite, $login, $name, $parsed, $segmentDefinition, $shared === 1)];
+    }
+
+    /**
+     * Changes a saved exploration (its owner or a super user).
+     *
+     * @param int $idSite
+     * @param int $idSaved
+     * @param string $name 1 to 100 characters
+     * @param string $state JSON of the page's parameters
+     * @param string $segmentDefinition Matomo segment the exploration opens with
+     * @param int $shared 1 shows it to everyone who may use explorations on the site
+     * @unsanitized name and state are kept as typed (shown with text bindings only), the state is JSON
+     */
+    public function updateSavedExploration(int $idSite, int $idSaved, string $name, string $state, string $segmentDefinition = '', int $shared = 0): void
+    {
+        self::checkAccess($idSite);
+        self::editable($idSite, $idSaved);
+
+        $name = SavedExplorationRules::name($name);
+        $parsed = SavedExplorationRules::state($state);
+        self::checkSegment($segmentDefinition, $idSite);
+        (new SavedExplorationStore())->update($idSaved, $name, $parsed, $segmentDefinition, $shared === 1);
+    }
+
+    /**
+     * Deletes a saved exploration (its owner or a super user).
+     *
+     * @param int $idSite
+     * @param int $idSaved
+     */
+    public function deleteSavedExploration(int $idSite, int $idSaved): void
+    {
+        self::checkAccess($idSite);
+        self::editable($idSite, $idSaved);
+        (new SavedExplorationStore())->delete($idSaved);
+    }
+
+    /**
+     * The row when the current user may change it; an exploration of another site counts as missing.
+     */
+    private static function editable(int $idSite, int $idSaved): array
+    {
+        $row = (new SavedExplorationStore())->get($idSaved);
+        if ($row === null || $row['idsite'] !== $idSite || (!$row['shared'] && !self::canEdit($row))) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedNotFound');
+        }
+        if (!self::canEdit($row)) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedNotYours');
+        }
+        return $row;
+    }
+
+    private static function canEdit(array $row): bool
+    {
+        return Piwik::hasUserSuperUserAccess() || $row['login'] === Piwik::getCurrentUserLogin();
+    }
+
+    /** Matomo's own check of the segment definition (unknown segments, access to them). */
+    private static function checkSegment(string $segment, int $idSite): void
+    {
+        if ($segment !== '') {
+            new Segment($segment, [$idSite]);
+        }
     }
 
     /**

@@ -47,7 +47,13 @@ final class ExplorationQueryBuilder
             . ' * COUNT(DISTINCT log_link_visit_action.idlink_va) / COUNT(*)'],
         'nb_downloads' => ['fwde_downloads', 'COUNT(DISTINCT CASE WHEN fwde_url.type = 3 THEN log_link_visit_action.idlink_va END)'],
         'nb_outlinks' => ['fwde_outlinks', 'COUNT(DISTINCT CASE WHEN fwde_url.type = 2 THEN log_link_visit_action.idlink_va END)'],
+        // site searches have no URL; their name is a log_action of type 8 (joined as fwde_search when counted)
+        'nb_searches' => ['fwde_searches', 'COUNT(DISTINCT CASE WHEN fwde_search.idaction IS NOT NULL THEN log_link_visit_action.idlink_va END)'],
     ];
+
+    /** The divisor of the average event value, as in Matomo's Events reports: events that have a value. */
+    private const EVENTS_WITH_VALUE = ['fwde_events_with_value', 'COUNT(DISTINCT CASE WHEN ' . self::IS_EVENT
+        . ' AND log_link_visit_action.custom_float IS NOT NULL THEN log_link_visit_action.idlink_va END)'];
 
     /** @var callable fn(string $select, array $from, string $where, array $bind, ?string $groupBy): array{sql: string, bind: array} */
     private $segmentedSelect;
@@ -140,6 +146,10 @@ final class ExplorationQueryBuilder
         $from = [$base];
         if ($isAction) {
             $from[] = ['table' => 'log_action', 'tableAlias' => 'fwde_url', 'joinOn' => 'fwde_url.idaction = log_link_visit_action.idaction_url'];
+            if (in_array('nb_searches', $definition->metricIds, true)) {
+                $from[] = ['table' => 'log_action', 'tableAlias' => 'fwde_search',
+                    'joinOn' => 'fwde_search.idaction = log_link_visit_action.idaction_name AND fwde_search.type = 8'];
+            }
         }
         $joins = [];
         foreach (array_values($dimensions) as $i => $dimension) {
@@ -251,7 +261,12 @@ final class ExplorationQueryBuilder
         $measures = [];
         foreach ($definition->metricIds as $metricId) {
             if ($isAction) {
-                if (isset(self::ACTION_MEASURES[$metricId])) {
+                if ($metricId === 'avg_event_value') {
+                    [$alias, $sql] = self::ACTION_MEASURES['sum_event_value'];
+                    $measures[$alias] = $sql;
+                    [$alias, $sql] = self::EVENTS_WITH_VALUE;
+                    $measures[$alias] = $sql;
+                } elseif (isset(self::ACTION_MEASURES[$metricId])) {
                     [$alias, $sql] = self::ACTION_MEASURES[$metricId];
                     $measures[$alias] = $metricId === 'nb_uniq_pageviews' ? sprintf($sql, $pageColumn) : $sql;
                 }
@@ -259,7 +274,7 @@ final class ExplorationQueryBuilder
             }
             if ($metricId === 'nb_uniq_visitors') {
                 $measures['fwde_idvisitor'] = 'log_visit.idvisitor';
-            } elseif (in_array($metricId, ['nb_actions', 'bounce_rate', 'nb_actions_per_visit'], true)) {
+            } elseif (in_array($metricId, ['nb_actions', 'bounce_rate', 'nb_actions_per_visit', 'max_actions'], true)) {
                 $measures['fwde_actions'] = 'log_visit.visit_total_actions';
             } elseif ($metricId === 'avg_time_on_site') {
                 $measures['fwde_time'] = 'log_visit.visit_total_time';
@@ -287,6 +302,8 @@ final class ExplorationQueryBuilder
                 return 'ROUND(SUM(' . $time . ') / COUNT(*), 0)';
             case 'nb_actions_per_visit':
                 return 'ROUND(SUM(' . $actions . ') / COUNT(*), 1)';
+            case 'max_actions':
+                return 'MAX(' . $actions . ')';
             case 'nb_conversions':
                 return 'COALESCE(SUM(fwde_c.fwde_conversions), 0)';
             case 'conversion_rate':
@@ -295,6 +312,8 @@ final class ExplorationQueryBuilder
                 return 'ROUND(COALESCE(SUM(fwde_c.fwde_revenue), 0), 2)';
             case 'sum_event_value':
                 return 'ROUND(COALESCE(SUM(fwde_a.fwde_event_value), 0), 2)';
+            case 'avg_event_value':
+                return 'ROUND(COALESCE(SUM(fwde_a.fwde_event_value) / NULLIF(SUM(fwde_a.fwde_events_with_value), 0), 0), 2)';
             default:
                 return 'SUM(fwde_a.' . self::ACTION_MEASURES[$metricId][0] . ')';
         }

@@ -1,7 +1,7 @@
 {
     "name": "FeinwerkDataExploration",
     "description": "Explore your raw data on the spot: a free-form table with a secondary dimension and up to five metrics, without creating or archiving a report.",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "theme": false,
     "keywords": [
         "exploration",

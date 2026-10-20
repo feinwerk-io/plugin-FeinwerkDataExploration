@@ -46,7 +46,7 @@ class ActionParityTest extends SystemTestCase
         foreach ($cases as $method => $dimension) {
             foreach ($this->periods() as [$period, $date]) {
                 $this->assertActionReportMatches($method, [], $dimension,
-                    ['nb_events' => 'nb_events', 'sum_event_value' => 'sum_event_value'], $period, $date);
+                    ['nb_events' => 'nb_events', 'sum_event_value' => 'sum_event_value', 'avg_event_value' => 'avg_event_value'], $period, $date);
             }
         }
     }
@@ -91,12 +91,13 @@ class ActionParityTest extends SystemTestCase
             $this->assertSame((int) $core['nb_uniq_pageviews'], $sum('pageUrl', 'nb_uniq_pageviews'), $date);
             $this->assertSame((int) $core['nb_downloads'], $sum('downloadUrl', 'nb_downloads'), $date);
             $this->assertSame((int) $core['nb_outlinks'], $sum('outlinkUrl', 'nb_outlinks'), $date);
+            $this->assertSame((int) $core['nb_searches'], $sum('siteSearchKeyword', 'nb_searches'), $date);
         }
     }
 
     public function testActionMetricsByVisitDimensionMatchSegmentedActionsGet(): void
     {
-        $metrics = ['nb_pageviews', 'nb_uniq_pageviews', 'nb_downloads', 'nb_outlinks'];
+        $metrics = ['nb_pageviews', 'nb_uniq_pageviews', 'nb_downloads', 'nb_outlinks', 'nb_searches'];
         $ours = $this->ourRows(['dimensions' => ['browser'], 'metrics' => $metrics], 'range', ExplorationFixture::RANGE);
 
         foreach ($this->coreRows('DevicesDetection.getBrowsers', 'range', ExplorationFixture::RANGE) as $browser => $row) {

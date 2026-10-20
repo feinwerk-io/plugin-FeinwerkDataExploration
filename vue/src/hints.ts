@@ -33,7 +33,8 @@ export function needsSmallerPeriod(
  * @param timeoutStart the translated time limit message up to its number of seconds
  */
 export function canRetry(message: string, busy: string, timeoutStart: string): boolean {
-  return message !== '' && (message === busy || (timeoutStart !== '' && message.startsWith(timeoutStart)));
+  return message !== ''
+    && (message === busy || (timeoutStart !== '' && message.startsWith(timeoutStart)));
 }
 
 /**
