@@ -64,15 +64,22 @@ describe('findSaved', () => {
 
 describe('dialogDefaults', () => {
   it('starts with the open exploration\'s name and visibility when the user may change it', () => {
-    expect(dialogDefaults(saved(3, 'anna', true), 'Browser')).toEqual({ name: 'Exploration 3', shared: true });
+    expect(dialogDefaults(saved(3, 'anna', true), 'Browser', true))
+      .toEqual({ name: 'Exploration 3', shared: true });
   });
 
   it('starts a copy of someone else\'s exploration as private', () => {
-    expect(dialogDefaults(saved(1, 'bert', true), 'Browser')).toEqual({ name: 'Exploration 1', shared: false });
+    expect(dialogDefaults(saved(1, 'bert', true), 'Browser', true))
+      .toEqual({ name: 'Exploration 1', shared: false });
   });
 
   it('suggests the result title for a new exploration, at most 100 characters', () => {
-    expect(dialogDefaults(null, 'x'.repeat(120))).toEqual({ name: 'x'.repeat(100), shared: false });
+    expect(dialogDefaults(null, 'x'.repeat(120), true)).toEqual({ name: 'x'.repeat(100), shared: false });
+  });
+
+  it('starts private for users who may not share (no write access)', () => {
+    expect(dialogDefaults(saved(3, 'anna', true), 'Browser', false))
+      .toEqual({ name: 'Exploration 3', shared: false });
   });
 });
 

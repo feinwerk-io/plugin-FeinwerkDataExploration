@@ -93,6 +93,7 @@
             class="fwde-card__save"
             :current="currentSaved"
             :suggested-name="resultName"
+            :can-share="canShare"
             :busy="saveBusy"
             :error="saveError"
             @open="saveError = ''"
@@ -289,6 +290,8 @@ export default defineComponent({
     idSite: { type: Number, required: true },
     maxRows: { type: Number, required: true },
     defaultRows: { type: Number, required: true },
+    /** at least write access to the site: may share saved explorations */
+    canShare: { type: Boolean, default: false },
     maxDays: { type: Number, required: true },
     rawDataFrom: { type: String, default: null },
     currencySymbol: { type: String, default: '' },

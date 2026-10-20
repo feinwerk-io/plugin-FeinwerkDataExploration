@@ -178,6 +178,8 @@
         "MetricDescriptionAvgEventValue": "Die Summe der Ereigniswerte geteilt durch die Zahl der Ereignisse mit einem Wert.",
         "MetricDescriptionSearches": "Die Zahl der Suchanfragen in der internen Suche der Website.",
         "MetricDescriptionMaxActions": "Die höchste Zahl an Aktionen in einem einzelnen Besuch.",
-        "SavedChanged": "Nicht gespeicherte Änderungen"
+        "SavedChanged": "Nicht gespeicherte Änderungen",
+        "ErrorSavedShareNeedsWrite": "Explorationen teilen können nur Benutzer mit Schreibrechten für diese Website. Speichern Sie sie stattdessen nur für sich.",
+        "SavedShareNeedsWrite": "Explorationen teilen können nur Benutzer mit Schreibrechten für diese Website."
     }
 }

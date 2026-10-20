@@ -59,14 +59,16 @@ export function findSaved(list: SavedExploration[], id: string|undefined): Saved
 
 /**
  * What the save dialog starts with: the open exploration's name and visibility when the user may
- * change it; a copy of someone else's exploration starts private.
+ * change it; a copy of someone else's exploration starts private, and so does every exploration
+ * of a user who may not share (no write access).
  */
 export function dialogDefaults(
   current: SavedExploration|null,
   suggestedName: string,
+  canShare: boolean,
 ): { name: string, shared: boolean } {
   if (current && current.canEdit) {
-    return { name: current.name, shared: current.shared };
+    return { name: current.name, shared: canShare && current.shared };
   }
   return { name: (current ? current.name : suggestedName).slice(0, 100), shared: false };
 }

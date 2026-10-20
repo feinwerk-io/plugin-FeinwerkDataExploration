@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Sharing an exploration with the website's users needs at least write access to the website. With view access you
+  save explorations for yourself.
+- "Open in exploration" also under the reports of websites, search engines, social networks, AI assistants and
+  keywords (each opens on the visits of its channel), continents, visits by visit number, device brands and models,
+  and operating system and browser versions.
+
 ## 0.2.0
 
 - Save explorations and open them again: for yourself only, or for everyone who may use explorations on the website.

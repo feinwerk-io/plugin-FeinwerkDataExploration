@@ -195,6 +195,7 @@ class API extends \Piwik\Plugin\API
     {
         self::checkAccess($idSite);
 
+        self::checkShare($idSite, $shared);
         $name = SavedExplorationRules::name($name);
         $parsed = SavedExplorationRules::state($state);
         self::checkSegment($segmentDefinition, $idSite);
@@ -222,6 +223,7 @@ class API extends \Piwik\Plugin\API
     {
         self::checkAccess($idSite);
         self::editable($idSite, $idSaved);
+        self::checkShare($idSite, $shared);
 
         $name = SavedExplorationRules::name($name);
         $parsed = SavedExplorationRules::state($state);
@@ -260,6 +262,13 @@ class API extends \Piwik\Plugin\API
     private static function canEdit(array $row): bool
     {
         return Piwik::hasUserSuperUserAccess() || $row['login'] === Piwik::getCurrentUserLogin();
+    }
+
+    private static function checkShare(int $idSite, int $shared): void
+    {
+        if ($shared === 1 && !AccessPolicy::canShare($idSite)) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedShareNeedsWrite');
+        }
     }
 
     /** Matomo's own check of the segment definition (unknown segments, access to them). */

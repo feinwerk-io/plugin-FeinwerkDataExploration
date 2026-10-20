@@ -44,10 +44,10 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
 
     public function testOwnAndSharedAreListedWithTheirRights(): void
     {
-        $this->as('anna', [1]);
+        $this->as('anna', [1], [1]);
         $private = $this->api()->addSavedExploration(1, '  Mine  ', self::STATE)['id'];
         $this->api()->addSavedExploration(1, 'Team view', self::STATE, 'browserCode==FF', 1);
-        $this->as('bert', [1]);
+        $this->as('bert', [1], [1]);
         $this->api()->addSavedExploration(1, 'Bert alone', self::STATE);
         $bertShared = $this->api()->addSavedExploration(1, 'Bert for all', self::STATE, '', 1)['id'];
 
@@ -68,7 +68,7 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
 
     public function testOthersCannotChangeOrDeleteButSuperUsersCan(): void
     {
-        $this->as('bert', [1]);
+        $this->as('bert', [1], [1]);
         $id = $this->api()->addSavedExploration(1, 'Bert for all', self::STATE, '', 1)['id'];
 
         $this->as('anna', [1]);
@@ -85,12 +85,26 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
 
     public function testAnotherSitesExplorationIsNotFound(): void
     {
-        $this->as('anna', [1, 2]);
+        $this->as('anna', [1, 2], [2]);
         $id = $this->api()->addSavedExploration(2, 'Site two', self::STATE, '', 1)['id'];
 
         $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotFound', fn () => $this->api()->updateSavedExploration(1, $id, 'X', self::STATE));
         $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotFound', fn () => $this->api()->deleteSavedExploration(1, $id));
         $this->assertSame([], $this->api()->getSavedExplorations(1));
+    }
+
+    /** Sharing needs at least write access to the website (Peter, 2026-10-20); view users save privately. */
+    public function testOnlyUsersWithWriteAccessCanShare(): void
+    {
+        $this->as('viewer', [1]);
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedShareNeedsWrite', fn () => $this->api()->addSavedExploration(1, 'Shared', self::STATE, '', 1));
+        $id = $this->api()->addSavedExploration(1, 'Private', self::STATE)['id'];
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedShareNeedsWrite', fn () => $this->api()->updateSavedExploration(1, $id, 'Private', self::STATE, '', 1));
+        $this->api()->updateSavedExploration(1, $id, 'Still private', self::STATE);
+
+        $this->as('writer', [1], [1]);
+        $shared = $this->api()->addSavedExploration(1, 'Shared by a writer', self::STATE, '', 1)['id'];
+        $this->assertTrue((new SavedExplorationStore())->get($shared)['shared']);
     }
 
     public function testAnonymousAndUsersWithoutAccessAreRefused(): void
@@ -167,9 +181,9 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
         $this->assertSame([], $store->listVisible(2, 'dora'));
     }
 
-    private function as(string $login, array $viewSites): void
+    private function as(string $login, array $viewSites, array $writeSites = []): void
     {
-        FakeAccess::clearAccess(false, [], $viewSites, $login);
+        FakeAccess::clearAccess(false, [], $viewSites, $login, $writeSites);
     }
 
     private function api(): API

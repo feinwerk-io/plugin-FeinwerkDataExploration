@@ -22,6 +22,12 @@
         return match ? match[1] : null;
     }
 
+    /** The condition of a report of one channel (fwde-scope--referrerType-search: referrerType==search), or ''. */
+    function scopeOf(element) {
+        var match = /(?:^|\s)fwde-scope--([A-Za-z0-9]+)-([A-Za-z0-9]+)(?:\s|$)/.exec(element.className || '');
+        return match ? match[1] + '==' + match[2] : '';
+    }
+
     /**
      * The table of the report the action belongs to: Matomo 5 renders the action inside it, Matomo 6 in the report
      * header next to it (full page) or in the widget's header (dashboard). The report is the div.dataTable: the HTML
@@ -109,6 +115,10 @@
 
         var current = MatomoUrl.parsed.value;
         var view = reportView(this, current);
+        var scope = scopeOf(this);
+        if (scope) {
+            view.segment = view.segment ? view.segment + ';' + scope : scope;
+        }
         openExploration(MatomoUrl, explorationParams(dimension, current.idSite, view), current, view);
     });
 

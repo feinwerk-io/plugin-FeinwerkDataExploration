@@ -52,18 +52,29 @@ final class DimensionCatalog
      */
     private const REPORT_LINKS = [
         'Referrers.getReferrerType' => 'channelType',
+        'Referrers.getWebsites' => 'referrerName',
+        'Referrers.getSearchEngines' => 'referrerName',
+        'Referrers.getSocials' => 'referrerName',
+        'Referrers.getAIAssistants' => 'referrerName',
+        'Referrers.getKeywords' => 'referrerKeyword',
         'Referrers.getCampaigns' => 'campaignName',
         'MarketingCampaignsReporting.getName' => 'campaignName',
         'MarketingCampaignsReporting.getSource' => 'campaignSource',
         'MarketingCampaignsReporting.getMedium' => 'campaignMedium',
         'FeinwerkChannelGrouping.getChannels' => 'channelGroup',
+        'UserCountry.getContinent' => 'continent',
         'UserCountry.getCountry' => 'country',
         'UserCountry.getRegion' => 'region',
         'UserCountry.getCity' => 'city',
         'UserLanguage.getLanguage' => 'language',
+        'VisitorInterest.getNumberOfVisitsByVisitCount' => 'visitCount',
         'DevicesDetection.getType' => 'deviceType',
+        'DevicesDetection.getBrand' => 'deviceBrand',
+        'DevicesDetection.getModel' => 'deviceModel',
         'DevicesDetection.getOsFamilies' => 'operatingSystem',
+        'DevicesDetection.getOsVersions' => 'operatingSystemVersion',
         'DevicesDetection.getBrowsers' => 'browser',
+        'DevicesDetection.getBrowserVersions' => 'browserVersion',
         'Resolution.getResolution' => 'resolution',
         // the hour of the exploration is the time of the site, like this report (not the visitor's local time)
         'VisitTime.getVisitInformationPerServerTime' => 'hour',
@@ -81,6 +92,18 @@ final class DimensionCatalog
         'Events.getAction' => 'eventAction',
         'Events.getName' => 'eventName',
         'CustomDimensions.getCustomDimension' => 'customDimension',
+    ];
+
+    /**
+     * Reports of one channel: their link opens the exploration on that channel's visits (the report's rows carry the
+     * same condition in their own segments). Name and value are plain words, they travel as a CSS class.
+     */
+    private const REPORT_SCOPES = [
+        'Referrers.getWebsites' => 'referrerType==website',
+        'Referrers.getSearchEngines' => 'referrerType==search',
+        'Referrers.getSocials' => 'referrerType==social',
+        'Referrers.getAIAssistants' => 'referrerType==ai',
+        'Referrers.getKeywords' => 'referrerType==search',
     ];
 
     private const VISIT = 'log_visit';
@@ -153,6 +176,12 @@ final class DimensionCatalog
     public function get(int $idSite, string $id): ?DimensionDefinition
     {
         return $this->availableFor($idSite)[$id] ?? null;
+    }
+
+    /** The segment a report's link adds (see REPORT_SCOPES), or null. */
+    public static function reportScope(string $apiMethod): ?string
+    {
+        return self::REPORT_SCOPES[$apiMethod] ?? null;
     }
 
     public static function linksReport(string $apiMethod): bool

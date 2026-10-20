@@ -9,7 +9,8 @@ __What does a saved exploration keep, and who sees it?__
 Its dimensions, metrics, goal, filters, sorting, number of rows, view and chart metric, and its segment. Not the
 period: it opens with the period you have selected, so one exploration serves last week as well as today. A private
 exploration is seen only by you; a shared one by everyone who may use explorations on the website (never by
-anonymous users). Only the person who saved it, or a super user, can change or delete it. Each person can save up
+anonymous users). Sharing needs at least write access to the website; with view access you save explorations for
+yourself. Only the person who saved it, or a super user, can change or delete it. Each person can save up
 to 100 explorations per website.
 
 __Why at most 31 days?__

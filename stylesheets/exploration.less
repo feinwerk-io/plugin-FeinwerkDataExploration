@@ -496,6 +496,15 @@
   cursor: pointer;
 }
 
+// sharing needs write access: the option is visibly off (Morpheus' own disabled colour loses against the rule above)
+.fwde-page .fwde-savedialog__option.fwde-savedialog__option--disabled {
+  cursor: not-allowed;
+
+  [type="radio"] + span.fwde-list__label {
+    color: @theme-color-text-lighter;
+  }
+}
+
 .fwde-page .fwde-savedialog__panel .btn {
   text-transform: none;
 }

@@ -29,6 +29,19 @@ final class AccessPolicy
         }
     }
 
+    /**
+     * Who may share an exploration with the website's users: at least write access (Peter, 2026-10-20). Users with
+     * view access save explorations for themselves only.
+     */
+    public static function canShare(int $idSite): bool
+    {
+        try {
+            return Piwik::isUserHasWriteAccess($idSite);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
     public static function check(int $idSite): void
     {
         Piwik::checkUserIsNotAnonymous();

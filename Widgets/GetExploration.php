@@ -49,6 +49,7 @@ class GetExploration extends Widget
             'rawDataFrom' => RawDataRetention::earliestCompleteDay($idSite),
             'currencySymbol' => Site::getCurrencySymbolFor($idSite),
             'hourLabels' => self::hourLabels(),
+            'canShare' => AccessPolicy::canShare($idSite),
         ]);
     }
 

@@ -73,8 +73,10 @@ final class OpenInExploration
             return;
         }
 
+        // a report of one channel adds its condition (fwde-scope--referrerType-search for referrerType==search)
+        $scope = DimensionCatalog::reportScope($apiMethod);
         $view->config->datatable_actions[] = [
-            'id' => 'fwde-explore fwde-explore--' . $dimension,
+            'id' => 'fwde-explore fwde-explore--' . $dimension . ($scope === null ? '' : ' fwde-scope--' . str_replace('==', '-', $scope)),
             'title' => ($this->translate)('FeinwerkDataExploration_OpenInExploration'),
             'icon' => 'icon-lab',
         ];

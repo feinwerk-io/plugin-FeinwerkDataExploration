@@ -312,11 +312,33 @@ class DimensionCatalogTest extends TestCase
             'Events.getCategory' => 'eventCategory',
             'Events.getAction' => 'eventAction',
             'Events.getName' => 'eventName',
+            // reports of the dimensions of iteration 2 and further reports of existing dimensions (Peter, 2026-10-20)
+            'Referrers.getWebsites' => 'referrerName',
+            'Referrers.getSearchEngines' => 'referrerName',
+            'Referrers.getSocials' => 'referrerName',
+            'Referrers.getAIAssistants' => 'referrerName',
+            'Referrers.getKeywords' => 'referrerKeyword',
+            'UserCountry.getContinent' => 'continent',
+            'VisitorInterest.getNumberOfVisitsByVisitCount' => 'visitCount',
+            'DevicesDetection.getBrand' => 'deviceBrand',
+            'DevicesDetection.getModel' => 'deviceModel',
+            'DevicesDetection.getOsVersions' => 'operatingSystemVersion',
+            'DevicesDetection.getBrowserVersions' => 'browserVersion',
         ];
         foreach ($expected as $method => $id) {
             $this->assertSame($id, $catalog->reportLink(1, $method, []), $method);
         }
         $this->assertSame('customDimension3', $catalog->reportLink(1, 'CustomDimensions.getCustomDimension', ['idDimension' => '3']));
+    }
+
+    public function testReportsOfOneChannelOpenTheExplorationOnThatChannel(): void
+    {
+        $this->assertSame('referrerType==website', DimensionCatalog::reportScope('Referrers.getWebsites'));
+        $this->assertSame('referrerType==search', DimensionCatalog::reportScope('Referrers.getSearchEngines'));
+        $this->assertSame('referrerType==social', DimensionCatalog::reportScope('Referrers.getSocials'));
+        $this->assertSame('referrerType==ai', DimensionCatalog::reportScope('Referrers.getAIAssistants'));
+        $this->assertSame('referrerType==search', DimensionCatalog::reportScope('Referrers.getKeywords'));
+        $this->assertNull(DimensionCatalog::reportScope('DevicesDetection.getBrowsers'));
     }
 
     public function testNoActionWhenDimensionUnavailable(): void
@@ -329,6 +351,12 @@ class DimensionCatalogTest extends TestCase
         $this->assertNull($this->catalog()->reportLink(1, 'MarketingCampaignsReporting.getSource', []), 'MCR columns missing');
         $this->assertNull($this->catalog()->reportLink(1, 'Live.getLastVisitsDetails', []));
         $this->assertNull($this->catalog()->reportLink(2, 'CustomDimensions.getCustomDimension', ['idDimension' => '3']), 'other site');
+        // reports whose rows do not fit a dimension of the exploration (Referrers.getAll lists search keywords next to
+        // websites; the no-result keywords would open every keyword)
+        $this->assertNull($this->catalog()->reportLink(1, 'Referrers.getAll', []));
+        $this->assertNull($this->catalog()->reportLink(1, 'Actions.getSiteSearchNoResultKeywords', []));
+        $modelDetectionOff = $this->catalog(null, [], false, fn (int $idSite): bool => true);
+        $this->assertNull($modelDetectionOff->reportLink(1, 'DevicesDetection.getModel', []), 'device model detection off');
     }
 
     public function testSegmentsOfPluginDimensions(): void

@@ -66,7 +66,9 @@ class OpenInExplorationTest extends IntegrationTestCase
     {
         FakeAccess::clearAccess(false, [], [1], 'viewer');
 
-        $this->assertSame([], $this->actionIds('Referrers.getWebsites'));
+        $this->assertSame([], $this->actionIds('DevicesDetection.getBrowserEngines'));
+        // mapped since 0.3.0 / 1.0.0-beta.4
+        $this->assertSame(['fwde-explore fwde-explore--referrerName fwde-scope--referrerType-website'], $this->actionIds('Referrers.getWebsites'));
     }
 
     private function actionIds(string $apiMethod): array

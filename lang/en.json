@@ -178,6 +178,8 @@
         "MetricDescriptionAvgEventValue": "The sum of the event values divided by the number of events that have a value.",
         "MetricDescriptionSearches": "The number of searches in the website's site search.",
         "MetricDescriptionMaxActions": "The highest number of actions in a single visit.",
-        "SavedChanged": "Unsaved changes"
+        "SavedChanged": "Unsaved changes",
+        "ErrorSavedShareNeedsWrite": "Only users with write access to this website can share explorations. Save it for yourself instead.",
+        "SavedShareNeedsWrite": "Only users with write access to this website can share explorations."
     }
 }

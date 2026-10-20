@@ -61,16 +61,24 @@
           <span class="fwde-list__label">{{
             translate('FeinwerkDataExploration_VisibilityPrivate') }}</span>
         </label>
-        <label class="fwde-savedialog__option">
+        <label
+          class="fwde-savedialog__option"
+          :class="{ 'fwde-savedialog__option--disabled': !canShare }"
+        >
           <input
             v-model="shared"
             type="radio"
             name="fwde-savedialog-shared"
             :value="true"
+            :disabled="!canShare"
           >
           <span class="fwde-list__label">{{
             translate('FeinwerkDataExploration_VisibilityShared') }}</span>
         </label>
+        <p
+          v-if="!canShare"
+          class="fwde-savedialog__note"
+        >{{ translate('FeinwerkDataExploration_SavedShareNeedsWrite') }}</p>
       </fieldset>
       <p
         v-if="error"
@@ -144,6 +152,8 @@ export default defineComponent({
     current: { type: Object as PropType<SavedExploration|null>, default: null },
     /** the name a new exploration gets suggested (the result title) */
     suggestedName: { type: String, required: true },
+    /** at least write access: may share with the website's users */
+    canShare: { type: Boolean, default: false },
     busy: { type: Boolean, default: false },
     error: { type: String, default: '' },
   },
@@ -179,7 +189,11 @@ export default defineComponent({
         this.close();
         return;
       }
-      ({ name: this.name, shared: this.shared } = dialogDefaults(this.current, this.suggestedName));
+      ({ name: this.name, shared: this.shared } = dialogDefaults(
+        this.current,
+        this.suggestedName,
+        this.canShare,
+      ));
       this.confirmDelete = false;
       this.open = true;
       this.$emit('open');

@@ -31,6 +31,14 @@ class OpenInExplorationTest extends TestCase
         $this->assertSame([self::ACTION], $view->config->datatable_actions);
     }
 
+    public function testAReportOfOneChannelNamesItsScope(): void
+    {
+        $view = $this->view(['apiMethodToRequestDataTable' => 'Referrers.getSearchEngines']);
+        $this->listener()->configureView($view);
+
+        $this->assertSame('fwde-explore fwde-explore--referrerName fwde-scope--referrerType-search', $view->config->datatable_actions[0]['id']);
+    }
+
     public function testKeepsOtherActions(): void
     {
         $view = $this->view();

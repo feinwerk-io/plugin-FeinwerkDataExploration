@@ -21,12 +21,12 @@ Feinwerk Data Exploration answers them directly from the raw data of your websit
 - **Visit, goal and action metrics:** visits, unique visitors, actions, bounce rate, average visit duration, actions
   per visit, maximum actions in one visit, conversions (all goals or one goal), conversion rate, revenue, pageviews,
   unique pageviews, events, sum and average of event values, downloads, outlinks and site searches.
-- **Save and share:** save an exploration with its segment, for yourself or for everyone who may use explorations on
-  the website, and open it again from the list at the top of the page.
+- **Save and share:** save an exploration with its segment, for yourself or (with write access) for everyone who may
+  use explorations on the website, and open it again from the list at the top of the page.
 - **Filters:** every Matomo segment, plus simple row filters: a dimension contains, equals or does not contain a
   text; a metric is greater or less than a number.
-- **Open from your reports:** "Open in exploration" under the standard reports (browsers, countries, page URLs,
-  events, campaigns and more) opens the exploration with that report's dimension, period and segment, and "Explore
+- **Open from your reports:** "Open in exploration" under the standard reports (channels, referrers, keywords,
+  continents, countries, devices, browsers and their versions, page URLs, events, campaigns and more) opens the exploration with that report's dimension, period and segment, and "Explore
   this row" on a report row opens it on that row's visits, ready to break them down by a second dimension.
 - **A menu on every row:** filter to the row's value, break it down by a second dimension, or show the visits behind
   it in Matomo's Visits Log.
@@ -86,8 +86,9 @@ have no raw data of their own, so explorations are not offered there.
 4. Add row filters, sort by a column, choose the number of rows, and switch between table, chart or both. The menu
    at the end of each row filters to it, breaks it down or shows its visits.
 5. Export the table as CSV or TSV, or copy the link to share the exploration with colleagues who can see the site.
-6. Click **Save** at the top of the result to keep the exploration: for yourself only, or for everyone who may use
-   explorations on the website. Saved explorations open from the list at the top of the left column.
+6. Click **Save** at the top of the result to keep the exploration: for yourself only, or, with write access to the
+   website, for everyone who may use explorations on it. Saved explorations open from the list at the top of the left
+   column.
 
 **Settings** (super users, **Administration → System → General settings → Feinwerk Data Exploration**): the longest
 period (up to 31 days), the row limit, the query time limit, the largest number of visits per exploration, whether to
