@@ -1,0 +1,30 @@
+# IDE
+.idea/
+*.swp
+*.swo
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+/vendor/
+node_modules/
+
+# Build artifacts
+*.log
+
+# PHPUnit
+.phpunit.cache/
+.phpunit.result.cache
+
+# Vue build: ship only the minified UMD build and its metadata
+vue/dist/demo.html
+vue/dist/*.common.js
+vue/dist/*.map
+vue/dist/*.development.*
+vue/dist/*.umd.js
+
+# Local tools
+.superpowers/

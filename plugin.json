@@ -1,0 +1,32 @@
+{
+    "name": "FeinwerkDataExploration",
+    "description": "Explore your raw data on the spot: a free-form table with a secondary dimension and up to five metrics, without creating or archiving a report.",
+    "version": "0.1.1",
+    "theme": false,
+    "keywords": [
+        "exploration",
+        "secondary dimension",
+        "free-form table",
+        "ad hoc analysis",
+        "raw data",
+        "GA4 explorations"
+    ],
+    "category": "insights",
+    "require": {
+        "matomo": ">=5.12.0,<6.0.0-b1",
+        "php": ">=8.1.0"
+    },
+    "authors": [
+        {
+            "name": "Peter Boehlke, Feinwerk.io",
+            "email": "support@feinwerk.io",
+            "homepage": "https://feinwerk.io"
+        }
+    ],
+    "homepage": "https://feinwerk.io",
+    "license": "GPL v3+",
+    "support": {
+        "email": "support@feinwerk.io",
+        "docs": "https://plugins.feinwerk.io/en/docs/plugins/FeinwerkDataExploration"
+    }
+}
