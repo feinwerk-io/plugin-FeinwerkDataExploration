@@ -34,3 +34,8 @@ export function formatDuration(seconds: number): string {
   const secs = String(total % 60).padStart(2, '0');
   return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${secs}` : `${minutes}:${secs}`;
 }
+
+/** The text of the table footer: "1 row", otherwise "%s rows". */
+export function rowCountKey(count: number): string {
+  return count === 1 ? 'FeinwerkDataExploration_RowCountOne' : 'FeinwerkDataExploration_RowCount';
+}

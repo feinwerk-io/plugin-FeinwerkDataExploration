@@ -68,7 +68,7 @@
       </table>
     </div>
     <p class="fwde-table__footer">
-      {{ translate('FeinwerkDataExploration_RowCount', formatNumber(rows.length)) }}
+      {{ translate(rowCountKey(rows.length), formatNumber(rows.length)) }}
       <span v-if="rows.length >= state.limit">
         {{ translate('FeinwerkDataExploration_LimitReached') }}
       </span>
@@ -81,7 +81,9 @@ import { defineComponent, PropType } from 'vue';
 import { Matomo, NumberFormatter, translate } from 'CoreHome';
 import { Catalog, ExplorationState } from './types';
 import { ResultRow } from './api';
-import { formatDuration, formatMetric, Formatters } from './format';
+import {
+  formatDuration, formatMetric, Formatters, rowCountKey,
+} from './format';
 import { shouldSortClientSide, sortByLabel } from './sorting';
 import RowMenu from './RowMenu.vue';
 import { canFilterTo } from './rows';
@@ -153,6 +155,7 @@ export default defineComponent({
       return row.segment ? '' : translate('FeinwerkDataExploration_NoVisitsForRow');
     },
     translate,
+    rowCountKey,
     formatNumber(value: number): string {
       return NumberFormatter.formatNumber(value, 0, 0);
     },

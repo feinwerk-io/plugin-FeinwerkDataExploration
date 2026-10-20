@@ -2,7 +2,9 @@
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
-import { formatMetric, formatDuration, Formatters } from '../src/format';
+import {
+  formatMetric, formatDuration, Formatters, rowCountKey,
+} from '../src/format';
 
 const formatters: Formatters = {
   number: (v) => `n${v}`,
@@ -34,5 +36,13 @@ describe('formatDuration', () => {
     expect(formatDuration(104)).toBe('1:44');
     expect(formatDuration(3599)).toBe('59:59');
     expect(formatDuration(3725)).toBe('1:02:05');
+  });
+});
+
+describe('rowCountKey', () => {
+  it('says "1 row", not "1 rows"', () => {
+    expect(rowCountKey(1)).toBe('FeinwerkDataExploration_RowCountOne');
+    expect(rowCountKey(0)).toBe('FeinwerkDataExploration_RowCount');
+    expect(rowCountKey(7)).toBe('FeinwerkDataExploration_RowCount');
   });
 });

@@ -180,6 +180,7 @@
         "MetricDescriptionMaxActions": "Die höchste Zahl an Aktionen in einem einzelnen Besuch.",
         "SavedChanged": "Nicht gespeicherte Änderungen",
         "ErrorSavedShareNeedsWrite": "Explorationen teilen können nur Benutzer mit Schreibrechten für diese Website. Speichern Sie sie stattdessen nur für sich.",
-        "SavedShareNeedsWrite": "Explorationen teilen können nur Benutzer mit Schreibrechten für diese Website."
+        "SavedShareNeedsWrite": "Explorationen teilen können nur Benutzer mit Schreibrechten für diese Website.",
+        "RowCountOne": "1 Zeile"
     }
 }

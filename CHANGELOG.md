@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- A result with a single row says "1 row" instead of "1 rows".
+
 ## 0.3.0
 
 - Sharing an exploration with the website's users needs at least write access to the website. With view access you
