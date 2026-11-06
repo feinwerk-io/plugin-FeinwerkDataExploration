@@ -100,6 +100,40 @@ class ApiExplorationTest extends IntegrationTestCase
         }
     }
 
+    /** Matomo 6 no longer trims request parameters: period, date and segment with spaces give the same exploration. */
+    public function testPeriodDateAndSegmentAreTrimmed(): void
+    {
+        $rows = function (array $params): array {
+            $table = Request::processRequest('FeinwerkDataExploration.getExploration', $params + [
+                'idSite' => 1, 'definition' => self::BROWSER_VISITS,
+            ]);
+            return array_map(fn ($row) => $row->getColumns(), $table->getRows());
+        };
+
+        $expected = $rows(['period' => 'day', 'date' => '2026-03-27', 'segment' => 'browserCode==CH']);
+        $this->assertCount(1, $expected);
+        $this->assertSame($expected, $rows(['period' => ' day ', 'date' => ' 2026-03-27 ', 'segment' => ' browserCode==CH ']));
+        $this->assertSame(
+            Request::processRequest('FeinwerkDataExploration.getPeriodVisits', ['idSite' => 1, 'period' => 'day', 'date' => '2026-03-27']),
+            Request::processRequest('FeinwerkDataExploration.getPeriodVisits', ['idSite' => 1, 'period' => ' day', 'date' => '2026-03-27 '])
+        );
+    }
+
+    /** The parameters are typed: an array where the API expects a string is refused, never read as an empty value. */
+    public function testAWronglyTypedParameterIsRefused(): void
+    {
+        try {
+            Request::processRequest('FeinwerkDataExploration.getExploration', [
+                'idSite' => 1, 'period' => 'day', 'date' => '2026-03-27', 'definition' => ['dimensions' => ['browser']],
+            ]);
+        } catch (\Throwable $e) {
+            // Matomo 6: a bad request naming the parameter; Matomo 5: PHP's type error for it
+            $this->assertStringContainsString('definition', $e->getMessage());
+            return;
+        }
+        $this->fail('an array was accepted as the definition');
+    }
+
     public function testFilterLimitDoesNotCutResult(): void
     {
         $table = Request::processRequest('FeinwerkDataExploration.getExploration', [

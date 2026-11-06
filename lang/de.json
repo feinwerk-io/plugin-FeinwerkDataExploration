@@ -181,6 +181,15 @@
         "SavedChanged": "Nicht gespeicherte Änderungen",
         "ErrorSavedShareNeedsWrite": "Explorationen teilen können nur Benutzer mit Schreibrechten für diese Website. Speichern Sie sie stattdessen nur für sich.",
         "SavedShareNeedsWrite": "Explorationen teilen können nur Benutzer mit Schreibrechten für diese Website.",
-        "RowCountOne": "1 Zeile"
+        "RowCountOne": "1 Zeile",
+        "ErrorFeedbackValue": "Diese Rückmeldung lässt sich nicht senden: Der Wert von „%s“ ist ungültig.",
+        "FeedbackQuestion_free_form_table": "Ist diese Exploration hilfreich?",
+        "FeedbackYes": "Ja, sie ist hilfreich",
+        "FeedbackNo": "Nein, etwas fehlt oder stimmt nicht",
+        "FeedbackThanks": "Danke für Ihre Rückmeldung.",
+        "FeedbackThanksDown": "Danke. Schreiben Sie unserem Support gern, was Sie gesucht haben.",
+        "FeedbackPrivacy": "Ihre Antwort geht mit Plugin- und Matomo-Version, Ihrem Browser und der Sprache der Oberfläche an Feinwerk, sonst nichts.",
+        "Support": "Support",
+        "SupportTitle": "Öffnet das Kontaktformular von Feinwerk in einem neuen Tab"
     }
 }

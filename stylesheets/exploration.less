@@ -858,3 +858,89 @@
   font-size: 12px;
   white-space: normal;
 }
+
+// Feedback question and support link under the result (Feinwerk feedback kit)
+.fwde-feedback {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid @theme-color-border-alternative;
+  color: @theme-color-text-light;
+  font-size: 13px;
+}
+
+.fwde-feedback__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.fwde-feedback__thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid @theme-color-border-alternative;
+  border-radius: 4px;
+  background: @theme-color-background-base;
+  color: @theme-color-text-light;
+  cursor: pointer;
+
+  svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:hover:not([disabled]),
+  &:focus-visible {
+    border-color: @theme-color-brand;
+    color: @theme-color-brand;
+  }
+
+  &.is-chosen {
+    border-color: @theme-color-brand;
+    background: ~"color-mix(in srgb, @{theme-color-brand} 14%, transparent)";
+    color: @theme-color-brand;
+  }
+
+  &[disabled] {
+    cursor: default;
+  }
+
+  &[disabled]:not(.is-chosen) {
+    opacity: 0.5;
+  }
+}
+
+.fwde-feedback__icon--down {
+  transform: rotate(180deg);
+}
+
+.fwde-feedback__support {
+  margin-left: auto;
+  color: @theme-color-text;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    background: @theme-color-background-lowContrast;
+    color: @theme-color-text;
+    text-decoration: none;
+  }
+}
+
+.fwde-feedback__thanks {
+  margin: 8px 0 0;
+  color: @theme-color-text;
+}
+
+.fwde-feedback__privacy {
+  margin: 6px 0 0;
+  color: @theme-color-text-lighter;
+  font-size: 12px;
+}

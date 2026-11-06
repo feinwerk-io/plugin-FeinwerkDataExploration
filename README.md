@@ -94,6 +94,19 @@ have no raw data of their own, so explorations are not offered there.
 period (up to 31 days), the row limit, the query time limit, the largest number of visits per exploration, whether to
 use the read replica, and the role that may use explorations (default: view access).
 
+**Feedback and support:** below the result you can tell us whether the exploration is helpful (thumbs up or down).
+Your Matomo server sends the answer to Feinwerk together with the plugin and Matomo version, the browser family and
+version and the language of Matomo, nothing about you, your website or your visitors. To switch it off, add to
+`config/config.ini.php`:
+
+```ini
+[FeinwerkDataExploration]
+feedback = 0
+```
+
+With `enable_internet_features = 0` in Matomo's `[General]` section nothing is sent either, and the question is not
+shown. "Support" opens the Feinwerk contact form in a new tab.
+
 ## Known limitations
 
 - The sum and the average of event values can be too high when a segment combines a goal condition and an action

@@ -183,6 +183,13 @@
             @row-breakdown="breakDownRow"
             @row-visits="showRowVisits"
           />
+          <FeedbackBar
+            v-if="!error && rows"
+            :id-site="idSite"
+            topic="free_form_table"
+            :question="translate('FeinwerkDataExploration_FeedbackQuestion_free_form_table')"
+            :feedback="feedback"
+          />
         </div>
       </section>
     </div>
@@ -204,6 +211,8 @@ import ResultTable from './ResultTable.vue';
 import ExplorationToolbar from './ExplorationToolbar.vue';
 import SavedPicker from './SavedPicker.vue';
 import SaveDialog from './SaveDialog.vue';
+import FeedbackBar from './FeedbackBar.vue';
+import { FeedbackSettings } from './feedback';
 import {
   differsFromSaved, findSaved, linkNamesOnlySaved, savedHashParams, stateToSave, STATE_KEYS,
 } from './saved';
@@ -285,6 +294,7 @@ export default defineComponent({
     ExplorationToolbar,
     SavedPicker,
     SaveDialog,
+    FeedbackBar,
   },
   props: {
     idSite: { type: Number, required: true },
@@ -292,6 +302,10 @@ export default defineComponent({
     defaultRows: { type: Number, required: true },
     /** at least write access to the site: may share saved explorations */
     canShare: { type: Boolean, default: false },
+    feedback: {
+      type: Object as PropType<FeedbackSettings>,
+      default: () => ({ enabled: false, supportUrl: '', version: '' }),
+    },
     maxDays: { type: Number, required: true },
     rawDataFrom: { type: String, default: null },
     currencySymbol: { type: String, default: '' },

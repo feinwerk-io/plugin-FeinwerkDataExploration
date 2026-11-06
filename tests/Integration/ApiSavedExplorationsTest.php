@@ -165,6 +165,22 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
         $this->assertSame(['fwdeDims' => 'country'], $saved['state']);
     }
 
+    /** Matomo 6 no longer trims request parameters: the saved segment is stored without surrounding spaces. */
+    public function testTheSavedSegmentIsTrimmed(): void
+    {
+        $this->as('anna', [1]);
+        $result = Request::processRequest('FeinwerkDataExploration.addSavedExploration', [
+            'idSite' => 1, 'name' => 'Firefox', 'state' => self::STATE, 'segmentDefinition' => ' browserCode==FF ',
+        ]);
+        $this->assertSame('browserCode==FF', (new SavedExplorationStore())->get((int) $result['id'])['segment']);
+
+        Request::processRequest('FeinwerkDataExploration.updateSavedExploration', [
+            'idSite' => 1, 'idSaved' => $result['id'], 'name' => 'Chrome', 'state' => self::STATE,
+            'segmentDefinition' => "browserCode==CH\n",
+        ]);
+        $this->assertSame('browserCode==CH', (new SavedExplorationStore())->get((int) $result['id'])['segment']);
+    }
+
     public function testDeletingAUserOrASiteRemovesTheirExplorations(): void
     {
         $store = new SavedExplorationStore();

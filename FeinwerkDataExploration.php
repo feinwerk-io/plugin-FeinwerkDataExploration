@@ -10,6 +10,8 @@
 namespace Piwik\Plugins\FeinwerkDataExploration;
 
 use Piwik\Common;
+use Piwik\Option;
+use Piwik\Plugins\FeinwerkDataExploration\Feedback\PluginFeedback;
 use Piwik\Plugins\FeinwerkDataExploration\Reports\OpenInExploration;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationStore;
 
@@ -37,6 +39,7 @@ class FeinwerkDataExploration extends \Piwik\Plugin
     public function uninstall()
     {
         (new SavedExplorationStore())->uninstall();
+        Option::deleteLike(PluginFeedback::THROTTLE_OPTION_PREFIX . '%');
     }
 
     public function getTablesInstalled(&$allTablesInstalled)
@@ -48,6 +51,7 @@ class FeinwerkDataExploration extends \Piwik\Plugin
     public function deleteUser($userLogin)
     {
         (new SavedExplorationStore())->deleteForUser((string) $userLogin);
+        Option::deleteLike(PluginFeedback::userOptionPattern((string) $userLogin));
     }
 
     /** The saved explorations of a deleted website go with the website. */

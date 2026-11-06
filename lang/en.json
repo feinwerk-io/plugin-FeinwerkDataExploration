@@ -181,6 +181,15 @@
         "SavedChanged": "Unsaved changes",
         "ErrorSavedShareNeedsWrite": "Only users with write access to this website can share explorations. Save it for yourself instead.",
         "SavedShareNeedsWrite": "Only users with write access to this website can share explorations.",
-        "RowCountOne": "1 row"
+        "RowCountOne": "1 row",
+        "ErrorFeedbackValue": "This feedback cannot be sent: the value of “%s” is not valid.",
+        "FeedbackQuestion_free_form_table": "Is this exploration helpful?",
+        "FeedbackYes": "Yes, it is helpful",
+        "FeedbackNo": "No, something is missing or wrong",
+        "FeedbackThanks": "Thank you for your feedback.",
+        "FeedbackThanksDown": "Thank you. If you like, tell our support what you were looking for.",
+        "FeedbackPrivacy": "Your answer goes to Feinwerk with the plugin and Matomo version, your browser and the interface language, nothing else.",
+        "Support": "Support",
+        "SupportTitle": "Opens the Feinwerk contact form in a new tab"
     }
 }

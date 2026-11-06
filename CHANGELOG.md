@@ -1,5 +1,13 @@
 # Changelog
 
+## 5.0.0
+
+- Below the result you can tell us whether the exploration is helpful (thumbs up or down), and "Support" opens the
+  Feinwerk contact form. Your Matomo server sends only the answer, the plugin and Matomo version, the browser family
+  and major version and the language of Matomo; `feedback = 0` in the `[FeinwerkDataExploration]` section of `config/config.ini.php`
+  switches the question off.
+- Version numbers now follow Matomo: version 5.0.0 follows 0.3.1 and is offered as an update as usual.
+
 ## 0.3.1
 
 - A result with a single row says "1 row" instead of "1 rows".

@@ -25,6 +25,12 @@ use Piwik\Plugins\FeinwerkDataExploration\Engine\ExplorationException;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationRules;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationStore;
 use Piwik\Segment;
+use Piwik\Container\StaticContainer;
+use Piwik\Option;
+use Piwik\Plugin\Manager as PluginManager;
+use Piwik\Plugins\FeinwerkDataExploration\Feedback\PluginFeedback;
+use Piwik\Translation\Translator;
+use Piwik\Version;
 
 /**
  * Data Exploration: ad hoc tables straight from the raw log data of one site.
@@ -63,7 +69,8 @@ class API extends \Piwik\Plugin\API
         $limits = (new LimitsProvider())->get();
         $parsed = ExplorationDefinition::fromJson($definition, $idSite, $dimensions, $metrics, $limits);
 
-        return (new Explorer($dimensions, $metrics, $limits))->explore($idSite, $period, $date, $parsed, $segment, $readableColumns === 1);
+        return (new Explorer($dimensions, $metrics, $limits))
+            ->explore($idSite, trim($period), trim($date), $parsed, trim($segment), $readableColumns === 1);
     }
 
     /**
@@ -81,7 +88,7 @@ class API extends \Piwik\Plugin\API
         self::checkAccess($idSite);
 
         $limits = (new LimitsProvider())->get();
-        $window = ExplorationWindow::for($idSite, $period, $date, $limits);
+        $window = ExplorationWindow::for($idSite, trim($period), trim($date), $limits);
         $visits = (new CostGuard(new QueryRunner($limits)))->visits($idSite, $window->startUtc, $window->endUtc, $limits, $window->cacheTtl());
 
         return ['visits' => $visits, 'maxVisits' => $limits->maxVisits, 'timeoutSeconds' => $limits->timeoutSeconds];
@@ -103,7 +110,7 @@ class API extends \Piwik\Plugin\API
         self::checkAccess($idSite);
 
         $limits = (new LimitsProvider())->get();
-        return (new PeriodSuggestion(new CostGuard(new QueryRunner($limits)), $limits))->suggest($idSite, $period, $date);
+        return (new PeriodSuggestion(new CostGuard(new QueryRunner($limits)), $limits))->suggest($idSite, trim($period), trim($date));
     }
 
     /**
@@ -198,6 +205,7 @@ class API extends \Piwik\Plugin\API
         self::checkShare($idSite, $shared);
         $name = SavedExplorationRules::name($name);
         $parsed = SavedExplorationRules::state($state);
+        $segmentDefinition = trim($segmentDefinition);
         self::checkSegment($segmentDefinition, $idSite);
 
         $store = new SavedExplorationStore();
@@ -227,6 +235,7 @@ class API extends \Piwik\Plugin\API
 
         $name = SavedExplorationRules::name($name);
         $parsed = SavedExplorationRules::state($state);
+        $segmentDefinition = trim($segmentDefinition);
         self::checkSegment($segmentDefinition, $idSite);
         (new SavedExplorationStore())->update($idSaved, $name, $parsed, $segmentDefinition, $shared === 1);
     }
@@ -242,6 +251,50 @@ class API extends \Piwik\Plugin\API
         self::checkAccess($idSite);
         self::editable($idSite, $idSaved);
         (new SavedExplorationStore())->delete($idSaved);
+    }
+
+    /**
+     * A feedback vote ("Is this exploration helpful?"), sent from this server to Feinwerk: plugin, versions, question,
+     * vote, browser family and UI language; nothing about the user, the website or its visitors. At most one vote per
+     * user and question every 10 seconds and 20 a minute per server; switched off with [FeinwerkDataExploration]
+     * feedback = 0, and never sent from a test run.
+     *
+     * @param int $idSite
+     * @param string $topic one of PluginFeedback::TOPICS
+     * @param string $vote up|down
+     * @return array{sent: bool}
+     */
+    public function sendFeedback(int $idSite, string $topic, string $vote): array
+    {
+        self::checkAccess($idSite);
+        $feedback = StaticContainer::get(PluginFeedback::class);
+        if (!$feedback->isEnabled()) {
+            return ['sent' => false];
+        }
+        try {
+            $payload = PluginFeedback::payload(
+                trim($topic),
+                trim($vote),
+                (string) PluginManager::getInstance()->getLoadedPlugin(PluginFeedback::PLUGIN)->getVersion(),
+                Version::VERSION,
+                (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''),
+                (string) StaticContainer::get(Translator::class)->getCurrentLanguage()
+            );
+        } catch (\InvalidArgumentException $e) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorFeedbackValue', [$e->getMessage()]);
+        }
+        $key = PluginFeedback::throttleOption(Piwik::getCurrentUserLogin(), $payload['topic']);
+        if (time() - (int) Option::get($key) < 10) {
+            return ['sent' => false];
+        }
+        // at most SERVER_CAP votes a minute leave this Matomo; both counters are stored only when the vote is sent
+        $server = PluginFeedback::countVote((string) Option::get(PluginFeedback::SERVER_OPTION), time());
+        if ($server === null) {
+            return ['sent' => false];
+        }
+        Option::set($key, (string) time());
+        Option::set(PluginFeedback::SERVER_OPTION, $server);
+        return ['sent' => $feedback->send($payload)];
     }
 
     /**

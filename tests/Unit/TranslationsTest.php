@@ -55,7 +55,7 @@ class TranslationsTest extends TestCase
             if (!preg_match('/\.(php|twig|vue|ts)$/', $path) || preg_match('~/(vendor|node_modules|tests|\.git|dist|\.superpowers)/~', $path)) {
                 continue;
             }
-            preg_match_all('/FeinwerkDataExploration_([A-Z][A-Za-z]*)/', (string) file_get_contents($path), $matches);
+            preg_match_all('/FeinwerkDataExploration_([A-Z][A-Za-z_]*)/', (string) file_get_contents($path), $matches);
             foreach ($matches[1] as $key) {
                 if (!in_array($key, self::DYNAMIC_PREFIXES, true)) {
                     $this->assertArrayHasKey($key, $keys, "$path uses FeinwerkDataExploration_$key");
