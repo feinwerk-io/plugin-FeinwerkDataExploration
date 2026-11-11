@@ -9,6 +9,7 @@
 
 namespace Piwik\Plugins\FeinwerkDataExploration\tests\Integration;
 
+use Piwik\API\Request;
 use Piwik\Cache;
 use Piwik\Piwik;
 use Piwik\Plugins\FeinwerkDataExploration\API;
@@ -55,6 +56,17 @@ class ApiSuggestedPeriodTest extends IntegrationTestCase
         $this->limitVisits(3);
 
         $this->assertSame(['date' => '2026-03-26,2026-03-27', 'days' => 2], API::getInstance()->getSuggestedPeriod(1, 'range', '2026-03-25,2026-03-27'));
+    }
+
+    /** Matomo 6 no longer trims request parameters: period and date with spaces give the same offer. */
+    public function testPeriodAndDateAreTrimmed(): void
+    {
+        $this->limitVisits(3);
+
+        $this->assertSame(['date' => '2026-03-26,2026-03-27', 'days' => 2], Request::processRequest(
+            'FeinwerkDataExploration.getSuggestedPeriod',
+            ['idSite' => 1, 'period' => ' range ', 'date' => ' 2026-03-25,2026-03-27 ', 'format' => 'original']
+        ));
     }
 
     public function testOffersNothingWhenOneDayIsTooMuch(): void

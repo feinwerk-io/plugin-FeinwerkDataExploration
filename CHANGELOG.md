@@ -1,5 +1,10 @@
 # Changelog
 
+## 5.0.1
+
+- The feedback question below the result now takes a single compact line.
+- A failing connection to Feinwerk while sending a feedback vote no longer shows an error in Matomo.
+
 ## 5.0.0
 
 - Below the result you can tell us whether the exploration is helpful (thumbs up or down), and "Support" opens the

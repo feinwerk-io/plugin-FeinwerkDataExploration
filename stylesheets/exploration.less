@@ -859,33 +859,27 @@
   white-space: normal;
 }
 
-// Feedback question and support link under the result (Feinwerk feedback kit)
+// Feedback question and support link under the result, one compact line (Feinwerk feedback kit, Peter, 2026-11-11):
+// question, thumbs and a plain link in small muted type; after a vote the thanks takes the place of question and thumbs.
 .fwde-feedback {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid @theme-color-border-alternative;
-  color: @theme-color-text-light;
-  font-size: 13px;
-}
-
-.fwde-feedback__row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 4px 6px;
+  margin: 6px 0 2px;
+  color: @theme-color-text-lighter;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .fwde-feedback__thumb {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid @theme-color-border-alternative;
-  border-radius: 4px;
-  background: @theme-color-background-base;
-  color: @theme-color-text-light;
+  padding: 1px 4px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: @theme-color-text-lighter;
   cursor: pointer;
 
   svg {
@@ -896,24 +890,10 @@
     stroke-linejoin: round;
   }
 
-  &:hover:not([disabled]),
+  &:hover,
   &:focus-visible {
-    border-color: @theme-color-brand;
+    background: @theme-color-background-lowContrast;
     color: @theme-color-brand;
-  }
-
-  &.is-chosen {
-    border-color: @theme-color-brand;
-    background: ~"color-mix(in srgb, @{theme-color-brand} 14%, transparent)";
-    color: @theme-color-brand;
-  }
-
-  &[disabled] {
-    cursor: default;
-  }
-
-  &[disabled]:not(.is-chosen) {
-    opacity: 0.5;
   }
 }
 
@@ -921,26 +901,21 @@
   transform: rotate(180deg);
 }
 
-.fwde-feedback__support {
-  margin-left: auto;
-  color: @theme-color-text;
-  text-decoration: none;
+.fwde-feedback__thanks {
+  color: @theme-color-text-light;
 
-  &:hover,
-  &:focus-visible {
-    background: @theme-color-background-lowContrast;
-    color: @theme-color-text;
-    text-decoration: none;
+  // stays in the document while empty (so screen readers announce the thanks), but takes no room
+  &:empty {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
   }
 }
 
-.fwde-feedback__thanks {
-  margin: 8px 0 0;
-  color: @theme-color-text;
-}
-
-.fwde-feedback__privacy {
-  margin: 6px 0 0;
-  color: @theme-color-text-lighter;
-  font-size: 12px;
+.fwde-feedback__support {
+  margin-left: auto;
+  color: @theme-color-link;
+  text-decoration: underline;
 }

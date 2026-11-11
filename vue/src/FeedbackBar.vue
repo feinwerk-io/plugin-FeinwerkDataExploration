@@ -2,62 +2,51 @@
   Matomo - free/libre analytics platform
   @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
 
-  Feinwerk feedback kit: a question with thumbs up and down, sent through the plugin's API
-  method sendFeedback (the Matomo server talks to Feinwerk, never the browser), and a support
-  link in a new tab.
+  Feinwerk feedback kit, one compact line (Peter, 2026-11-11): the question with thumbs up and
+  down, sent through the plugin's API method sendFeedback (the Matomo server talks to Feinwerk,
+  never the browser), and a support link in a new tab. After a vote the thanks takes the place
+  of question and thumbs.
 -->
 <template>
   <div
     v-if="feedback.enabled || feedback.supportUrl"
     class="fwde-feedback"
   >
-    <div class="fwde-feedback__row">
-      <template v-if="feedback.enabled">
-        <span>{{ question }}</span>
-        <button
-          v-for="choice in choices"
-          :key="choice"
-          type="button"
-          class="fwde-feedback__thumb"
-          :class="{ 'is-chosen': vote === choice }"
-          :title="label(choice)"
-          :aria-label="label(choice)"
-          :aria-pressed="vote === choice ? 'true' : 'false'"
-          :disabled="vote !== ''"
-          @click="send(choice)"
+    <template v-if="feedback.enabled && !vote">
+      <span class="fwde-feedback__question">{{ question }}</span>
+      <button
+        v-for="choice in choices"
+        :key="choice"
+        type="button"
+        class="fwde-feedback__thumb"
+        :title="label(choice)"
+        :aria-label="label(choice)"
+        @click="send(choice)"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="14"
+          height="14"
+          aria-hidden="true"
+          :class="`fwde-feedback__icon--${choice}`"
         >
-          <svg
-            viewBox="0 0 24 24"
-            width="18"
-            height="18"
-            aria-hidden="true"
-            :class="`fwde-feedback__icon--${choice}`"
-          >
-            <path :d="thumbPath" />
-          </svg>
-        </button>
-      </template>
-      <a
-        v-if="feedback.supportUrl"
-        class="fwde-button fwde-feedback__support"
-        :href="feedback.supportUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        :title="tr('SupportTitle')"
-      ><span
-        class="icon-help"
-        aria-hidden="true"
-      /> {{ tr('Support') }}</a>
-    </div>
-    <p
-      v-if="feedback.enabled && vote"
+          <path :d="thumbPath" />
+        </svg>
+      </button>
+    </template>
+    <span
+      v-if="feedback.enabled"
       class="fwde-feedback__thanks"
       role="status"
-    >{{ vote === 'up' ? tr('FeedbackThanks') : tr('FeedbackThanksDown') }}</p>
-    <p
-      v-if="feedback.enabled"
-      class="fwde-feedback__privacy"
-    >{{ tr('FeedbackPrivacy') }}</p>
+    >{{ thanks }}</span>
+    <a
+      v-if="feedback.supportUrl"
+      class="fwde-feedback__support"
+      :href="feedback.supportUrl"
+      target="_blank"
+      rel="noopener noreferrer"
+      :title="tr('SupportTitle')"
+    >{{ tr('Support') }}</a>
   </div>
 </template>
 
@@ -104,6 +93,13 @@ export default defineComponent({
     },
     thumbPath(): string {
       return THUMB_PATH;
+    },
+    /** after a vote the thanks takes the place of question and thumbs (one line); empty before */
+    thanks(): string {
+      if (!this.vote) {
+        return '';
+      }
+      return this.vote === 'up' ? this.tr('FeedbackThanks') : this.tr('FeedbackThanksDown');
     },
   },
   methods: {

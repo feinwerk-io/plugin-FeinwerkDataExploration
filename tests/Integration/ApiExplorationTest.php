@@ -16,6 +16,7 @@ use Piwik\Db;
 use Piwik\DataTable;
 use Piwik\NoAccessException;
 use Piwik\Plugins\FeinwerkDataExploration\API;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\ExplorationException;
 use Piwik\Plugins\PrivacyManager\IPAnonymizer;
 use Piwik\Tests\Framework\Fixture;
 use Piwik\Tests\Framework\Mock\FakeAccess;
@@ -127,7 +128,9 @@ class ApiExplorationTest extends IntegrationTestCase
                 'idSite' => 1, 'period' => 'day', 'date' => '2026-03-27', 'definition' => ['dimensions' => ['browser']],
             ]);
         } catch (\Throwable $e) {
-            // Matomo 6: a bad request naming the parameter; Matomo 5: PHP's type error for it
+            // Matomo 6: a bad request naming the parameter; Matomo 5: PHP's type error for it. Never the plugin's own
+            // error about an unreadable definition: then Matomo would have passed the array on.
+            $this->assertNotInstanceOf(ExplorationException::class, $e);
             $this->assertStringContainsString('definition', $e->getMessage());
             return;
         }

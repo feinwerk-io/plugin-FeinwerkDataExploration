@@ -9,6 +9,7 @@
 
 namespace Piwik\Plugins\FeinwerkDataExploration\tests\Integration;
 
+use Piwik\API\Request;
 use Piwik\Config;
 use Piwik\NoAccessException;
 use Piwik\Option;
@@ -70,6 +71,17 @@ class ApiFeedbackTest extends IntegrationTestCase
         $this->assertSame('down', $vote['vote']);
         $this->assertSame('Firefox 143', $vote['browser']);
         unset($_SERVER['HTTP_USER_AGENT']);
+    }
+
+    /** Matomo 6 no longer trims request parameters: question and vote with spaces are the same vote. */
+    public function testQuestionAndVoteAreTrimmed(): void
+    {
+        $result = Request::processRequest('FeinwerkDataExploration.sendFeedback', [
+            'idSite' => 1, 'topic' => ' free_form_table ', 'vote' => " up\n", 'format' => 'original',
+        ]);
+
+        $this->assertSame(['sent' => true], $result);
+        $this->assertSame(['free_form_table', 'up'], [self::$sent[0]['topic'], self::$sent[0]['vote']]);
     }
 
     public function testASecondVoteWithinTenSecondsIsNotSent(): void

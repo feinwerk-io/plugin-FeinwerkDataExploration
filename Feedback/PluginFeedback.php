@@ -74,16 +74,21 @@ class PluginFeedback
 
     /** @var callable Http::sendHttpRequestBy or a test double with the same arguments */
     private $transport;
+    /** @var bool true when the votes would really go out (Matomo's HTTP client) */
+    private $realHttp;
     /** @var bool|null null: Matomo's PIWIK_TEST_MODE decides */
     private $testMode;
 
     /**
-     * @param bool|null $testMode only tests with a recording transport pass false; null detects PIWIK_TEST_MODE
+     * @param callable|null $transport a recording test double; null sends with Matomo's HTTP client
+     * @param bool|null $testMode false switches the test-mode guard off, but only together with a test double: with
+     *                            the real HTTP client PIWIK_TEST_MODE always decides, so no vote leaves a test run
      */
     public function __construct(?callable $transport = null, ?bool $testMode = null)
     {
+        $this->realHttp = $transport === null;
         $this->transport = $transport ?? [Http::class, 'sendHttpRequestBy'];
-        $this->testMode = $testMode;
+        $this->testMode = $this->realHttp ? null : $testMode;
     }
 
     /** Whether to ask and send: the config switch, Matomo's internet features and never from a test run. */
@@ -205,6 +210,9 @@ class PluginFeedback
     /** Sends the vote; failures (store unreachable, endpoint missing) are logged and never shown to the user. */
     public function send(array $payload): bool
     {
+        if ($this->realHttp && self::inTestMode()) {
+            return false; // never from a test run (CI, sandboxes), whatever the caller checked before
+        }
         // Matomo's client also copies an incoming proxy chain (HTTP_VIA) into its Via header: leave it out.
         $via = $_SERVER['HTTP_VIA'] ?? null;
         unset($_SERVER['HTTP_VIA']);
@@ -227,7 +235,8 @@ class PluginFeedback
                 json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
                 ['Content-Type: application/json', 'Accept: application/json']
             );
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // also PHP errors of the HTTP client (e.g. a TypeError when curl cannot start): never shown to the user
             self::log('feedback not sent: {message}', ['message' => $e->getMessage()]);
             return false;
         } finally {

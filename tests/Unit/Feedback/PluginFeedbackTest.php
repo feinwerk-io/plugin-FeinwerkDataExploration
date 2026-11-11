@@ -177,6 +177,14 @@ class PluginFeedbackTest extends TestCase
             PluginFeedback::clientProps(false, 'en', '5.0.0'));
     }
 
+    public function testAnErrorInTheHttpClientIsNotAnErrorForTheUser(): void
+    {
+        $broken = new PluginFeedback(function (...$args) {
+            throw new \Error('curl_init() returned false');
+        });
+        $this->assertFalse($broken->send(['plugin' => 'FeinwerkDataExploration']));
+    }
+
     public function testAFailingStoreIsNotAnError(): void
     {
         $refused = new PluginFeedback(fn (...$args) => ['status' => 422, 'data' => '{}']);
