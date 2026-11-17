@@ -44,14 +44,15 @@ class ComparisonListTest extends TestCase
     public function testColumnLimitCountsTheOwnColumn(): void
     {
         $column = ['segment' => '', 'period' => 'day', 'date' => '2026-03-27'];
-        $this->assertCount(2, ComparisonList::fromJson(json_encode([$column, $column]), new Limits()));
-        $this->assertRefused(json_encode([$column, $column, $column]), 'FeinwerkDataExploration_ErrorComparisonCount', [3]);
+        // free: 4 columns, the own one included (Peter, 2026-11-17: "raise limit to 4")
+        $this->assertCount(3, ComparisonList::fromJson(json_encode([$column, $column, $column]), new Limits()));
+        $this->assertRefused(json_encode(array_fill(0, 4, $column)), 'FeinwerkDataExploration_ErrorComparisonCount', [4]);
         $this->assertCount(4, ComparisonList::fromJson(json_encode(array_fill(0, 4, $column)), new Limits(maxCompareColumns: 5)));
     }
 
     public function testMaxColumnsIsClamped(): void
     {
-        $this->assertSame(3, ComparisonList::maxColumns(new Limits()));
+        $this->assertSame(4, ComparisonList::maxColumns(new Limits()));
         $this->assertSame(1, ComparisonList::maxColumns(new Limits(maxCompareColumns: 0)));
         $this->assertSame(10, ComparisonList::maxColumns(new Limits(maxCompareColumns: 50)));
     }

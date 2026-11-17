@@ -65,7 +65,7 @@ class API extends \Piwik\Plugin\API
      * @param int $readableColumns 1 names the columns in the user's language
      * @param string $comparisons JSON, optional: comparison columns after the own one (Matomo's comparison of segments and
      *                            periods), e.g. [{"segment": "browserCode==FF", "period": "day", "date": "2026-03-27"}];
-     *                            up to 2 (3 columns per metric with the own one). With comparisons the first row is the
+     *                            up to 3 (4 columns per metric with the own one). With comparisons the first row is the
      *                            total row (metadata fwde_total), and each row gets {metric}__share and per comparison n
      *                            {metric}__c{n} with {metric}__c{n}__share (segments) or {metric}__c{n}__change (periods)
      * @return DataTable label, secondary_label (two dimensions) and the metric columns; rows carry a "segment"

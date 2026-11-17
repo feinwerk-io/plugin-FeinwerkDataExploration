@@ -64,7 +64,8 @@ class WidgetTest extends IntegrationTestCase
         $props = $widget->getClientSideProps();
         $this->assertSame(1, $props['idSite']);
         $this->assertSame(1000, $props['maxRows']);
-        $this->assertSame(3, $props['maxCompareColumns']);
+        // free limit 4 (Peter, 2026-11-17: "raise limit to 4"): one segment and one period fit together
+        $this->assertSame(4, $props['maxCompareColumns']);
         $this->assertSame(5, $props['maxTrendLines']);
         $this->assertSame(100, $props['defaultRows']);
         $this->assertSame(31, $props['maxDays']);

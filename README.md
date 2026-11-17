@@ -26,10 +26,10 @@ Feinwerk Data Exploration answers them directly from the raw data of your websit
   the previous step and the drop-offs, as bars and as a table. No setup in advance: the funnel is counted from the raw
   data of the period, for every period and segment.
 - **Compare segments:** click the compare icon next to a saved segment, and the table shows one column per segment
-  for every metric, with a total row and each count's share of its column.
+  for every metric, with a total row and each count's share of its column; the bar chart shows one bar per segment.
 - **Compare periods:** choose "Compare to" in the date picker, for example this month against the last one: one
   column per period for every metric with the change in percent, and with "Date" as dimension day by day. Segments
-  and periods together: up to 3 columns per metric.
+  and periods together: up to 4 columns per metric, so one segment and one period fit side by side.
 - **Trend:** switch the chart from "Bars" to "Trend" and the first 5 rows of the table become lines over the days of
   the period (over the hours for a single day). While comparing, the trend shows one line per comparison column, a
   compared period dashed and lined up day by day.
@@ -109,12 +109,13 @@ have no raw data of their own, so explorations are not offered there.
 
 **Comparing:** on **Explorations → Free-form table**, compare a saved segment with the compare icon in the segment
 list, or a period with "Compare to" in the date picker. The table then shows, for each metric, one column for your own
-view and one per comparison (up to 3 columns per metric), a total row at the top, the share of each count in its column,
+view and one per comparison (up to 4 columns per metric), a total row at the top, the share of each count in its column,
 a bar behind each count (against the largest value of that metric in all its columns), and in period columns the change of your period against that period (for example "+12 %" in the September
 column when October has 12 % more visits). With "Date" as dimension, days line up by position: the first day of your
 period next to the first day of the compared one. Rows come from your own view; a comparison column shows the values
-of exactly these rows. The bar chart shows your own view; the trend shows one line per comparison column (the total
-of that column per day). Exports contain every column.
+of exactly these rows. The bar chart shows one bar per comparison column for each of the 10 largest rows of your view
+(by the chart's metric), in the colours of Matomo's comparison; the trend shows one line per comparison column (the
+total of that column per day). Exports contain every column.
 
 **Trend:** in the chart, switch from **Bars** to **Trend**. The first 5 rows of the table, in its sort and with its
 filters, become lines over the days of the period, or over the hours when the period is a single day, counted in the

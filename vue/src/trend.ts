@@ -6,7 +6,7 @@ import {
   canTrend, ChartModel, ChartOptions, ChartSeries, compareKeys, INTEGER_METRICS, niceScale,
   timeOrder,
 } from './chart';
-import { valueKey } from './comparison';
+import { columnLabel, valueKey } from './comparison';
 import { ResultRow, TrendRow } from './api';
 import { ChartType, ComparisonColumn, ExplorationState } from './types';
 
@@ -73,6 +73,7 @@ export function trendModel(rows: TrendRow[], metric: string, options: TrendOptio
       label,
       dashed: isOtherPeriod(head.fwde_kind),
       comparison: head.fwde_kind !== undefined && head.fwde_kind !== null,
+      line: Number(head.fwde_line),
       points: categories.map((category, i) => {
         const row = lineRows[i];
         if (!row) {
@@ -118,7 +119,7 @@ export function compareTimeModel(
     .sort((a, b) => compareKeys(order(String(a.label)), order(String(b.label))));
   const categories = data.map((row) => String(row.label));
   const series: ChartSeries[] = columns.map((column, n) => ({
-    label: column.title,
+    label: columnLabel(column),
     dashed: isOtherPeriod(column.kind),
     comparison: true,
     points: data.map((row) => ({

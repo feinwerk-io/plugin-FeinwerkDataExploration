@@ -53,6 +53,26 @@ describe('result table', () => {
     expect(cell.find('.fwde-ellipsis__tail').text().length).toBeGreaterThan(0);
   });
 
+  it('keeps both dimensions together: a first dimension of short values is only as wide as they are', () => {
+    // rows: browsers (short) by page URLs (long): the free width goes behind the second dimension, not between them
+    const head = table().findAll('thead th');
+    expect(head[0].classes()).toContain('fwde-table__dimension--fit');
+    expect(head[1].classes()).not.toContain('fwde-table__dimension--fit');
+    expect(table().findAll('tbody tr')[0].findAll('td')[0].classes()).toContain('fwde-table__dimension--fit');
+    // a long first dimension (page URLs) keeps the free width; one dimension alone too
+    const swapped = parseState({ fwdeDims: 'pageUrl,browser', fwdeMetrics: 'nb_visits,bounce_rate' }, CATALOG, LIMITS);
+    const longFirst = mount(ResultTable, {
+      props: {
+        rows: rows.map((row) => ({ ...row, label: row.secondary_label, secondary_label: row.label })),
+        state: swapped,
+        catalog: CATALOG,
+        actionScope: false,
+        currencySymbol: '$',
+      },
+    });
+    expect(longFirst.find('thead th').classes()).not.toContain('fwde-table__dimension--fit');
+  });
+
   it('never shortens a short value; only a long one may shrink when the table runs out of room', () => {
     const [first] = table().findAll('tbody tr').map((tr) => tr.findAll('td'));
     expect(first[0].find('.fwde-ellipsis').classes()).not.toContain('fwde-ellipsis--long');

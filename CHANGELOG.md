@@ -1,5 +1,16 @@
 # Changelog
 
+## 5.2.0
+
+- Comparisons show up to 4 columns per metric (was 3), so one segment and one period fit together.
+- The table keeps both dimensions together on the left (a first dimension of short values is only as wide as they
+  are), a light line separates the metric columns and their bars, and numbers keep a small distance to the next
+  column.
+- While comparing segments or periods, the bar chart shows one bar per comparison column for each row, in the colours of
+  Matomo's comparison, with a legend, the value on each bar and a compared period's change in its tooltip.
+- A value just over 20 characters, such as "Referrer Name not defined", no longer shows a gap in the middle of its table
+  cell.
+
 ## 5.1.0
 
 - The table is easier to read: both dimensions side by side on the left and a line before the metrics, long values on

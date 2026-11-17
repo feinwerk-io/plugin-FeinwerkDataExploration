@@ -89,8 +89,46 @@
               text-anchor="middle"
             >{{ formatTick(tick) }}</text>
           </g>
+          <template v-if="model.series.length > 1">
+            <g
+              v-for="(category, index) in model.categories"
+              :key="`group${index}`"
+              class="fwde-chart__group"
+            >
+              <text
+                class="fwde-chart__category"
+                :x="labelWidth"
+                :y="barY(index) + bandHeight / 2"
+                text-anchor="end"
+                dominant-baseline="central"
+              >{{ truncateLabel(category, labelChars) }}</text>
+              <g
+                v-for="(series, seriesIndex) in model.series"
+                :key="`group${index}-${seriesIndex}`"
+              >
+                <title>{{ groupTitle(series, series.points[index]) }}</title>
+                <template v-if="series.points[index].value !== null">
+                  <rect
+                    :class="['fwde-chart__bar', ...seriesClasses(seriesIndex, series)]"
+                    :data-name="seriesColourName(seriesIndex, series)"
+                    :x="Math.min(barX(0), barX(series.points[index].value || 0))"
+                    :y="groupBarY(index, seriesIndex)"
+                    :width="Math.max(1, Math.abs(barX(series.points[index].value || 0) - barX(0)))"
+                    :height="GROUP_BAR_HEIGHT - 2"
+                    rx="2"
+                  />
+                  <text
+                    class="fwde-chart__value fwde-chart__value--grouped"
+                    :x="Math.max(barX(0), barX(series.points[index].value || 0)) + 6"
+                    :y="groupBarY(index, seriesIndex) + (GROUP_BAR_HEIGHT - 2) / 2"
+                    dominant-baseline="central"
+                  >{{ format(series.points[index].value) }}</text>
+                </template>
+              </g>
+            </g>
+          </template>
           <g
-            v-for="(point, index) in model.series[0].points"
+            v-for="(point, index) in model.series.length > 1 ? [] : model.series[0].points"
             :key="`bar${index}`"
           >
             <title>{{ point.label }}: {{ format(point.value) }}</title>
@@ -257,16 +295,20 @@ import {
 } from './types';
 import { ResultRow, TrendRow } from './api';
 import { compareTimeModel, trendModel } from './trend';
+import { columnLabel } from './comparison';
 import {
   formatDay, formatDuration, formatHour, formatMetric, Formatters,
 } from './format';
 import {
-  axisLabelStep, ChartModel, chartModel, ChartPoint, ChartSeries, linePath, TIME_DIMENSIONS,
-  truncateLabel,
+  axisLabelStep, ChartModel, chartModel, ChartPoint, ChartSeries, compareBarModel, linePath,
+  TIME_DIMENSIONS, truncateLabel,
 } from './chart';
 
 const TOP = 8;
 const BAR_HEIGHT = 26;
+/** grouped bars while comparing: one bar per comparison column, a gap between the rows */
+const GROUP_BAR_HEIGHT = 16;
+const GROUP_GAP = 10;
 const AXIS_HEIGHT = 26;
 // Matomo's evolution graph: a flat plot, three value ticks, a date label about every 150 pixels
 const LINE_HEIGHT = 210;
@@ -304,7 +346,7 @@ export default defineComponent({
     trendLoading: { type: Boolean, default: false },
     /** lines of a line chart (free: 5) */
     maxLines: { type: Number, default: 5 },
-    /** comparison columns of a table with one time dimension: one line per column */
+    /** comparison columns: one line per column (time dimension) or one bar per column and row */
     compareColumns: { type: Array as PropType<ComparisonColumn[]>, default: () => [] },
   },
   emits: ['metric', 'chart-type'],
@@ -314,6 +356,7 @@ export default defineComponent({
       observer: null as ResizeObserver|null,
       TOP,
       BAR_HEIGHT,
+      GROUP_BAR_HEIGHT,
       LINE_HEIGHT,
       LINE_LEFT,
       LINE_RIGHT,
@@ -340,11 +383,20 @@ export default defineComponent({
   computed: {
     model(): ChartModel {
       if (this.chartType === 'trend') {
-        return trendModel(this.trendRows || [], this.metric, {
+        const trend = trendModel(this.trendRows || [], this.metric, {
           hourLabels: this.hourLabels,
           tableRows: this.rows.length,
           tickCount: LINE_TICKS,
         });
+        // comparison line n is column n: named as table and bars name it, not by the server
+        const columns = this.compareColumns;
+        return columns.length > 1 ? {
+          ...trend,
+          series: trend.series.map((series) => {
+            const column = series.line === undefined ? undefined : columns[series.line];
+            return series.comparison && column ? { ...series, label: columnLabel(column) } : series;
+          }),
+        } : trend;
       }
       const weekdays = [1, 2, 3, 4, 5, 6, 7]
         .map((day) => translate(`Intl_Day_Long_StandAlone_${day}`));
@@ -360,14 +412,31 @@ export default defineComponent({
         maxSeries: this.maxLines,
       };
       if (this.compareColumns.length > 1) {
-        return compareTimeModel(this.rows, this.compareColumns, this.state, this.metric, options);
+        const { dimensions } = this.state;
+        if (TIME_DIMENSIONS.includes(dimensions[0]) && dimensions.length === 1) {
+          return compareTimeModel(this.rows, this.compareColumns, this.state, this.metric, options);
+        }
+        if (!dimensions.some((id) => TIME_DIMENSIONS.includes(id))) {
+          return compareBarModel(this.rows, this.compareColumns, this.metric, {
+            maxBars: 10,
+            tickCount: options.tickCount,
+          });
+        }
       }
       return chartModel(this.rows, this.state, this.metric, options);
     },
     /** lines of several rows, values or comparison columns: a legend and the line's name */
     showsLegend(): boolean {
-      return this.model.type === 'line' && (this.state.dimensions.length > 1
-        || this.chartType === 'trend' || this.compareColumns.length > 1);
+      if (this.model.type === 'bar') {
+        return this.model.series.length > 1;
+      }
+      return this.state.dimensions.length > 1
+        || this.chartType === 'trend' || this.compareColumns.length > 1;
+    },
+    /** the height of one row: a single bar, or one bar per comparison column */
+    bandHeight(): number {
+      const count = this.model.series.length;
+      return count > 1 ? count * GROUP_BAR_HEIGHT + GROUP_GAP : BAR_HEIGHT;
     },
     typeOptions(): { type: ChartType, label: string }[] {
       return [
@@ -391,7 +460,7 @@ export default defineComponent({
       if (this.model.type === 'line') {
         return LINE_HEIGHT;
       }
-      return TOP + this.model.categories.length * BAR_HEIGHT + AXIS_HEIGHT;
+      return TOP + this.model.categories.length * this.bandHeight + AXIS_HEIGHT;
     },
     labelWidth(): number {
       return Math.min(Math.round(this.width * 0.4), 280);
@@ -403,7 +472,7 @@ export default defineComponent({
       return Math.max(40, this.width - this.labelWidth - 12 - VALUE_SPACE);
     },
     barAreaBottom(): number {
-      return TOP + this.model.categories.length * BAR_HEIGHT;
+      return TOP + this.model.categories.length * this.bandHeight;
     },
     /** what the time axis shows: days, the hours of a day, or other values (weekdays) */
     axisKind(): 'day'|'hour'|'other' {
@@ -568,14 +637,18 @@ export default defineComponent({
     },
     /** colours: the plugin's series (Matomo's palette), or Matomo's colours of a comparison */
     seriesClasses(seriesIndex: number, series: ChartSeries): string[] {
-      const colour = (seriesIndex % SERIES_COLOURS) + 1;
+      const colour = (this.colourIndex(seriesIndex, series) % SERIES_COLOURS) + 1;
       const classes = ['fwde-chart__series', `fwde-chart__series-${colour}`];
       return series.comparison ? [...classes, 'comparison-series-color'] : classes;
     },
     seriesColourName(seriesIndex: number, series: ChartSeries): string|undefined {
       return series.comparison
-        ? ComparisonsStoreInstance.getSeriesColorName(seriesIndex, 0)
+        ? ComparisonsStoreInstance.getSeriesColorName(this.colourIndex(seriesIndex, series), 0)
         : undefined;
+    },
+    /** a comparison line keeps its column's colour, also when a line before it is missing */
+    colourIndex(seriesIndex: number, series: ChartSeries): number {
+      return series.comparison && series.line !== undefined ? series.line : seriesIndex;
     },
     /** keyboard: the tooltip starts at the first day */
     onFocus() {
@@ -605,7 +678,21 @@ export default defineComponent({
       return this.labelWidth + 12 + ((value - min) / (max - min)) * this.barPlotWidth;
     },
     barY(index: number): number {
-      return TOP + index * BAR_HEIGHT;
+      return TOP + index * this.bandHeight;
+    },
+    /** the top of a comparison column's bar in its row */
+    groupBarY(index: number, seriesIndex: number): number {
+      return this.barY(index) + GROUP_GAP / 2 + seriesIndex * GROUP_BAR_HEIGHT;
+    },
+    /** a grouped bar's tooltip: column, row, value, and a compared period's change */
+    groupTitle(series: ChartSeries, point: ChartPoint): string {
+      const value = point.value === null ? '' : this.format(point.value);
+      let title = `${series.label} · ${point.label}: ${value}`;
+      if (point.change !== undefined && point.change !== null) {
+        const change = NumberFormatter.formatPercent(point.change, 1, 0);
+        title += ` (${point.change > 0 ? `+${change}` : change})`;
+      }
+      return title;
     },
     lineX(index: number): number {
       const plotWidth = this.width - LINE_LEFT - LINE_RIGHT;

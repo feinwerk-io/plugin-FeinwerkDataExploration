@@ -168,11 +168,10 @@
             class="pk-emptyDataTable"
           >{{ translate('CoreHome_ThereIsNoDataForThisReport') }}</div>
           <p
-            v-if="comparing && !error && ownRows && ownRows.length && view !== 'table'"
+            v-if="comparing && compareHint && !error && ownRows && ownRows.length
+              && view !== 'table'"
             class="fwde-compare__hint"
-          >{{ translate(chartShowsComparison
-            ? 'FeinwerkDataExploration_CompareTrendHint'
-            : 'FeinwerkDataExploration_CompareChartHint') }}</p>
+          >{{ translate(compareHint) }}</p>
           <template v-if="showsTrend">
             <Alert
               v-if="trendError"
@@ -199,7 +198,7 @@
             :trend-rows="trendRows"
             :trend-loading="trendLoading"
             :max-lines="maxTrendLines"
-            :compare-columns="compareTimeColumns"
+            :compare-columns="chartCompareColumns"
             :class="{ 'fwde-main__stale': loading }"
             @metric="update({ chartMetric: $event })"
             @chart-type="update({ chartType: $event })"
@@ -288,7 +287,7 @@ import {
 } from './types';
 import { parseState, toDefinition, toHashParams } from './state';
 import {
-  canChart, chartMetricFor, effectiveView, resultTitle, TIME_DIMENSIONS,
+  canChart, chartMetricFor, compareChartHint, effectiveView, resultTitle,
 } from './chart';
 import {
   canTrend, chartTypeFor, mergeTrendLines, needsOwnLine, trendColumns, trendIsCurrent, withOwnLine,
@@ -403,8 +402,8 @@ export default defineComponent({
     rawDataFrom: { type: String, default: null },
     currencySymbol: { type: String, default: '' },
     hourLabels: { type: Array as PropType<string[]>, default: () => [] },
-    /** columns per metric when comparing, the own one included (free: 3) */
-    maxCompareColumns: { type: Number, default: 3 },
+    /** columns per metric when comparing, the own one included (free: 4) */
+    maxCompareColumns: { type: Number, default: 4 },
     /** lines of a line chart (free: 5) */
     maxTrendLines: { type: Number, default: 5 },
   },
@@ -519,14 +518,14 @@ export default defineComponent({
       return !this.error && !!this.ownRows && this.ownRows.length > 0 && this.view !== 'table'
         && this.chartType === 'trend';
     },
-    /** a table of one time dimension while comparing: one line per column, from the table */
-    compareTimeColumns(): ComparisonColumn[] {
-      const { state } = this;
-      return this.comparing && state && state.dimensions.length === 1
-        && TIME_DIMENSIONS.includes(state.dimensions[0]) ? this.comparison.columns : [];
+    /** the comparison columns for the chart: lines of a time dimension, grouped bars otherwise */
+    chartCompareColumns(): ComparisonColumn[] {
+      return this.comparing ? this.comparison.columns : [];
     },
-    chartShowsComparison(): boolean {
-      return this.chartType === 'trend' || this.compareTimeColumns.length > 1;
+    /** the hint above a compared chart; none for grouped bars (they show every column) */
+    compareHint(): string {
+      const { state, chartType, chartCompareColumns } = this;
+      return state ? compareChartHint(state, chartType, chartCompareColumns.length) : '';
     },
     /** the setup the visible trend needs, '' while none is visible or the table still loads */
     trendRequestKey(): string {

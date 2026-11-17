@@ -240,21 +240,22 @@ class ApiComparisonTest extends IntegrationTestCase
     {
         $column = ['', 'day', '2026-03-27'];
         $this->assertRefused('FeinwerkDataExploration_ErrorComparisonCount', 400, null, fn () =>
-            $this->table(self::BROWSERS, 'range', ExplorationFixture::RANGE, self::comparisons($column, $column, $column)));
+            $this->table(self::BROWSERS, 'range', ExplorationFixture::RANGE, self::comparisons($column, $column, $column, $column)));
     }
 
     public function testMoreColumnsThroughTheLimitsEvent(): void
     {
         Piwik::addAction('FeinwerkDataExploration.getLimits', function (Limits &$limits) {
-            $limits = new Limits(maxCompareColumns: 4);
+            $limits = new Limits(maxCompareColumns: 5);
         });
         $rows = $this->dataRows($this->table(self::BROWSERS, 'range', ExplorationFixture::RANGE, self::comparisons(
             ['browserCode==FF', 'range', ExplorationFixture::RANGE],
             ['browserCode==CH', 'range', ExplorationFixture::RANGE],
+            ['browserCode==SF', 'range', ExplorationFixture::RANGE],
             ['', 'day', '2026-03-27']
         )));
-        $this->assertArrayHasKey('nb_visits__c3', $rows[0]);
-        $this->assertArrayHasKey('nb_visits__c3__change', $rows[0]);
+        $this->assertArrayHasKey('nb_visits__c4', $rows[0]);
+        $this->assertArrayHasKey('nb_visits__c4__change', $rows[0]);
     }
 
     public function testReadableColumnsNameEveryColumn(): void

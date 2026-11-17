@@ -603,6 +603,19 @@
   font-variant-numeric: tabular-nums;
 }
 
+// Matomo's report cells have no padding on the right: a right-aligned number would touch the next column's line
+// (Peter, 2026-11-17: "die zahlen brauchen einen ganz kleinen abstand zum rand")
+.fwde-table table.fwde-table__table td.fwde-table__number,
+.fwde-table table.fwde-table__table th.fwde-table__number {
+  padding-right: 10px;
+}
+
+// the same for dimension values: a tight column (or one only as wide as its values) keeps them off the next line
+.fwde-table table.fwde-table__table td.fwde-table__dimension,
+.fwde-table table.fwde-table__table th.fwde-table__dimension {
+  padding-right: 12px;
+}
+
 // Dimension values stay on one line and are shortened in the middle (the end of a URL stays visible, the full text in
 // the cell's title): the head shrinks with an ellipsis, the tail keeps its last characters
 .fwde-table table.fwde-table__table td.fwde-table__label {
@@ -617,12 +630,17 @@
 }
 
 // A short value (no tail) stays whole. The head of a long value may break anywhere, so its column's smallest width is
-// about 6em plus the tail (a nowrap text would keep the column as wide as the value and push the table sideways), and
-// shows only its first line with an ellipsis: the table gives the column the value's full width when there is room and
-// shortens it only when there is none.
+// 12em for head and tail together (a nowrap text would keep the column as wide as the value and push the table
+// sideways), and shows only its first line with an ellipsis: the table gives the column the value's full width when
+// there is room and shortens it only when there is none. The minimum sits on the whole value, not on the head: a head
+// shorter than its own minimum left a gap before the kept end ("Referrer Na me not defined", Peter, 2026-11-17).
 .fwde-ellipsis__head {
   flex: 0 0 auto;
   white-space: nowrap;
+}
+
+.fwde-ellipsis--long {
+  min-width: 12em;
 }
 
 .fwde-ellipsis--long .fwde-ellipsis__head {
@@ -630,7 +648,7 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
-  min-width: 6em;
+  min-width: 0;
   overflow: hidden;
   white-space: normal;
   overflow-wrap: anywhere;
@@ -649,6 +667,7 @@
   --fwde-head-2: #eceff3;
   --fwde-total: #e9f2fb;
   --fwde-divider: #8c97a3;
+  --fwde-cell-line: #d5dde4;
   --fwde-cell-bar: rgba(87, 177, 255, 0.24);
 
   .inDarkMode({
@@ -656,6 +675,7 @@
     --fwde-head-2: #223b44;
     --fwde-total: #1d4256;
     --fwde-divider: #7f949d;
+    --fwde-cell-line: #33464d;
     --fwde-cell-bar: rgba(87, 177, 255, 0.28);
   });
 }
@@ -664,6 +684,11 @@
 .fwde-table table.fwde-table__table td.fwde-table__metric,
 .fwde-table table.fwde-compare__table th.fwde-compare__column,
 .fwde-table table.fwde-compare__table td.fwde-compare__cell {
+  width: 1%;
+}
+
+// a first dimension of short values is only as wide as they are; the second dimension takes the free width
+.fwde-table table.fwde-table__table .fwde-table__dimension--fit {
   width: 1%;
 }
 
@@ -679,6 +704,15 @@
 
 .fwde-table table.fwde-compare__table td.fwde-compare__group-start {
   border-left-color: var(--fwde-divider) !important;
+}
+
+// a light line between neighbouring metric columns, so the bars behind their values stay apart (Peter, 2026-11-17:
+// "leichte trennlinien zwischen den spalten, sonst kann man die barcharts im hintergrund nicht mehr auseinanderhalten");
+// the stronger lines after the dimensions and between metric groups stay as they are
+.fwde-table table.fwde-table__table .fwde-table__metric + .fwde-table__metric,
+.fwde-table table.fwde-compare__table .fwde-compare__column:not(.fwde-compare__group-start),
+.fwde-table table.fwde-compare__table .fwde-compare__cell:not(.fwde-compare__group-start) {
+  border-left: 1px solid var(--fwde-cell-line) !important;
 }
 
 // a bar from the left behind the number, the cell's full height; --fwde-bar is set per cell
@@ -850,6 +884,11 @@
 .fwde-chart__value {
   fill: @theme-color-text-light;
   font-size: 12px;
+}
+
+// grouped bars while comparing: one smaller bar per comparison column
+.fwde-chart__value--grouped {
+  font-size: 11px;
 }
 
 .fwde-chart__line {

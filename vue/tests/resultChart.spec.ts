@@ -6,6 +6,8 @@ import { mount } from '@vue/test-utils';
 import ResultChart from '../src/ResultChart.vue';
 import { parseState } from '../src/state';
 import { CATALOG, LIMITS } from './fixtures';
+import { ResultRow } from '../src/api';
+import { ComparisonColumn } from '../src/types';
 
 // Matomo 5 runs the specs with Jest; CoreHome is Matomo's UMD global, so the mock is virtual
 jest.mock('CoreHome', () => ({
@@ -179,5 +181,157 @@ describe('ResultChart, trend', () => {
     });
     expect(wrapper.findAll('path.fwde-chart__line')).toHaveLength(1);
     expect(wrapper.find('.fwde-chart__note').text()).toContain('FeinwerkDataExploration_TrendFirstRows 1 12');
+  });
+});
+
+describe('ResultChart, grouped bars while comparing', () => {
+  const barState = parseState({ fwdeDims: 'browser', fwdeMetrics: 'nb_visits' }, CATALOG, LIMITS);
+  const column = (title: string, kind: ComparisonColumn['kind']): ComparisonColumn => ({
+    segment: '', period: 'range', date: '2026-03-27,2026-03-30', title, kind,
+  });
+  const columns = [column('All visits', 'own'), column('Mobile visitors', 'segment'), column('Previous', 'period')];
+  const compared: ResultRow[] = [
+    {
+      label: 'Chrome', nb_visits: 10, nb_visits__c1: 4, nb_visits__c2: 8, nb_visits__c2__change: 25,
+    },
+    {
+      label: 'Firefox', nb_visits: 20, nb_visits__c1: 6, nb_visits__c2: 16, nb_visits__c2__change: 25,
+    },
+    {
+      label: 'Safari', nb_visits: 5, nb_visits__c1: 2, nb_visits__c2: 4, nb_visits__c2__change: 25,
+    },
+  ];
+  const grouped = (compareColumns: ComparisonColumn[]) => mount(ResultChart, {
+    props: {
+      rows: compared,
+      state: barState,
+      catalog: CATALOG,
+      metric: 'nb_visits',
+      actionScope: false,
+      currencySymbol: '$',
+      chartType: 'bar',
+      compareColumns,
+    },
+  });
+
+  it('one bar per comparison column and row, in Matomo\'s comparison colours', () => {
+    const bars = grouped(columns).findAll('rect.fwde-chart__bar');
+    expect(bars).toHaveLength(9);
+    expect(bars.slice(0, 3).map((b) => b.attributes('data-name'))).toEqual(['series0', 'series1', 'series2']);
+    expect(bars[1].classes()).toContain('comparison-series-color');
+  });
+
+  it('names the columns in a legend below the chart, bars without dashes', () => {
+    const chart = grouped(columns);
+    expect(chart.findAll('.fwde-chart__legend-item').map((li) => li.text()))
+      .toEqual(['All visits', 'Mobile visitors', 'Previous']);
+    expect(chart.findAll('.fwde-chart__swatch--dashed')).toHaveLength(0);
+  });
+
+  it('names the column, the row, the value and a period\'s change in each bar\'s tooltip', () => {
+    const titles = grouped(columns).findAll('g.fwde-chart__group title').map((t) => t.text());
+    expect(titles[2]).toContain('Previous');
+    expect(titles[2]).toContain('Firefox');
+    expect(titles[2]).toContain('16');
+    expect(titles[2]).toContain('+25 %');
+    expect(titles[1]).not.toContain('%');
+  });
+
+  it('never overlaps the next row, also with four and ten columns', () => {
+    // every column has a value, so each row draws one bar per column (the last bar of row 0 is bars[n - 1])
+    const full: ResultRow[] = compared.map((row) => {
+      const values: ResultRow = { ...row };
+      for (let c = 1; c < 10; c += 1) {
+        values[`nb_visits__c${c}`] = Number(row.nb_visits) - c / 10;
+      }
+      return values;
+    });
+    [4, 10].forEach((count) => {
+      const many = Array.from({ length: count }, (_, c) => column(`Column ${c}`, c ? 'segment' : 'own'));
+      const bars = mount(ResultChart, {
+        props: {
+          rows: full,
+          state: barState,
+          catalog: CATALOG,
+          metric: 'nb_visits',
+          actionScope: false,
+          currencySymbol: '$',
+          chartType: 'bar',
+          compareColumns: many,
+        },
+      }).findAll('rect.fwde-chart__bar');
+      expect(bars).toHaveLength(3 * count);
+      const lastOfFirstRow = bars[count - 1];
+      const firstOfSecondRow = bars[count];
+      expect(Number(firstOfSecondRow.attributes('y')))
+        .toBeGreaterThanOrEqual(Number(lastOfFirstRow.attributes('y')) + Number(lastOfFirstRow.attributes('height')));
+    });
+  });
+
+  it('labels the trend\'s comparison lines like the bars: segment and period', () => {
+    const withTitles = (title: string, segment: string, period: string, kind: ComparisonColumn['kind']) => ({
+      ...column(title, kind), segmentTitle: segment, periodTitle: period,
+    });
+    const trendColumns = [
+      withTitles('All visits, Nov 2026', 'All visits', 'Nov 2026', 'own'),
+      withTitles('Mobile visitors', 'Mobile visitors', 'Nov 2026', 'segment'),
+      withTitles('Oct 2026', 'All visits', 'Oct 2026', 'period'),
+    ];
+    const lines = [0, 1, 2].flatMap((line) => ['2026-03-27', '2026-03-28'].map((time) => ({
+      label: `server title ${line}`, time, fwde_line: line, fwde_kind: line ? 'segment' : 'own', nb_visits: 3 + line,
+    })));
+    const legend = mount(ResultChart, {
+      props: {
+        rows: compared,
+        state: barState,
+        catalog: CATALOG,
+        metric: 'nb_visits',
+        actionScope: false,
+        currencySymbol: '$',
+        chartType: 'trend',
+        trendRows: lines,
+        compareColumns: trendColumns,
+      },
+    }).findAll('.fwde-chart__legend-item').map((li) => li.text());
+    expect(legend).toEqual(['All visits, Nov 2026', 'Mobile visitors, Nov 2026', 'All visits, Oct 2026']);
+  });
+
+  it('names and colours a trend line by its column, also when a column before it failed', () => {
+    const withTitles = (title: string, segment: string, kind: ComparisonColumn['kind']) => ({
+      ...column(title, kind), segmentTitle: segment, periodTitle: '',
+    });
+    const fourColumns = [
+      withTitles('All visits', 'All visits', 'own'),
+      withTitles('Mobile visitors', 'Mobile visitors', 'segment'),
+      withTitles('Desktop visitors', 'Desktop visitors', 'segment'),
+      withTitles('Tablet visitors', 'Tablet visitors', 'segment'),
+    ];
+    // column 1 failed (busy or the time limit): its line is missing, lines 0, 2 and 3 arrive
+    const lines = [0, 2, 3].flatMap((line) => ['2026-03-27', '2026-03-28'].map((time) => ({
+      label: `server title ${line}`, time, fwde_line: line, fwde_kind: line ? 'segment' : 'own', nb_visits: 3 + line,
+    })));
+    const chart = mount(ResultChart, {
+      props: {
+        rows: compared,
+        state: barState,
+        catalog: CATALOG,
+        metric: 'nb_visits',
+        actionScope: false,
+        currencySymbol: '$',
+        chartType: 'trend',
+        trendRows: lines,
+        compareColumns: fourColumns,
+      },
+    });
+    expect(chart.findAll('.fwde-chart__legend-item').map((li) => li.text()))
+      .toEqual(['All visits', 'Desktop visitors', 'Tablet visitors']);
+    expect(chart.findAll('.fwde-chart__legend-item .fwde-chart__swatch').map((sw) => sw.attributes('data-name')))
+      .toEqual(['series0', 'series2', 'series3']);
+  });
+
+  it('draws single bars of the own view without a comparison', () => {
+    const plain = grouped([columns[0]]);
+    expect(plain.findAll('rect.fwde-chart__bar')).toHaveLength(3);
+    expect(plain.find('.fwde-chart__legend').exists()).toBe(false);
   });
 });

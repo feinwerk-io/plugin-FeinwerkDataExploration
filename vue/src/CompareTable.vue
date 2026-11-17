@@ -15,6 +15,7 @@
                 label: true,
                 'fwde-table__dimension': true,
                 'fwde-table__dimension-last': dimension.key === lastDimension,
+                'fwde-table__dimension--fit': dimension.key === 'label' && firstDimensionFits,
               }"
               rowspan="2"
             >{{ dimension.label }}</th>
@@ -94,6 +95,7 @@
                 'fwde-table__label': true,
                 'fwde-table__dimension': true,
                 'fwde-table__dimension-last': dimension.key === lastDimension,
+                'fwde-table__dimension--fit': dimension.key === 'label' && firstDimensionFits,
               }"
             >{{ dimension.key === 'label' ? total.label : '' }}</td>
             <template
@@ -124,6 +126,7 @@
                 'fwde-table__label': true,
                 'fwde-table__dimension': true,
                 'fwde-table__dimension-last': dimension.key === lastDimension,
+                'fwde-table__dimension--fit': dimension.key === 'label' && firstDimensionFits,
               }"
               :title="String(row[dimension.key])"
             >
@@ -245,6 +248,16 @@ export default defineComponent({
     },
     lastDimension(): string {
       return this.state.dimensions.length > 1 ? 'secondary_label' : 'label';
+    },
+    /**
+     * With two dimensions and only short values in the first one, the first column is only as
+     * wide as its values: the free width goes behind the second dimension, so both dimensions stay
+     * together on the left (Peter, 2026-11-17). A first dimension with long values (page URLs)
+     * keeps the free width, it needs it.
+     */
+    firstDimensionFits(): boolean {
+      return this.state.dimensions.length > 1
+        && this.rows.every((row) => headAndTail(String(row.label))[1] === '');
     },
     /**
      * What each count's bars are measured against: the metric's largest value in all its columns,

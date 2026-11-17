@@ -15,7 +15,7 @@ use Piwik\Plugins\FeinwerkDataExploration\Engine\Limits;
 /**
  * The comparison columns of getExploration (comparison design, section 5), e.g.
  * [{"segment": "browserCode==FF", "period": "day", "date": "2026-03-27"}]: the columns after the own one. The free
- * version shows up to 3 columns per metric, the own one included; another plugin may raise the limit through
+ * version shows up to 4 columns per metric, the own one included; another plugin may raise the limit through
  * FeinwerkDataExploration.getLimits, up to MAX_COLUMNS.
  */
 final class ComparisonList

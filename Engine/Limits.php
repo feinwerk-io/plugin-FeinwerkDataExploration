@@ -25,7 +25,7 @@ final class Limits
         /** steps of a funnel; the free version has 3, FunnelDefinition::maxSteps() clamps it to 2..10 */
         public readonly int $maxFunnelSteps = 3,
         /** columns per metric when comparing, the own one included; ComparisonList::maxColumns() clamps it to 1..10 */
-        public readonly int $maxCompareColumns = 3,
+        public readonly int $maxCompareColumns = 4,
         /** lines of a line chart (trend and time dimensions); TrendExplorer::maxLines() clamps it to 1..10 */
         public readonly int $maxTrendLines = 5
     ) {

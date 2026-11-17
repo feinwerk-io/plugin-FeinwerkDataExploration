@@ -71,6 +71,17 @@ export function isComparing(columns: ComparisonColumn[]): boolean {
   return columns.length > 1;
 }
 
+/**
+ * A column's name in the charts (legend, lines, tooltips), the same for every column: "segment,
+ * period" while periods are compared, else the segment; both from Matomo's comparison list, as
+ * the table's column titles (Peter, 2026-11-17: the labels were mixed, and a segment showed once
+ * by its name, once by its definition).
+ */
+export function columnLabel(column: ComparisonColumn): string {
+  const segment = column.segmentTitle || column.title;
+  return column.periodTitle ? `${segment}, ${column.periodTitle}` : segment;
+}
+
 export function valueKey(metric: string, n: number): string {
   return n === 0 ? metric : `${metric}__c${n}`;
 }

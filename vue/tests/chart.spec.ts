@@ -3,9 +3,11 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 import {
-  axisLabelStep, canChart, chartMetricFor, chartModel, effectiveView, linePath, niceScale,
-  resultTitle, truncateLabel,
+  axisLabelStep, canChart, chartMetricFor, chartModel, compareBarModel, compareChartHint, effectiveView, linePath,
+  niceScale, resultTitle, truncateLabel,
 } from '../src/chart';
+import { ResultRow } from '../src/api';
+import { ComparisonColumn } from '../src/types';
 
 describe('axisLabelStep', () => {
   it('labels days weekly when every day does not fit, as Matomo\'s graphs do', () => {
@@ -311,5 +313,60 @@ describe('truncateLabel', () => {
     expect(truncateLabel('Chrome', 10)).toBe('Chrome');
     expect(truncateLabel('outdoor-shop.example/wandern/', 10)).toBe('outdo…ern/');
     expect(truncateLabel('abc', 0)).toBe('…');
+  });
+});
+
+const column = (title: string, kind: ComparisonColumn['kind']): ComparisonColumn => ({
+  segment: '', period: 'range', date: '2026-03-27,2026-03-30', title, kind,
+});
+
+describe('compareBarModel', () => {
+  const columns = [column('All visits', 'own'), column('Mobile visitors', 'segment'), column('Previous', 'period')];
+  const rows: ResultRow[] = [
+    {
+      label: 'Total', fwde_total: 1, nb_visits: 30, nb_visits__c1: 12, nb_visits__c2: 25,
+    },
+    {
+      label: 'Chrome', nb_visits: 10, nb_visits__c1: 4, nb_visits__c2: 8, nb_visits__c2__change: 25,
+    },
+    {
+      label: 'Firefox', nb_visits: 20, nb_visits__c1: '', nb_visits__c2: 16, nb_visits__c2__change: 25,
+    },
+  ];
+
+  it('one series per column, rows by the own value, without the total row', () => {
+    const model = compareBarModel(rows, columns, 'nb_visits', {});
+    expect(model.type).toBe('bar');
+    expect(model.categories).toEqual(['Firefox', 'Chrome']);
+    expect(model.series.map((s) => [s.label, s.comparison])).toEqual([
+      ['All visits', true], ['Mobile visitors', true], ['Previous', true]]);
+    expect(model.series.map((s) => s.points.map((p) => p.value))).toEqual([[20, 10], [null, 4], [16, 8]]);
+    expect(model.series[2].points.map((p) => p.change)).toEqual([25, 25]);
+    expect(model.series[1].points.map((p) => p.change)).toEqual([undefined, undefined]);
+    expect(model.scale.min).toBe(0);
+    expect(model.scale.max).toBeGreaterThanOrEqual(20);
+  });
+
+  it('at most 10 rows while comparing', () => {
+    const many: ResultRow[] = Array.from({ length: 14 }, (_, i) => ({ label: `B${i}`, nb_visits: 14 - i, nb_visits__c1: i }));
+    const model = compareBarModel(many, columns.slice(0, 2), 'nb_visits', {});
+    expect(model.categories).toHaveLength(10);
+    expect(model.omittedRows).toBe(4);
+  });
+
+  it('a missing column gives null points, never NaN', () => {
+    const model = compareBarModel([{ label: 'Chrome', nb_visits: 3 }], columns.slice(0, 2), 'nb_visits', {});
+    expect(model.series[1].points[0].value).toBeNull();
+    expect(Number.isFinite(model.scale.max)).toBe(true);
+  });
+});
+
+describe('compareChartHint', () => {
+  it('no hint for grouped bars, the trend hint for lines, the own-view hint for a time dimension in second place', () => {
+    expect(compareChartHint(state({ fwdeDims: 'browser' }), 'bar', 3)).toBe('');
+    expect(compareChartHint(state({ fwdeDims: 'date' }), 'bar', 3)).toBe('FeinwerkDataExploration_CompareTrendHint');
+    expect(compareChartHint(state({ fwdeDims: 'browser,date' }), 'bar', 3)).toBe('FeinwerkDataExploration_CompareChartHint');
+    expect(compareChartHint(state({ fwdeDims: 'date,browser' }), 'bar', 3)).toBe('FeinwerkDataExploration_CompareChartHint');
+    expect(compareChartHint(state({ fwdeDims: 'browser' }), 'trend', 3)).toBe('FeinwerkDataExploration_CompareTrendHint');
   });
 });

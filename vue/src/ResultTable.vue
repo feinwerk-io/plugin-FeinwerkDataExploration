@@ -20,6 +20,7 @@
                 label: !column.isMetric,
                 'fwde-table__dimension': !column.isMetric,
                 'fwde-table__dimension-last': column.key === lastDimension,
+                'fwde-table__dimension--fit': column.key === 'label' && firstDimensionFits,
               }"
               :aria-sort="ariaSort(column.key)"
             >
@@ -69,6 +70,7 @@
                   'fwde-table__label': true,
                   'fwde-table__dimension': true,
                   'fwde-table__dimension-last': column.key === lastDimension,
+                  'fwde-table__dimension--fit': column.key === 'label' && firstDimensionFits,
                 }"
                 :title="String(row[column.key])"
               >
@@ -151,6 +153,16 @@ export default defineComponent({
         columns.push({ key: id, label, isMetric: true });
       });
       return columns;
+    },
+    /**
+     * With two dimensions and only short values in the first one, the first column is only as
+     * wide as its values: the free width goes behind the second dimension, so both dimensions stay
+     * together on the left (Peter, 2026-11-17). A first dimension with long values (page URLs)
+     * keeps the free width, it needs it.
+     */
+    firstDimensionFits(): boolean {
+      return this.state.dimensions.length > 1
+        && this.rows.every((row) => headAndTail(String(row.label))[1] === '');
     },
     /** the key of the last dimension column: a line separates the dimensions from the metrics */
     lastDimension(): string {

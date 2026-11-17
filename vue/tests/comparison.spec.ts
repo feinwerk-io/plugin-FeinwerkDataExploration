@@ -6,6 +6,7 @@ import {
   changeKey, comparisonColumns, isComparing, mergeColumn, remainingColumns, requestColumns, shareKey,
   valueKey, withoutComparisonColumns,
 } from '../src/comparison';
+import { columnLabel as labelOf } from '../src/comparison';
 
 const segments = [
   { params: { segment: '' }, title: 'All visits' },
@@ -133,6 +134,13 @@ describe('comparison columns from Matomo\'s comparison store', () => {
     ]);
     const segmentsOnly = comparisonColumns(segments, [periods[0]], 10).columns;
     expect(segmentsOnly.map((c) => [c.segmentTitle, c.periodTitle])).toEqual([['All visits', ''], ['Mobile', '']]);
+  });
+
+  it('names every column the same way in the charts: segment and period while periods are compared', () => {
+    expect(comparisonColumns(segments, periods, 10).columns.map(labelOf)).toEqual([
+      'All visits, Nov 2026', 'Mobile, Nov 2026', 'All visits, Oct 2026', 'Mobile, Oct 2026',
+    ]);
+    expect(comparisonColumns(segments, [periods[0]], 10).columns.map(labelOf)).toEqual(['All visits', 'Mobile']);
   });
 
   it('the first response keeps the own columns only (its column 1 repeats the own view)', () => {

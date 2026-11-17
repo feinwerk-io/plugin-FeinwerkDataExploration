@@ -2,7 +2,10 @@
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
-import { Catalog, ChartView, ExplorationState } from './types';
+import {
+  Catalog, ChartType, ChartView, ComparisonColumn, ExplorationState,
+} from './types';
+import { changeKey, columnLabel, valueKey } from './comparison';
 import { ResultRow } from './api';
 import { NUMBER_OPERATORS } from './state';
 
@@ -50,6 +53,8 @@ export interface ChartPoint {
   value: number|null;
   /** the real date or hour of a compared period lined up by position (tooltip) */
   date?: string;
+  /** a compared period's change against the page's period, in percent (grouped bars' tooltip) */
+  change?: number|null;
 }
 
 export interface ChartSeries {
@@ -58,6 +63,8 @@ export interface ChartSeries {
   dashed?: boolean;
   /** a comparison column: coloured as Matomo colours its comparison series */
   comparison?: boolean;
+  /** the trend's line (fwde_line): comparison line n is column n, also after a missing line */
+  line?: number;
   /** one point per category, in the order of the categories */
   points: ChartPoint[];
 }
@@ -191,6 +198,15 @@ export function niceScale(
   return { min, max, ticks };
 }
 
+/** a cell's number, or null for a missing or empty one (never NaN) */
+function numberOrNull(value: unknown): number|null {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
 function valueOf(row: ResultRow, metric: string): number {
   const value = Number(row[metric]);
   return Number.isFinite(value) ? value : 0;
@@ -313,6 +329,75 @@ function lineModel(
       INTEGER_METRICS.includes(metric),
     ),
   };
+}
+
+/**
+ * The bar chart while comparing: the largest rows of the own view by the metric, one series per
+ * comparison column (own view first), coloured as Matomo's comparison series; a compared period
+ * carries its change for the tooltip.
+ */
+export function compareBarModel(
+  rows: ResultRow[],
+  columns: ComparisonColumn[],
+  metric: string,
+  options: { maxBars?: number, tickCount?: number },
+): ChartModel {
+  const { maxBars = 10, tickCount = 5 } = options;
+  const data = rows.filter((row) => !row.fwde_total);
+  const top = [...data]
+    .sort((a, b) => (numberOrNull(b[metric]) ?? 0) - (numberOrNull(a[metric]) ?? 0))
+    .slice(0, maxBars);
+  const series: ChartSeries[] = columns.map((column, n) => ({
+    label: columnLabel(column),
+    comparison: true,
+    points: top.map((row) => {
+      const point: ChartPoint = {
+        label: rowLabel(row),
+        value: numberOrNull(row[valueKey(metric, n)]),
+      };
+      if (column.kind === 'period' || column.kind === 'both') {
+        point.change = numberOrNull(row[changeKey(metric, n)]);
+      }
+      return point;
+    }),
+  }));
+  const values = series.flatMap((s) => s.points.map((p) => p.value))
+    .filter((value): value is number => value !== null);
+  return {
+    type: 'bar',
+    categories: top.map(rowLabel),
+    series,
+    omittedRows: Math.max(0, data.length - maxBars),
+    omittedSeries: 0,
+    incomplete: false,
+    scale: niceScale(
+      Math.min(0, ...values),
+      Math.max(0, ...values),
+      tickCount,
+      INTEGER_METRICS.includes(metric),
+    ),
+  };
+}
+
+/**
+ * The hint above a compared chart (translation key, '' for none): grouped bars show every column
+ * themselves; the lines of a time dimension and the trend show column totals; a time dimension in
+ * second place shows the own view.
+ */
+export function compareChartHint(
+  state: ExplorationState,
+  chartType: ChartType,
+  columnCount: number,
+): string {
+  const [first, second] = state.dimensions;
+  const singleTime = TIME_DIMENSIONS.includes(first) && second === undefined;
+  if (chartType === 'trend' || (singleTime && columnCount > 1)) {
+    return 'FeinwerkDataExploration_CompareTrendHint';
+  }
+  if (state.dimensions.some((id) => TIME_DIMENSIONS.includes(id))) {
+    return 'FeinwerkDataExploration_CompareChartHint';
+  }
+  return columnCount > 1 ? '' : 'FeinwerkDataExploration_CompareChartHint';
 }
 
 /**
