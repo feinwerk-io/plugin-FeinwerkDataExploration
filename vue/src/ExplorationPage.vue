@@ -71,182 +71,190 @@
           />
         </section>
       </aside>
-      <section class="fwde-card fwde-main">
-        <header class="fwde-card__header">
-          <div class="fwde-card__heading">
-            <h2 class="fwde-card__title">{{ title }}</h2>
-            <span
-              v-if="savedChanged"
-              class="fwde-card__changed"
-            >{{ translate('FeinwerkDataExploration_SavedChanged') }}</span>
-          </div>
-          <ExplorationToolbar
-            class="fwde-card__actions"
-            :state="state"
-            :max-rows="maxRows"
-            :view="view"
-            :can-chart="canChart"
-            :export-url-for="comparing ? compareExportUrl : undefined"
-            @limit="update({ limit: $event })"
-            @view="update({ view: $event })"
-          />
-          <SaveDialog
-            v-if="savedLoaded"
-            class="fwde-card__save"
-            :current="currentSaved"
-            :suggested-name="resultName"
-            :can-share="canShare"
-            :busy="saveBusy"
-            :error="saveError"
-            @open="saveError = ''"
-            @save="saveExploration"
-            @delete="deleteCurrent"
-          />
-        </header>
-        <div class="fwde-card__body">
-          <Alert
-            v-if="showRawDataWarning"
-            severity="warning"
-          >
-            {{ translate('FeinwerkDataExploration_RawDataWarning', rawDataFrom) }}
-            <button
-              v-if="rawDataRange"
-              type="button"
-              class="fwde-alert-link"
-              @click="showFrom(rawDataRange)"
-            >{{ translate('FeinwerkDataExploration_ShowFromFirstCompleteDay') }}</button>
-          </Alert>
-          <Alert
-            v-if="largePeriodHint"
-            severity="warning"
-          >{{ largePeriodHint }}</Alert>
-          <Alert
-            v-if="error"
-            severity="danger"
-          >
-            {{ error }}
-            <button
-              v-if="canRetry"
-              type="button"
-              class="fwde-alert-link fwde-retry"
-              @click="run"
-            >{{ translate('FeinwerkDataExploration_TryAgain') }}</button>
-          </Alert>
-          <Alert
-            v-if="slowHint"
-            severity="info"
-          >{{ slowHint }}</Alert>
-          <Alert
-            v-if="suggestedPeriod"
-            severity="info"
-          >
-            <template v-if="suggestedPeriod.date">
-              {{ translate('FeinwerkDataExploration_SmallerPeriodHint') }}
-              <button
-                type="button"
-                class="fwde-alert-link fwde-suggested-period"
-                @click="showFrom(suggestedPeriod.date)"
-              >{{ suggestedPeriodLabel }}</button>
-            </template>
-            <template v-else>{{ translate(noSmallerPeriodKey) }}</template>
-          </Alert>
-          <ActivityIndicator
-            :loading="loading"
-            :loading-message="translate('FeinwerkDataExploration_LoadingExploration')"
-          />
-          <Alert
-            v-if="comparing && comparison.cut"
-            severity="info"
-          >{{ compareLimitText }}</Alert>
-          <Alert
-            v-for="(message, n) in columnErrors"
-            :key="`column-${n}`"
-            severity="warning"
-          >{{ message }}</Alert>
-          <div
-            v-if="!loading && !error && ownRows && !ownRows.length"
-            class="pk-emptyDataTable"
-          >{{ translate('CoreHome_ThereIsNoDataForThisReport') }}</div>
-          <p
-            v-if="comparing && compareHint && !error && ownRows && ownRows.length
-              && view !== 'table'"
-            class="fwde-compare__hint"
-          >{{ translate(compareHint) }}</p>
-          <template v-if="showsTrend">
+      <div class="fwde-page__content">
+        <section class="fwde-card fwde-main">
+          <header class="fwde-card__header">
+            <div class="fwde-card__heading">
+              <h2 class="fwde-card__title">{{ title }}</h2>
+              <span
+                v-if="savedChanged"
+                class="fwde-card__changed"
+              >{{ translate('FeinwerkDataExploration_SavedChanged') }}</span>
+            </div>
+            <ExplorationToolbar
+              class="fwde-card__actions"
+              :state="state"
+              :max-rows="maxRows"
+              :view="view"
+              :can-chart="canChart"
+              :export-url-for="comparing ? compareExportUrl : undefined"
+              @limit="update({ limit: $event })"
+              @view="update({ view: $event })"
+            />
+            <SaveDialog
+              v-if="savedLoaded"
+              class="fwde-card__save"
+              :current="currentSaved"
+              :suggested-name="resultName"
+              :can-share="canShare"
+              :busy="saveBusy"
+              :error="saveError"
+              @open="saveError = ''"
+              @save="saveExploration"
+              @delete="deleteCurrent"
+            />
+          </header>
+          <div class="fwde-card__body">
             <Alert
-              v-if="trendError"
+              v-if="showRawDataWarning"
               severity="warning"
-            >{{ trendError }}</Alert>
+            >
+              {{ translate('FeinwerkDataExploration_RawDataWarning', rawDataFrom) }}
+              <button
+                v-if="rawDataRange"
+                type="button"
+                class="fwde-alert-link"
+                @click="showFrom(rawDataRange)"
+              >{{ translate('FeinwerkDataExploration_ShowFromFirstCompleteDay') }}</button>
+            </Alert>
             <Alert
-              v-for="(message, n) in trendErrors"
-              :key="`trend-${n}`"
+              v-if="largePeriodHint"
+              severity="warning"
+            >{{ largePeriodHint }}</Alert>
+            <Alert
+              v-if="error"
+              severity="danger"
+            >
+              {{ error }}
+              <button
+                v-if="canRetry"
+                type="button"
+                class="fwde-alert-link fwde-retry"
+                @click="run"
+              >{{ translate('FeinwerkDataExploration_TryAgain') }}</button>
+            </Alert>
+            <Alert
+              v-if="slowHint"
+              severity="info"
+            >{{ slowHint }}</Alert>
+            <Alert
+              v-if="suggestedPeriod"
+              severity="info"
+            >
+              <template v-if="suggestedPeriod.date">
+                {{ translate('FeinwerkDataExploration_SmallerPeriodHint') }}
+                <button
+                  type="button"
+                  class="fwde-alert-link fwde-suggested-period"
+                  @click="showFrom(suggestedPeriod.date)"
+                >{{ suggestedPeriodLabel }}</button>
+              </template>
+              <template v-else>{{ translate(noSmallerPeriodKey) }}</template>
+            </Alert>
+            <ActivityIndicator
+              :loading="loading"
+              :loading-message="translate('FeinwerkDataExploration_LoadingExploration')"
+            />
+            <Alert
+              v-if="comparing && comparison.cut"
+              severity="info"
+            >{{ compareLimitText }}</Alert>
+            <Alert
+              v-for="(message, n) in columnErrors"
+              :key="`column-${n}`"
               severity="warning"
             >{{ message }}</Alert>
-          </template>
-          <ResultChart
-            v-if="!error && ownRows && ownRows.length && view !== 'table'"
-            :rows="ownRows"
-            :state="state"
-            :catalog="catalog"
-            :metric="chartMetric"
-            :action-scope="actionScope"
-            :currency-symbol="currencySymbol"
-            :hour-labels="hourLabels"
-            :period-days="periodDays"
-            :chart-type="chartType"
-            :show-type-switch="showTypeSwitch"
-            :trend-rows="trendRows"
-            :trend-loading="trendLoading"
-            :max-lines="maxTrendLines"
-            :compare-columns="chartCompareColumns"
-            :class="{ 'fwde-main__stale': loading }"
-            @metric="update({ chartMetric: $event })"
-            @chart-type="update({ chartType: $event })"
-          />
-          <CompareTable
-            v-if="comparing && !error && rows && ownRows && ownRows.length && view !== 'chart'"
-            :rows="rows"
-            :state="state"
-            :catalog="catalog"
-            :columns="comparison.columns"
-            :column-errors="columnErrors"
-            :action-scope="actionScope"
-            :currency-symbol="currencySymbol"
-            :visits-log-enabled="visitsLogEnabled"
-            :class="{ 'fwde-main__stale': loading }"
-            @sort="sortBy"
-            @row-filter="filterToRow"
-            @row-breakdown="breakDownRow"
-            @row-visits="showRowVisits"
-          />
-          <ResultTable
-            v-if="!comparing && !error && rows && rows.length && view !== 'chart'"
-            :rows="rows"
-            :state="state"
-            :catalog="catalog"
-            :action-scope="actionScope"
-            :currency-symbol="currencySymbol"
-            :visits-log-enabled="visitsLogEnabled"
-            :class="{ 'fwde-main__stale': loading }"
-            @sort="sortBy"
-            @row-filter="filterToRow"
-            @row-breakdown="breakDownRow"
-            @row-visits="showRowVisits"
-          />
-          <FeedbackBar
-            v-if="!error && rows"
-            :id-site="idSite"
-            topic="free_form_table"
-            :question="translate('FeinwerkDataExploration_FeedbackQuestion_free_form_table')"
-            :feedback="feedback"
-          />
-          <PromoLine
-            v-if="!error && rows"
-            :promo="promo"
-            :dismiss-label="translate('FeinwerkDataExploration_PromoDismiss')"
-          />
-        </div>
-      </section>
+            <div
+              v-if="!loading && !error && ownRows && !ownRows.length"
+              class="pk-emptyDataTable"
+            >{{ translate('CoreHome_ThereIsNoDataForThisReport') }}</div>
+            <p
+              v-if="comparing && compareHint && !error && ownRows && ownRows.length
+                && view !== 'table'"
+              class="fwde-compare__hint"
+            >{{ translate(compareHint) }}</p>
+            <template v-if="showsTrend">
+              <Alert
+                v-if="trendError"
+                severity="warning"
+              >{{ trendError }}</Alert>
+              <Alert
+                v-for="(message, n) in trendErrors"
+                :key="`trend-${n}`"
+                severity="warning"
+              >{{ message }}</Alert>
+            </template>
+            <ResultChart
+              v-if="!error && ownRows && ownRows.length && view !== 'table'"
+              :rows="ownRows"
+              :state="state"
+              :catalog="catalog"
+              :metric="chartMetric"
+              :action-scope="actionScope"
+              :currency-symbol="currencySymbol"
+              :hour-labels="hourLabels"
+              :period-days="periodDays"
+              :chart-type="chartType"
+              :show-type-switch="showTypeSwitch"
+              :trend-rows="trendRows"
+              :trend-loading="trendLoading"
+              :max-lines="maxTrendLines"
+              :compare-columns="chartCompareColumns"
+              :class="{ 'fwde-main__stale': loading }"
+              @metric="update({ chartMetric: $event })"
+              @chart-type="update({ chartType: $event })"
+            />
+            <CompareTable
+              v-if="comparing && !error && rows && ownRows && ownRows.length && view !== 'chart'"
+              :rows="rows"
+              :state="state"
+              :catalog="catalog"
+              :columns="comparison.columns"
+              :column-errors="columnErrors"
+              :action-scope="actionScope"
+              :currency-symbol="currencySymbol"
+              :visits-log-enabled="visitsLogEnabled"
+              :class="{ 'fwde-main__stale': loading }"
+              @sort="sortBy"
+              @row-filter="filterToRow"
+              @row-breakdown="breakDownRow"
+              @row-visits="showRowVisits"
+            />
+            <ResultTable
+              v-if="!comparing && !error && rows && rows.length && view !== 'chart'"
+              :rows="rows"
+              :state="state"
+              :catalog="catalog"
+              :action-scope="actionScope"
+              :currency-symbol="currencySymbol"
+              :visits-log-enabled="visitsLogEnabled"
+              :class="{ 'fwde-main__stale': loading }"
+              @sort="sortBy"
+              @row-filter="filterToRow"
+              @row-breakdown="breakDownRow"
+              @row-visits="showRowVisits"
+            />
+            <FeedbackBar
+              v-if="!error && rows"
+              :id-site="idSite"
+              topic="free_form_table"
+              :question="translate('FeinwerkDataExploration_FeedbackQuestion_free_form_table')"
+              :feedback="feedback"
+            />
+            <PromoLine
+              v-if="!error && rows"
+              :promo="promo"
+              :dismiss-label="translate('FeinwerkDataExploration_PromoDismiss')"
+            />
+          </div>
+        </section>
+        <PremiumBanner
+          :premium="premium"
+          :label="translate('FeinwerkDataExploration_PremiumLabel')"
+          :more-label="translate('FeinwerkDataExploration_PremiumMore')"
+          :dismiss-label="translate('FeinwerkDataExploration_PremiumDismiss')"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -276,6 +284,8 @@ import SavedPicker from './SavedPicker.vue';
 import SaveDialog from './SaveDialog.vue';
 import FeedbackBar from './FeedbackBar.vue';
 import PromoLine, { PromoVariables } from './PromoLine.vue';
+import PremiumBanner from './PremiumBanner.vue';
+import { PremiumProps } from './premium';
 import { FeedbackSettings } from './feedback';
 import {
   differsFromSaved, findSaved, linkNamesOnlySaved, savedHashParams, savedKind, stateToSave,
@@ -382,6 +392,7 @@ export default defineComponent({
     SaveDialog,
     FeedbackBar,
     PromoLine,
+    PremiumBanner,
   },
   props: {
     idSite: { type: Number, required: true },
@@ -392,6 +403,11 @@ export default defineComponent({
     canCopy: { type: Boolean, default: false },
     promo: {
       type: Object as PropType<PromoVariables|null>,
+      default: null,
+    },
+    /** the premium banner below the result (PremiumPromo); null: none, the tip line may show */
+    premium: {
+      type: Object as PropType<PremiumProps|null>,
       default: null,
     },
     feedback: {

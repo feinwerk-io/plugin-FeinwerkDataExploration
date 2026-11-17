@@ -6,16 +6,21 @@
  * - One notice per placement and page (data-fwpromo-placement; a line without it counts as "line"): when several
  *   reports or several Feinwerk plugins render the same placement, the first one that arrives stays, the others go.
  * Nothing is loaded and nothing is sent. Reports arrive and reload after the page, so new notices are prepared through
- * a MutationObserver and clicks are caught at the document. Plain script without a build and without jQuery. Several
- * Feinwerk plugins ship this file: the first copy on the page does the work (window.fwpromoKit).
+ * a MutationObserver and clicks are caught at the document. Plain script without a build and without jQuery.
+ * Several Feinwerk plugins ship this file, in different versions. window.fwpromoKit holds the version that runs: an equal
+ * or newer copy leaves the page to it. This copy (version 3) also runs after an older one (version 2: "the first copy
+ * wins", without the compact logo or session-only hiding in demo), fits the lines that copy showed, takes out demo
+ * notices hidden this session, and takes the clicks on the x first (capture phase), so no load order loses them
+ * (tests/js/run-promo-check.sh).
  */
 (function () {
     'use strict';
 
-    if (window.fwpromoKit) {
+    var VERSION = 3;
+    if ((window.fwpromoKit || 0) >= VERSION) {
         return;
     }
-    window.fwpromoKit = 2;
+    window.fwpromoKit = VERSION;
 
     var DAY = 86400000;
     var NOTICES = '.fwpromo-line, .fwpromo-box';
@@ -85,9 +90,10 @@
         : null;
 
     function watch(notice) {
-        if (!notice.classList.contains('fwpromo-line')) {
+        if (!notice.classList.contains('fwpromo-line') || notice.hasAttribute('data-fwpromo-fit')) {
             return;
         }
+        notice.setAttribute('data-fwpromo-fit', '1');
         fit(notice);
         if (resizeObserver) {
             resizeObserver.observe(notice);
@@ -98,9 +104,16 @@
         var notices = document.querySelectorAll(NOTICES);
         var shown = {};
         Array.prototype.forEach.call(notices, function (notice) {
-            if (notice.getAttribute('data-fwpromo-ready')) {
-                shown[placementOf(notice)] = true;
+            if (!notice.getAttribute('data-fwpromo-ready')) {
+                return;
             }
+            // shown by an older copy: a demo notice hidden this session goes, the others get the compact logo
+            if (notice.hasAttribute('data-fwpromo-demo') && dismissed(notice)) {
+                remove(notice);
+                return;
+            }
+            shown[placementOf(notice)] = true;
+            watch(notice);
         });
         Array.prototype.forEach.call(notices, function (notice) {
             if (notice.getAttribute('data-fwpromo-ready')) {
@@ -124,6 +137,8 @@
             return;
         }
         event.preventDefault();
+        // an older copy's handler (bubble phase) does not run as well
+        event.stopPropagation();
         var id = notice.getAttribute('data-fwpromo-id') || '';
         try {
             storage(notice).setItem(key(id), String(Date.now()));
@@ -135,7 +150,7 @@
                 remove(other);
             }
         });
-    });
+    }, true);
 
     function start() {
         prepare();

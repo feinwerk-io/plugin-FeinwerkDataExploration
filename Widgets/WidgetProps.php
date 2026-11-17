@@ -16,6 +16,7 @@ use Piwik\Plugins\FeinwerkDataExploration\Engine\AccessPolicy;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\Limits;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\RawDataRetention;
 use Piwik\Plugins\FeinwerkDataExploration\Feedback\PluginFeedback;
+use Piwik\Plugins\FeinwerkDataExploration\Promo\PremiumPromo;
 use Piwik\Plugins\FeinwerkDataExploration\Promo\PromoLine;
 use Piwik\Translation\Translator;
 
@@ -24,7 +25,11 @@ use Piwik\Translation\Translator;
  */
 final class WidgetProps
 {
-    /** @return array{idSite: int, maxDays: int, rawDataFrom: ?string, canShare: bool, canCopy: bool, feedback: array, promo: ?array} */
+    /**
+     * Both pages show the premium banner below their result (Peter, 2026-11-17).
+     *
+     * @return array{idSite: int, maxDays: int, rawDataFrom: ?string, canShare: bool, canCopy: bool, feedback: array, premium: ?array, promo: ?array}
+     */
     public static function common(int $idSite, Limits $limits): array
     {
         return [
@@ -38,24 +43,51 @@ final class WidgetProps
                 (string) StaticContainer::get(Translator::class)->getCurrentLanguage(),
                 (string) PluginManager::getInstance()->getLoadedPlugin(PluginFeedback::PLUGIN)->getVersion()
             ),
-            'promo' => self::promo($idSite),
-        ];
+        ] + self::promotions(self::isEmbedded(), [PremiumPromo::class, 'bannerProps'], static function () use ($idSite): ?array {
+            return PromoLine::current($idSite);
+        });
     }
 
     /**
-     * The tip line under the result (Feinwerk promotion kit, Promo\PromoLine): null for users without admin access,
-     * when promotions are off and in embeds; a failing promotion never breaks the page.
+     * The Feinwerk notices of the page (promotion kit, docs/promotions.md), one at a time: the premium banner below the
+     * result (Promo\PremiumPromo, Peter 2026-11-17) and, while it has no plugin, the tip line under the result
+     * (Promo\PromoLine). Each is null for users without admin access and when promotions are off; both are null in
+     * embeds. A failing promotion empties only its own prop and never breaks the page.
      *
-     * @return array<string, mixed>|null
+     * @param callable(): ?array $banner
+     * @param callable(): ?array $line
+     * @return array{premium: ?array, promo: ?array}
      */
-    private static function promo(int $idSite): ?array
+    public static function promotions(bool $embedded, callable $banner, callable $line): array
+    {
+        if ($embedded) {
+            return ['premium' => null, 'promo' => null];
+        }
+        $premium = self::guarded($banner);
+
+        return ['premium' => $premium, 'promo' => $premium === null ? self::guarded($line) : null];
+    }
+
+    /** @param callable(): ?array $promotion */
+    private static function guarded(callable $promotion): ?array
+    {
+        try {
+            return $promotion();
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /** Widgetize and other embeds show no notices; a failing check counts as embedded. */
+    private static function isEmbedded(): bool
     {
         try {
             $module = trim(Common::getRequestVar('module', '', 'string')); // Matomo 6 does not trim
             $disableLink = Common::getRequestVar('disableLink', 0, 'int');
-            return PromoLine::isEmbedded($module, $disableLink) ? null : PromoLine::current($idSite);
+
+            return PromoLine::isEmbedded($module, $disableLink);
         } catch (\Throwable $e) {
-            return null;
+            return true;
         }
     }
 }

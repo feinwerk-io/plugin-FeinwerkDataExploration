@@ -329,8 +329,8 @@ final class PromoLine
      * Where the connector message leads (connector session, checked on Matomo 5.14.2 and 6.0.0-rc1):
      * - a super user whose Matomo may install from its Marketplace: the connector's page there, inside Matomo (no
      *   campaign parameters; the popover hash works from Matomo 5.0 to 6);
-     * - a super user without that (Marketplace, internet or plugin admin switched off): the connector's ZIP download;
      * - an admin: the connector's page on plugins.matomo.org, with a note that the super user can install it.
+     * A super user without a usable Marketplace gets no connector message at all (lineFor()).
      *
      * @return array{0: string, 1: bool} url, external
      */
@@ -339,9 +339,8 @@ final class PromoLine
         if ($isSuperUser && $marketplaceUsable) {
             return ['index.php?module=Marketplace&action=overview#?popover=browsePluginDetail%243AFeinwerkMarketplaceConnector', false];
         }
-        $base = $isSuperUser ? 'https://plugins.feinwerk.io/connector/download' : 'https://plugins.matomo.org/FeinwerkMarketplaceConnector';
-
-        return [$base . '?mtm_campaign=plugin-promo&mtm_source=' . self::PLUGIN . '&mtm_content=' . self::CONNECTOR_MESSAGE, true];
+        return ['https://plugins.matomo.org/FeinwerkMarketplaceConnector?mtm_campaign=plugin-promo&mtm_source=' . self::PLUGIN
+            . '&mtm_content=' . self::CONNECTOR_MESSAGE, true];
     }
 
     /**
@@ -437,22 +436,50 @@ final class PromoLine
         if (!self::shownToCurrentUser()) {
             return null;
         }
-        $isEcommerceSite = $idSite > 0 && Site::isEcommerceEnabledFor($idSite);
-        $demo = self::demo();
-        $id = self::choose(self::candidates([self::class, 'isInstalled'], $isEcommerceSite, $demo, self::isWordPress()), intdiv(time(), 86400));
+        $superUser = Piwik::hasUserSuperUserAccess();
 
+        return self::lineFor(
+            [
+                'day' => intdiv(time(), 86400),
+                'ecommerce' => $idSite > 0 && Site::isEcommerceEnabledFor($idSite),
+                'demo' => self::demo(),
+                'wordpress' => self::isWordPress(),
+                'superUser' => $superUser,
+                'marketplace' => $superUser && self::marketplaceUsable(),
+            ],
+            [self::class, 'isInstalled'],
+            [Piwik::class, 'translate'],
+            self::language()
+        );
+    }
+
+    /**
+     * The tip line for one user and website, null when none is left. Pure, so current()'s decisions are tested:
+     * - Matomo for WordPress: no connector message (Peter, 2026-11-17, "Dort nicht werben");
+     * - a super user whose Matomo cannot install from its Marketplace gets no connector message either (Peter,
+     *   2026-11-17, "Dann keine Nachricht": a ZIP download would promise what the instance cannot do);
+     * - the admin note takes Matomo's own word for the super user in the German sentence.
+     *
+     * @param array{day: int, ecommerce: bool, demo: bool, wordpress: bool, superUser: bool, marketplace: bool} $env
+     * @param callable(string): bool $isInstalled
+     * @param callable $translate like Piwik::translate(string $key, array $args = [])
+     */
+    public static function lineFor(array $env, callable $isInstalled, callable $translate, string $language): ?array
+    {
+        $candidates = self::candidates($isInstalled, $env['ecommerce'], $env['demo'], $env['wordpress']);
+        if ($env['superUser'] && !$env['marketplace']) {
+            $candidates = array_values(array_diff($candidates, [self::CONNECTOR_MESSAGE]));
+        }
+        $id = self::choose($candidates, $env['day']);
         if ($id === null) {
             return null;
         }
-        $user = $id === self::CONNECTOR_MESSAGE
-            ? ['superUser' => Piwik::hasUserSuperUserAccess(), 'marketplace' => self::marketplaceUsable()]
-            : null;
+        $user = $id === self::CONNECTOR_MESSAGE ? ['superUser' => $env['superUser'], 'marketplace' => $env['marketplace']] : null;
 
-        return self::variables($id, self::language(), static function (string $key): string {
-            // the admin note: Matomo's own word for the super user in the German sentence (PremiumAskSuperUser)
+        return self::variables($id, $language, static function (string $key) use ($translate): string {
             return $key === 'FeinwerkDataExploration_PremiumAskSuperUser'
-                ? Piwik::translate($key, [Piwik::translate('Installation_SuperUser')])
-                : Piwik::translate($key);
-        }, 'line', $demo, $user);
+                ? (string) $translate($key, [(string) $translate('Installation_SuperUser')])
+                : (string) $translate($key);
+        }, 'line', $env['demo'], $user);
     }
 }

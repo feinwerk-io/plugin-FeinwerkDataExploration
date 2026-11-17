@@ -73,6 +73,7 @@ class FeinwerkDataExploration extends \Piwik\Plugin
     {
         $files[] = 'plugins/FeinwerkDataExploration/javascripts/exploreAction.js';
         $files[] = 'plugins/FeinwerkDataExploration/javascripts/promo.js';
+        $files[] = 'plugins/FeinwerkDataExploration/javascripts/promocard.js';
     }
 
     /**
@@ -94,6 +95,7 @@ class FeinwerkDataExploration extends \Piwik\Plugin
         $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/exploration.less';
         $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/promo.css';
         $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/feinwerklogo.css';
+        $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/premium.css';
     }
 
     /**

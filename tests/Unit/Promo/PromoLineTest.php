@@ -146,7 +146,8 @@ class PromoLineTest extends TestCase
 
     /**
      * Super user with a usable Marketplace: the connector in the instance's own Marketplace (no campaign parameters).
-     * Super user without: the ZIP download. Admin: plugins.matomo.org and a note that the super user can install it.
+     * Admin: plugins.matomo.org and a note that the super user can install it. A super user without a usable Marketplace
+     * gets no connector message at all (test_the_line_for_each_kind_of_user).
      */
     public function test_the_connector_message_leads_each_user_where_they_can_act(): void
     {
@@ -154,13 +155,10 @@ class PromoLineTest extends TestCase
             return '[' . $key . ']';
         };
         $super = PromoLine::variables('connector', 'de', $translate, 'line', false, ['superUser' => true, 'marketplace' => true]);
-        $download = PromoLine::variables('connector', 'de', $translate, 'line', false, ['superUser' => true, 'marketplace' => false]);
         $admin = PromoLine::variables('connector', 'en', $translate, 'line', false, ['superUser' => false, 'marketplace' => true]);
 
         self::assertSame(['index.php?module=Marketplace&action=overview#?popover=browsePluginDetail%243AFeinwerkMarketplaceConnector', false, ''],
             [$super['url'], $super['external'], $super['note']]);
-        self::assertSame(['https://plugins.feinwerk.io/connector/download?mtm_campaign=plugin-promo&mtm_source=FeinwerkDataExploration&mtm_content=connector', true, ''],
-            [$download['url'], $download['external'], $download['note']]);
         self::assertSame(['https://plugins.matomo.org/FeinwerkMarketplaceConnector?mtm_campaign=plugin-promo&mtm_source=FeinwerkDataExploration&mtm_content=connector', true, '[FeinwerkDataExploration_PremiumAskSuperUser]'],
             [$admin['url'], $admin['external'], $admin['note']]);
         self::assertSame('[FeinwerkDataExploration_PromoConnectorLink]', $admin['link']);
@@ -180,6 +178,42 @@ class PromoLineTest extends TestCase
         self::assertFalse(PromoLine::isWordPressBy(true, false), 'ABSPATH alone is not Matomo for WordPress');
         self::assertFalse(PromoLine::isWordPressBy(false, true));
         self::assertFalse(PromoLine::isWordPress(), 'the test runs outside WordPress');
+    }
+
+    /**
+     * current()'s decisions, through lineFor(): WordPress and a super user without a usable Marketplace get no connector
+     * message (Peter, 2026-11-17), a super user with one the Marketplace link, an admin plugins.matomo.org plus the note
+     * with Matomo's own word for the super user.
+     */
+    public function test_the_line_for_each_kind_of_user(): void
+    {
+        $nothing = static function (): bool {
+            return false;
+        };
+        $translate = static function (string $key, array $args = []): string {
+            return $key . ($args === [] ? '' : '(' . implode(',', $args) . ')');
+        };
+        $env = ['day' => 0, 'ecommerce' => false, 'demo' => false, 'wordpress' => false, 'superUser' => true, 'marketplace' => true];
+
+        $super = PromoLine::lineFor($env, $nothing, $translate, 'de');
+        self::assertSame('connector', $super['id'], 'day 0 is a connector day');
+        self::assertSame([false, ''], [$super['external'], $super['note']]);
+
+        $admin = PromoLine::lineFor(['superUser' => false, 'marketplace' => false] + $env, $nothing, $translate, 'de');
+        self::assertSame('connector', $admin['id']);
+        self::assertStringStartsWith('https://plugins.matomo.org/FeinwerkMarketplaceConnector?', $admin['url']);
+        self::assertSame('FeinwerkDataExploration_PremiumAskSuperUser(Installation_SuperUser)', $admin['note']);
+
+        foreach ([
+            'super user without a usable Marketplace' => ['marketplace' => false] + $env,
+            'Matomo for WordPress' => ['wordpress' => true] + $env,
+            'Matomo for WordPress, demo' => ['wordpress' => true, 'demo' => true] + $env,
+        ] as $case => $without) {
+            for ($day = 0; $day < 8; $day++) {
+                $line = PromoLine::lineFor(['day' => $day] + $without, $nothing, $translate, 'de');
+                self::assertNotSame('connector', $line['id'] ?? null, $case . ', day ' . $day);
+            }
+        }
     }
 
     public function test_only_admins_and_super_users(): void

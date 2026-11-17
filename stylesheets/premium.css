@@ -1,0 +1,218 @@
+/*
+ * The premium banner below the result (vue/src/PremiumBanner.vue; Peter, 2026-11-17: "ein randloses Banner unter dem
+ * Hauptfenster mit Premium-Plugin Rotation"): the promotion kit's premium.css (Page Filter Report 99c4100) with this
+ * plugin's classes, borderless and as wide as the result card, in one row that wraps on narrow screens. Matomo's CSS
+ * variables with fallbacks and a dark variant for [data-theme-mode="dark"] and "auto" (Matomo 5.0 to 6.x).
+ */
+.fwde-premium {
+    --fwde-premium-brand: #0e7c7b;
+    --fwde-premium-ink: #fff;
+    --fwde-premium-hover: #0a5453;
+    --fwde-premium-soft: rgba(14, 124, 123, .10);
+    --fwde-premium-dot: rgba(14, 124, 123, .22);
+    --fwde-premium-line: var(--theme-color-border, #e5e7eb);
+    --fwde-premium-band: rgba(14, 124, 123, .04);
+}
+
+[data-theme-mode="dark"] .fwde-premium {
+    --fwde-premium-brand: #9fd8d2;
+    --fwde-premium-ink: #0a1514;
+    --fwde-premium-hover: #c4ebe6;
+    --fwde-premium-soft: rgba(159, 216, 210, .10);
+    --fwde-premium-dot: rgba(159, 216, 210, .24);
+    --fwde-premium-band: rgba(159, 216, 210, .05);
+}
+
+@media (prefers-color-scheme: dark) {
+    [data-theme-mode="auto"] .fwde-premium {
+        --fwde-premium-brand: #9fd8d2;
+        --fwde-premium-ink: #0a1514;
+        --fwde-premium-hover: #c4ebe6;
+        --fwde-premium-soft: rgba(159, 216, 210, .10);
+        --fwde-premium-dot: rgba(159, 216, 210, .24);
+        --fwde-premium-band: rgba(159, 216, 210, .05);
+    }
+}
+
+/* the slot keeps no room once javascripts/promocard.js has removed the group (every plugin hidden) */
+.fwde-premium-slot:empty {
+    display: none;
+}
+
+/* hidden until javascripts/promocard.js has checked the 30 days and it is this plugin's turn */
+.fwde-premium__item:not([data-fwpromo-ready]) {
+    display: none;
+}
+
+/* borderless (Peter: "randlos"): a tinted band as wide as the result card, no frame, no corners, no shadow; one row
+   (picture and name, sentence, button and logo) that wraps on narrow screens */
+.fwde-premium__item[data-fwpromo-ready] {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 24px;
+    padding: 18px 46px 18px 18px;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: hidden;
+    color: var(--theme-color-text, #212121);
+    background-color: var(--fwde-premium-band);
+    background-image: linear-gradient(110deg, var(--fwde-premium-soft) 0%, transparent 62%);
+    text-align: left;
+}
+
+.fwde-premium__item[data-fwpromo-ready]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 140px;
+    pointer-events: none;
+    background-image: radial-gradient(circle, var(--fwde-premium-dot) 1.3px, transparent 1.9px);
+    background-size: 13px 13px;
+    -webkit-mask-image: radial-gradient(farthest-side at 100% 0%, #000 0%, rgba(0, 0, 0, .6) 45%, transparent 100%);
+    mask-image: radial-gradient(farthest-side at 100% 0%, #000 0%, rgba(0, 0, 0, .6) 45%, transparent 100%);
+}
+
+.fwde-premium__item > * {
+    position: relative;
+}
+
+.fwde-premium__head {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.fwde-premium__art {
+    flex: 0 0 112px;
+    aspect-ratio: 8 / 5;
+    border: 1px solid var(--fwde-premium-line);
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .10);
+}
+
+.fwde-premium__art img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.fwde-premium__intro {
+    min-width: 0;
+}
+
+.fwde-premium .fwde-premium__label {
+    margin: 0 0 4px;
+    color: var(--fwde-premium-brand);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    line-height: 1.3;
+    text-transform: uppercase;
+}
+
+.fwde-premium .fwde-premium__name {
+    margin: 0;
+    color: var(--theme-color-text, #212121);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+/* the store's description: at most three lines, the rest in the title (a div: Matomo's rules for p would change its
+   display and line height) */
+.fwde-premium .fwde-premium__text {
+    display: -webkit-box;
+    flex: 1 1 280px;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--theme-color-text-light, #374151);
+    font-size: 13px;
+    line-height: 1.5;
+    max-height: 4.5em;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+/* under a store link, for admins: who can install the plugin (Peter, 2026-11-16); its own line at the end */
+.fwde-premium .fwde-premium__note {
+    flex: 1 1 100%;
+    order: 1;
+    margin: -4px 0 0;
+    color: var(--theme-color-text-lighter, #646464);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* may shrink, so on narrow screens its own row wraps (logo below the button) instead of running past the edge */
+.fwde-premium__actions {
+    display: flex;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    margin-left: auto;
+}
+
+.fwde-premium a.fwde-premium__cta,
+.fwde-premium a.fwde-premium__cta:visited {
+    display: inline-block;
+    padding: 7px 14px;
+    border-radius: 4px;
+    color: var(--fwde-premium-ink);
+    background-color: var(--fwde-premium-brand);
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.fwde-premium a.fwde-premium__cta:hover,
+.fwde-premium a.fwde-premium__cta:focus {
+    color: var(--fwde-premium-ink);
+    background-color: var(--fwde-premium-hover);
+}
+
+/* the Feinwerk logo closes the actions row (vue/src/FeinwerkLogo.vue) */
+.fwde-premium__actions .fwlogo {
+    margin-left: 4px;
+}
+
+.fwde-premium__price {
+    color: var(--theme-color-text-lighter, #6b7280);
+    font-size: 12px;
+}
+
+.fwde-premium .fwde-premium__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    color: var(--theme-color-text-lighter, #6b7280);
+    background: transparent;
+    font-size: 20px;
+    line-height: 28px;
+    cursor: pointer;
+}
+
+.fwde-premium .fwde-premium__close:hover,
+.fwde-premium .fwde-premium__close:focus-visible {
+    color: var(--theme-color-text, #212121);
+    background: var(--fwde-premium-soft);
+}

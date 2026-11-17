@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.3.0
+
+- Below the result of the free-form table and of the funnel, administrators see one paid Feinwerk plugin at a time
+  that this Matomo does not have yet, in a borderless banner with a different plugin first each day. "×" hides it for
+  30 days and the next one shows; while the banner shows, the tip line under the result gives way to it.
+  `promotions = 0` switches both off.
+- Super users whose Matomo cannot install plugins from its Marketplace no longer get the tip on the Feinwerk
+  Marketplace Connector (it offered a download instead).
+
 ## 5.2.0
 
 - Comparisons show up to 4 columns per metric (was 3), so one segment and one period fit together.

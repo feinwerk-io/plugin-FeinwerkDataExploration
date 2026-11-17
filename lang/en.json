@@ -263,6 +263,27 @@
         "PromoConnectorTitle": "Feinwerk Connector",
         "PromoConnectorText": "Exclusive Plugins for Matomo by Feinwerk, free, freemium and premium:",
         "PromoConnectorLink": "Install the Feinwerk Connector from the Matomo Marketplace",
-        "PremiumAskSuperUser": "Your Matomo super user can install it."
+        "PremiumAskSuperUser": "Your Matomo super user can install it.",
+        "PaidPluginAuthSamlName": "Auth SAML",
+        "PaidPluginAuthSamlText": "Auth SAML connects Matomo to your identity provider: SAML 2.0 single sign-on, SCIM 2.0 on- and offboarding and site permissions driven by your IdP groups. For Okta, Microsoft Entra ID, Keycloak and any SAML provider.",
+        "PaidPluginChannelGroupingName": "Channel Grouping",
+        "PaidPluginChannelGroupingText": "Group hundreds of traffic sources into the marketing channels you actually steer: Organic, Paid, Email, Social or your own.",
+        "PaidPluginConversionsApiName": "Conversions API",
+        "PaidPluginConversionsApiText": "Conversions API sends your Matomo goals and ecommerce orders server-side to Google Ads, Meta, LinkedIn, X, Microsoft Advertising, ChatGPT Ads and TikTok: with consent per platform, automatic click attribution and close to real time.",
+        "PaidPluginEmailReportsProName": "Email Reports Pro",
+        "PaidPluginEmailReportsProText": "Email Reports Pro turns your Matomo data into designed email reports: key figures with their trend, clear charts and tables that make even multi-level reports readable. You put every report together from building blocks and see in the preview how the email arrives.",
+        "PaidPluginSearchReportName": "Search Report",
+        "PaidPluginSearchReportText": "Search Report imports Google Search Console and Bing Webmaster Tools into native Matomo reports: daily, automatically, with unlimited history beyond Google's 16-month limit.",
+        "PaidPluginSentinelProName": "Sentinel Pro",
+        "PaidPluginSentinelProText": "Sentinel Pro adds visit forecasts, public holidays and alarms per channel and conversion rate to the free Sentinel, plus a watchdog that speaks up when Sentinel itself stops.",
+        "PaidPluginTrackingRouterName": "Tracking Router",
+        "PaidPluginTrackingRouterText": "Keep every website in its own profile and add a shared profile with continuous sessions: one tracking request, copied on the server to the sites you allow.",
+        "PaidPluginTrackingSpamScoreName": "Tracking Spam Score",
+        "PaidPluginTrackingSpamScoreText": "Spots bot traffic by how whole groups of visits behave, shows it per network and blocks it while tracking, server-side.",
+        "PaidPluginVisitJourneyName": "Visit Journey",
+        "PaidPluginVisitJourneyText": "A funnel with no presets: Visit Journey shows, for every goal and every order, which steps really came before it: pages, events, other goals and the channel the visit came through, as an interactive flow chart in Matomo.",
+        "PremiumDismiss": "Hide this recommendation for 30 days",
+        "PremiumLabel": "Recommended by Feinwerk",
+        "PremiumMore": "Learn more"
     }
 }

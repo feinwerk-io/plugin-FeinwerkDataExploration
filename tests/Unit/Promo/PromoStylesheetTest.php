@@ -16,10 +16,14 @@ use PHPUnit\Framework\TestCase;
  * (`.fwpromo-line:not([data-fwpromo-ready])`). A rule that shows a notice and weighs as much or more must require
  * `[data-fwpromo-ready]`, or it beats the hidden rule and the notice shows before the check (the first footer variant A
  * had `.fwpromo-line[data-fwpromo-placement="line"] { display: flex }`, docs/footer.md).
+ * The same holds for stylesheets/premium.css and javascripts/promocard.js: a banner item stays hidden until the script
+ * has checked its 30 days and its turn (`.fwde-premium__item:not([data-fwpromo-ready])`).
  */
 class PromoStylesheetTest extends TestCase
 {
     private const HIDDEN_WEIGHT = [0, 2];
+    private const NOTICE = '/^\.fwpromo-(line|box)(?![\w-])/';
+    private const BANNER_ITEM = '/^\.fwde-premium__item(?![\w-])/';
 
     public function test_no_rule_shows_a_notice_before_promo_js_has_checked_it(): void
     {
@@ -27,6 +31,23 @@ class PromoStylesheetTest extends TestCase
 
         $this->assertStringContainsString('.fwpromo-line:not([data-fwpromo-ready])', $css);
         $this->assertSame([], self::earlyShowingSelectors($css));
+    }
+
+    public function test_no_rule_shows_a_banner_item_before_promocard_js_has_checked_it(): void
+    {
+        $css = (string) file_get_contents(__DIR__ . '/../../../stylesheets/premium.css');
+
+        $this->assertStringContainsString('.fwde-premium__item:not([data-fwpromo-ready])', $css);
+        $this->assertSame([], self::earlyShowingSelectors($css, self::BANNER_ITEM));
+    }
+
+    public function test_the_check_catches_a_banner_item_shown_too_early(): void
+    {
+        $css = ".fwde-premium__item:not([data-fwpromo-ready]) { display: none; }\n"
+            . ".fwde-premium .fwde-premium__item { display: flex; }\n"
+            . ".fwde-premium__item[data-fwpromo-ready], .fwde-premium__item .fwde-premium__head { display: flex; }\n";
+
+        $this->assertSame(['.fwde-premium .fwde-premium__item'], self::earlyShowingSelectors($css, self::BANNER_ITEM));
     }
 
     public function test_the_tip_line_still_outranks_the_plain_class_of_older_kit_copies(): void
@@ -51,12 +72,13 @@ class PromoStylesheetTest extends TestCase
     }
 
     /**
-     * Selectors whose subject is a notice (`.fwpromo-line` or `.fwpromo-box`), that set a display other than none, weigh
-     * at least as much as the hidden rule and do not require `[data-fwpromo-ready]` on the notice.
+     * Selectors whose subject is a notice (`.fwpromo-line` or `.fwpromo-box`, or what $subjectPattern matches), that set
+     * a display other than none, weigh at least as much as the hidden rule and do not require `[data-fwpromo-ready]` on
+     * the notice.
      *
      * @return string[]
      */
-    private static function earlyShowingSelectors(string $css): array
+    private static function earlyShowingSelectors(string $css, string $subjectPattern = self::NOTICE): array
     {
         $css = (string) preg_replace('~/\*.*?\*/~s', '', $css);
         preg_match_all('/([^{}]+)\{([^{}]*)\}/', $css, $rules, PREG_SET_ORDER);
@@ -70,7 +92,7 @@ class PromoStylesheetTest extends TestCase
                 $selector = trim($selector);
                 $parts = preg_split('/\s*[\s>+~]\s*(?![^\[]*\])/', $selector);
                 $subject = (string) end($parts);
-                if (!preg_match('/^\.fwpromo-(line|box)(?![\w-])/', $subject)) {
+                if (!preg_match($subjectPattern, $subject)) {
                     continue;
                 }
                 if (strpos($subject, '[data-fwpromo-ready]') !== false) {

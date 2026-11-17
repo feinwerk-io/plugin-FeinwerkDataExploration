@@ -154,9 +154,19 @@ Matomo's interface, never in exports, API results, email reports or embedded wid
 you already have installed. "×" hides a tip for 30 days in your browser. The tips are part of the plugin: nothing is
 loaded from outside and nothing is sent. Links to feinwerk.io open in a new tab and carry only the campaign
 parameters `mtm_campaign`, `mtm_source` and `mtm_content`; the tip on the Feinwerk Marketplace Connector opens it in
-your Matomo Marketplace (super users), on plugins.matomo.org (other administrators) or as a download where Matomo's
-Marketplace is switched off. To switch the tips off for this plugin, add to
-`config/config.ini.php`:
+your Matomo Marketplace (super users) or on plugins.matomo.org (other administrators); where Matomo's Marketplace is
+switched off, super users get no tip on it.
+
+The same users also see a recommendation for a paid Feinwerk plugin this Matomo does not have yet, below the result of
+**Explorations → Free-form table** and **Explorations → Funnel**: one plugin at a time and a different one first each day; while it shows, the tip
+line under the result gives way to it. "×" hides a recommendation for 30 days and the next one shows. With a connected
+Feinwerk Marketplace Connector 5.5.0 or later the recommendation uses the connector's current list, and for super users
+"Learn more" opens the plugin on its Feinwerk Plugins screen, with price and picture. Everyone else gets the plugin's
+page in the Feinwerk Plugins store in a new tab, and administrators read that their Matomo super user can install it.
+Without a connected connector the plugin uses its own list of paid Feinwerk plugins (names and one-liners, no prices);
+plugins already present in Matomo's `plugins` folder and plugins without a version for this Matomo are left out.
+
+To switch the tips and the recommendation off for this plugin, add to `config/config.ini.php`:
 
 ```ini
 [FeinwerkDataExploration]

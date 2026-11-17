@@ -10,6 +10,8 @@
 namespace Piwik\Plugins\FeinwerkDataExploration\tests\Integration;
 
 use Piwik\Cache;
+use Piwik\Config;
+use Piwik\Plugins\FeinwerkDataExploration\Promo\PremiumPromo;
 use Piwik\Plugins\FeinwerkDataExploration\SystemSettings;
 use Piwik\Tests\Framework\Fixture;
 use Piwik\Tests\Framework\Mock\FakeAccess;
@@ -107,7 +109,7 @@ class WidgetTest extends IntegrationTestCase
         $this->assertSame(['plugin' => 'FeinwerkDataExploration', 'name' => 'FunnelPage'], $widget->getClientSideComponent());
         $props = $widget->getClientSideProps();
         $this->assertSame(
-            ['idSite', 'maxDays', 'rawDataFrom', 'canShare', 'canCopy', 'feedback', 'promo', 'maxSteps'],
+            ['idSite', 'maxDays', 'rawDataFrom', 'canShare', 'canCopy', 'feedback', 'premium', 'promo', 'maxSteps'],
             array_keys($props)
         );
         $this->assertSame(1, $props['idSite']);
@@ -140,6 +142,50 @@ class WidgetTest extends IntegrationTestCase
 
         FakeAccess::clearAccess(false, [], [1], 'writer', [1]);
         $this->assertNotNull($this->widget('getFunnel'));
+    }
+
+    /**
+     * The premium banner below the result of both pages (Peter, 2026-11-17: "unter dem Hauptfenster", and "yes" to the
+     * funnel page), in place of the tip line. A super user of the harness gets the kit's fallback list (no connector,
+     * paid plugins not installed).
+     */
+    public function testBothPagesShowTheBannerInPlaceOfTheTipLine(): void
+    {
+        FakeAccess::clearAccess(true, [], [], 'superUserLogin');
+        FakeAccess::$superUser = true;
+        foreach (['getExploration', 'getFunnel'] as $action) {
+            PremiumPromo::reset();
+            $props = $this->widget($action)->getClientSideProps();
+            $this->assertNotEmpty($props['premium']['plugins'] ?? [], $action . ': the banner has the fallback list');
+            $this->assertNull($props['promo'], $action . ': the tip line yields to the banner');
+        }
+        PremiumPromo::reset();
+    }
+
+    /**
+     * Only admins and super users see a Feinwerk notice (docs/promotions.md), and `promotions = 0` silences both: the
+     * banner's fallback list knows no audience of its own, PremiumPromo::plugins() asks PromoLine for it.
+     */
+    public function testNoBannerAndNoTipLineForViewersOrWithPromotionsOff(): void
+    {
+        FakeAccess::clearAccess(false, [], [1], 'viewer');
+        PremiumPromo::reset();
+        $viewer = $this->widget()->getClientSideProps();
+        $this->assertSame([null, null], [$viewer['premium'], $viewer['promo']], 'a view-only user');
+
+        FakeAccess::clearAccess(true, [], [], 'superUserLogin');
+        FakeAccess::$superUser = true;
+        $config = Config::getInstance();
+        $before = $config->FeinwerkDataExploration;
+        $config->FeinwerkDataExploration = ['promotions' => 0] + (is_array($before) ? $before : []);
+        try {
+            PremiumPromo::reset();
+            $off = $this->widget()->getClientSideProps();
+            $this->assertSame([null, null], [$off['premium'], $off['promo']], 'promotions = 0');
+        } finally {
+            $config->FeinwerkDataExploration = is_array($before) ? $before : [];
+            PremiumPromo::reset();
+        }
     }
 
     private function widget(string $action = 'getExploration'): ?WidgetConfig

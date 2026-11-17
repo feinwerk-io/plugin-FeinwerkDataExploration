@@ -19,8 +19,11 @@ use PHPUnit\Framework\TestCase;
  */
 class TranslationsTest extends TestCase
 {
-    /** Keys built at run time from these prefixes ('Setting' . ucfirst($name)). */
-    private const DYNAMIC_PREFIXES = ['Setting'];
+    /**
+     * Keys built at run time from these prefixes ('Setting' . ucfirst($name); 'PaidPlugin' . $stem . 'Name|Text' in
+     * Promo/PaidPluginCatalog, whose own test checks every such key in both languages).
+     */
+    private const DYNAMIC_PREFIXES = ['Setting', 'PaidPlugin'];
 
     private static function keys(string $language): array
     {

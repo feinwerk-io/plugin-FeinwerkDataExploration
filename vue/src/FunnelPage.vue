@@ -41,110 +41,118 @@
           />
         </section>
       </aside>
-      <section class="fwde-card fwde-main">
-        <header class="fwde-card__header">
-          <div class="fwde-card__heading">
-            <h2 class="fwde-card__title">{{ title }}</h2>
-            <span
-              v-if="savedChanged"
-              class="fwde-card__changed"
-            >{{ translate('FeinwerkDataExploration_SavedChanged') }}</span>
-          </div>
-          <ExplorationToolbar
-            class="fwde-card__actions"
-            :export-url-for="complete ? exportUrlFor : undefined"
-          />
-          <SaveDialog
-            v-if="savedLoaded && complete"
-            class="fwde-card__save"
-            :current="currentSaved"
-            :suggested-name="suggestedName"
-            :can-share="canShare"
-            :busy="saveBusy"
-            :error="saveError"
-            @open="saveError = ''"
-            @save="saveFunnel"
-            @delete="deleteCurrent"
-          />
-        </header>
-        <div class="fwde-card__body">
-          <Alert
-            v-if="showRawDataWarning"
-            severity="warning"
-          >
-            {{ translate('FeinwerkDataExploration_RawDataWarning', rawDataFrom) }}
-            <button
-              v-if="rawDataRange"
-              type="button"
-              class="fwde-alert-link"
-              @click="showFrom(rawDataRange)"
-            >{{ translate('FeinwerkDataExploration_ShowFromFirstCompleteDay') }}</button>
-          </Alert>
-          <Alert
-            v-if="largePeriodHint"
-            severity="warning"
-          >{{ largePeriodHint }}</Alert>
-          <Alert
-            v-if="error"
-            severity="danger"
-          >
-            {{ error }}
-            <button
-              v-if="canRetry"
-              type="button"
-              class="fwde-alert-link fwde-retry"
-              @click="run"
-            >{{ translate('FeinwerkDataExploration_TryAgain') }}</button>
-          </Alert>
-          <Alert
-            v-if="slowHint"
-            severity="info"
-          >{{ slowHint }}</Alert>
-          <Alert
-            v-if="suggestedPeriod"
-            severity="info"
-          >
-            <template v-if="suggestedPeriod.date">
-              {{ translate('FeinwerkDataExploration_SmallerPeriodHint') }}
+      <div class="fwde-page__content">
+        <section class="fwde-card fwde-main">
+          <header class="fwde-card__header">
+            <div class="fwde-card__heading">
+              <h2 class="fwde-card__title">{{ title }}</h2>
+              <span
+                v-if="savedChanged"
+                class="fwde-card__changed"
+              >{{ translate('FeinwerkDataExploration_SavedChanged') }}</span>
+            </div>
+            <ExplorationToolbar
+              class="fwde-card__actions"
+              :export-url-for="complete ? exportUrlFor : undefined"
+            />
+            <SaveDialog
+              v-if="savedLoaded && complete"
+              class="fwde-card__save"
+              :current="currentSaved"
+              :suggested-name="suggestedName"
+              :can-share="canShare"
+              :busy="saveBusy"
+              :error="saveError"
+              @open="saveError = ''"
+              @save="saveFunnel"
+              @delete="deleteCurrent"
+            />
+          </header>
+          <div class="fwde-card__body">
+            <Alert
+              v-if="showRawDataWarning"
+              severity="warning"
+            >
+              {{ translate('FeinwerkDataExploration_RawDataWarning', rawDataFrom) }}
               <button
+                v-if="rawDataRange"
                 type="button"
-                class="fwde-alert-link fwde-suggested-period"
-                @click="showFrom(suggestedPeriod.date)"
-              >{{ suggestedPeriodLabel }}</button>
-            </template>
-            <template v-else>{{ translate(noSmallerPeriodKey) }}</template>
-          </Alert>
-          <div
-            v-if="!complete"
-            class="fwde-funnel__hint"
-          >{{ translate('FeinwerkDataExploration_FunnelNoSteps') }}</div>
-          <ActivityIndicator
-            :loading="loading"
-            :loading-message="translate('FeinwerkDataExploration_LoadingExploration')"
-          />
-          <div
-            v-if="complete && !loading && !error && rows && isEmpty"
-            class="pk-emptyDataTable"
-          >{{ translate('CoreHome_ThereIsNoDataForThisReport') }}</div>
-          <FunnelResult
-            v-if="complete && !error && rows && !isEmpty"
-            :rows="rows"
-            :class="{ 'fwde-main__stale': loading }"
-          />
-          <FeedbackBar
-            v-if="complete && !error && rows"
-            :id-site="idSite"
-            topic="funnel"
-            :question="translate('FeinwerkDataExploration_FeedbackQuestion_funnel')"
-            :feedback="feedback"
-          />
-          <PromoLine
-            v-if="complete && !error && rows"
-            :promo="promo"
-            :dismiss-label="translate('FeinwerkDataExploration_PromoDismiss')"
-          />
-        </div>
-      </section>
+                class="fwde-alert-link"
+                @click="showFrom(rawDataRange)"
+              >{{ translate('FeinwerkDataExploration_ShowFromFirstCompleteDay') }}</button>
+            </Alert>
+            <Alert
+              v-if="largePeriodHint"
+              severity="warning"
+            >{{ largePeriodHint }}</Alert>
+            <Alert
+              v-if="error"
+              severity="danger"
+            >
+              {{ error }}
+              <button
+                v-if="canRetry"
+                type="button"
+                class="fwde-alert-link fwde-retry"
+                @click="run"
+              >{{ translate('FeinwerkDataExploration_TryAgain') }}</button>
+            </Alert>
+            <Alert
+              v-if="slowHint"
+              severity="info"
+            >{{ slowHint }}</Alert>
+            <Alert
+              v-if="suggestedPeriod"
+              severity="info"
+            >
+              <template v-if="suggestedPeriod.date">
+                {{ translate('FeinwerkDataExploration_SmallerPeriodHint') }}
+                <button
+                  type="button"
+                  class="fwde-alert-link fwde-suggested-period"
+                  @click="showFrom(suggestedPeriod.date)"
+                >{{ suggestedPeriodLabel }}</button>
+              </template>
+              <template v-else>{{ translate(noSmallerPeriodKey) }}</template>
+            </Alert>
+            <div
+              v-if="!complete"
+              class="fwde-funnel__hint"
+            >{{ translate('FeinwerkDataExploration_FunnelNoSteps') }}</div>
+            <ActivityIndicator
+              :loading="loading"
+              :loading-message="translate('FeinwerkDataExploration_LoadingExploration')"
+            />
+            <div
+              v-if="complete && !loading && !error && rows && isEmpty"
+              class="pk-emptyDataTable"
+            >{{ translate('CoreHome_ThereIsNoDataForThisReport') }}</div>
+            <FunnelResult
+              v-if="complete && !error && rows && !isEmpty"
+              :rows="rows"
+              :class="{ 'fwde-main__stale': loading }"
+            />
+            <FeedbackBar
+              v-if="complete && !error && rows"
+              :id-site="idSite"
+              topic="funnel"
+              :question="translate('FeinwerkDataExploration_FeedbackQuestion_funnel')"
+              :feedback="feedback"
+            />
+            <PromoLine
+              v-if="complete && !error && rows"
+              :promo="promo"
+              :dismiss-label="translate('FeinwerkDataExploration_PromoDismiss')"
+            />
+          </div>
+        </section>
+        <PremiumBanner
+          :premium="premium"
+          :label="translate('FeinwerkDataExploration_PremiumLabel')"
+          :more-label="translate('FeinwerkDataExploration_PremiumMore')"
+          :dismiss-label="translate('FeinwerkDataExploration_PremiumDismiss')"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -170,6 +178,8 @@ import {
 } from './saved';
 import FeedbackBar from './FeedbackBar.vue';
 import PromoLine, { PromoVariables } from './PromoLine.vue';
+import PremiumBanner from './PremiumBanner.vue';
+import { PremiumProps } from './premium';
 import { FeedbackSettings } from './feedback';
 import {
   canRun, parseSteps, toFunnelDefinition, toStepsParam,
@@ -227,6 +237,7 @@ export default defineComponent({
     SaveDialog,
     FeedbackBar,
     PromoLine,
+    PremiumBanner,
   },
   props: {
     idSite: { type: Number, required: true },
@@ -237,6 +248,11 @@ export default defineComponent({
     canCopy: { type: Boolean, default: false },
     promo: {
       type: Object as PropType<PromoVariables|null>,
+      default: null,
+    },
+    /** the premium banner below the result (PremiumPromo); null: none, the tip line may show */
+    premium: {
+      type: Object as PropType<PremiumProps|null>,
       default: null,
     },
     feedback: {

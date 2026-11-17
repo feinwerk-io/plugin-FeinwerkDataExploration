@@ -22,34 +22,7 @@
     :data-fwpromo-days="promo.dismissDays"
     :data-fwpromo-demo="promo.demo ? '1' : undefined"
   >
-    <span
-      class="fwlogo"
-      aria-hidden="true"
-    ><svg
-      class="fwlogo__mark"
-      viewBox="0 0 48 48"
-      width="18"
-      height="18"
-      focusable="false"
-    ><circle
-      class="fwlogo__core"
-      cx="24"
-      cy="24"
-      r="5.4"
-    /><g
-      v-for="ring in LOGO_RINGS"
-      :key="ring.opacity"
-      class="fwlogo__dots"
-      :opacity="ring.opacity"
-    ><circle
-      v-for="([cx, cy], n) in ring.dots"
-      :key="n"
-      :cx="cx"
-      :cy="cy"
-      :r="ring.r"
-    /></g></svg><span class="fwlogo__word">feinwerk<span
-      class="fwlogo__sub"
-    > plugins</span></span></span>
+    <FeinwerkLogo />
     <span
       class="fwpromo-line__text"
       :title="promo.text"
@@ -72,19 +45,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-
-/** the dots of the store's feinwerk-plugins-mark.svg, as in the kit's _feinwerkLogo.twig */
-const LOGO_RINGS = [
-  {
-    opacity: '0.9', r: '2.9', dots: [[16, 24], [32, 24], [24, 16], [24, 32]],
-  },
-  {
-    opacity: '0.55', r: '2.5', dots: [[16, 16], [32, 16], [16, 32], [32, 32]],
-  },
-  {
-    opacity: '0.35', r: '2.1', dots: [[8, 24], [40, 24], [24, 8], [24, 40]],
-  },
-];
+import FeinwerkLogo from './FeinwerkLogo.vue';
 
 export interface PromoVariables {
   id: string;
@@ -103,15 +64,13 @@ export interface PromoVariables {
 }
 
 export default defineComponent({
+  components: { FeinwerkLogo },
   props: {
     promo: {
       type: Object as PropType<PromoVariables|null>,
       default: null,
     },
     dismissLabel: { type: String, required: true },
-  },
-  data() {
-    return { LOGO_RINGS };
   },
 });
 </script>
