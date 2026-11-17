@@ -3,7 +3,7 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 import {
-  Catalog, ChartView, ExplorationState, FilterOperator, RowFilter,
+  Catalog, ChartType, ChartView, ExplorationState, FilterOperator, RowFilter,
 } from './types';
 
 export const DEFAULT_DIMENSIONS = ['channelType'];
@@ -18,6 +18,7 @@ export const NUMBER_OPERATORS: FilterOperator[] = ['gt', 'lt'];
 /** Shown in percent, sent to the API as fractions. */
 export const RATE_METRICS = ['bounce_rate', 'conversion_rate'];
 export const VIEWS: ChartView[] = ['table', 'chart', 'both'];
+export const CHART_TYPES: ChartType[] = ['bar', 'trend'];
 
 export interface Limits {
   defaultRows: number;
@@ -143,6 +144,9 @@ export function parseState(
     filters: parseFilters(hash.fwdeFilters, dimensions.length, metrics),
     view: VIEWS.includes(view) ? view : null,
     chartMetric: metrics.includes(String(hash.fwdeChart)) ? String(hash.fwdeChart) : null,
+    chartType: CHART_TYPES.includes(hash.fwdeChartType as ChartType)
+      ? hash.fwdeChartType as ChartType
+      : null,
   };
 }
 
@@ -163,6 +167,7 @@ export function toHashParams(state: ExplorationState): Record<string, string> {
       .join(';'),
     fwdeView: state.view || '',
     fwdeChart: state.chartMetric || '',
+    fwdeChartType: state.chartType || '',
   };
 }
 

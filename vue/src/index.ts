@@ -4,3 +4,4 @@
  */
 
 export { default as ExplorationPage } from './ExplorationPage.vue';
+export { default as FunnelPage } from './FunnelPage.vue';

@@ -53,6 +53,69 @@ class SavedExplorationStoreTest extends IntegrationTestCase
         $this->assertSame(2, $this->store->countFor(1, 'anna'));
     }
 
+    /**
+     * Logins are compared exactly (security sweep 2026-11-17): where this table's collation is looser than Matomo's
+     * user table, "bob" and "Bob" (or "jurgen" and "jürgen") are two users but compare equal in SQL.
+     */
+    public function testPrivateExplorationsOfALoginThatOnlyLooksAlikeStayHidden(): void
+    {
+        $this->store->add(1, 'Bob', 'Bob private', self::STATE, '', false);
+        $this->store->add(1, 'Bob', 'Bob shared', self::STATE, '', true);
+        $this->store->add(1, 'jürgen', 'Jürgen private', self::STATE, '', false);
+
+        $this->assertSame(['Bob shared'], array_column($this->store->listVisible(1, 'bob'), 'name'));
+        $this->assertSame(['Bob shared'], array_column($this->store->listVisible(1, 'jurgen'), 'name'));
+        $this->assertSame(0, $this->store->countFor(1, 'bob'));
+        $this->assertSame(0, $this->store->countFor(1, 'jurgen'));
+        $this->assertSame(2, $this->store->countFor(1, 'Bob'));
+    }
+
+    public function testDeletingAUserKeepsTheExplorationsOfALoginThatOnlyLooksAlike(): void
+    {
+        $this->store->add(1, 'Bob', 'Bob', self::STATE, '', false);
+        $this->store->add(1, 'bob', 'bob', self::STATE, '', false);
+        $this->store->add(1, 'jürgen', 'Jürgen', self::STATE, '', false);
+        // "Bob" and "jürgen" are other users that still exist
+        $exists = static fn (string $login): bool => in_array($login, ['Bob', 'jürgen'], true);
+
+        $this->store->deleteForUser('bob', $exists);
+        $this->store->deleteForUser('jurgen', $exists);
+
+        $this->assertSame(['Bob'], array_column($this->store->listVisible(1, 'Bob'), 'name'));
+        $this->assertSame([], array_column($this->store->listVisible(1, 'bob'), 'name'));
+        $this->assertSame(['Jürgen'], array_column($this->store->listVisible(1, 'jürgen'), 'name'));
+    }
+
+    /**
+     * Matomo hands the deleted login over as the caller spelled it ("bob" for the user "Bob"), after the user row is
+     * gone: rows whose login no user has any more go too.
+     */
+    public function testDeletingAUserSpelledDifferentlyRemovesItsExplorations(): void
+    {
+        $this->store->add(1, 'Bob', 'Bob private', self::STATE, '', false);
+        $this->store->add(2, 'Bob', 'Bob shared', self::STATE, '', true);
+        $this->store->add(1, 'anna', 'Anna', self::STATE, '', true);
+
+        $this->store->deleteForUser('bob', static fn (string $login): bool => $login === 'anna');
+
+        $this->assertSame(0, $this->store->countFor(1, 'Bob') + $this->store->countFor(2, 'Bob'));
+        $this->assertSame(['Anna'], array_column($this->store->listVisible(1, 'anna'), 'name'));
+    }
+
+    /** When Matomo's user lookup fails, a look-alike login keeps its explorations (only the exact login goes). */
+    public function testALookupThatFailsKeepsTheExplorations(): void
+    {
+        $this->store->add(1, 'Bob', 'Bob', self::STATE, '', false);
+        $this->store->add(1, 'bob', 'bob', self::STATE, '', false);
+
+        $this->store->deleteForUser('bob', static function (string $login): bool {
+            throw new \RuntimeException('lookup failed');
+        });
+
+        $this->assertSame(1, $this->store->countFor(1, 'Bob'));
+        $this->assertSame(0, $this->store->countFor(1, 'bob'));
+    }
+
     public function testUpdateAndDelete(): void
     {
         $id = $this->store->add(1, 'anna', 'First', self::STATE, '', false);

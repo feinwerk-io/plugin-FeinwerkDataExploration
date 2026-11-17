@@ -1,0 +1,208 @@
+/*
+ * Feinwerk promotion kit (docs/promo-kit.md): tip line, admin home banner and context boxes. Identical in every Feinwerk
+ * plugin. Colours are Matomo's CSS custom properties with light fallbacks: compiles on Matomo 5.0 to 6.x (no Matomo LESS
+ * variables or mixins) and follows dark mode where Matomo has one (5.12+).
+ */
+
+/* shown once javascripts/promo.js has checked the 30-day dismissal and the one-per-page rule, so nothing flashes */
+.fwpromo-line:not([data-fwpromo-ready]),
+.fwpromo-box:not([data-fwpromo-ready]) {
+    display: none;
+}
+
+/* --- Tip line under the plugin's own report (footer variant A, docs/footer.md): always exactly one line. The sentence
+   ends with an ellipsis where it does not fit (full text in the DOM and in its title); link and hide stay visible.
+   `[data-fwpromo-ready]` outranks the plain `.fwpromo-line` of older kit copies in other Feinwerk plugins, which may load
+   later in Matomo's merged CSS and allowed wrapping (seen on stats6, 2026-11-13). It must be the ready attribute: any
+   other selector of this weight would also beat the hidden rule above and show the line before promo.js has checked it
+   (tests/Unit/Promo/PromoStylesheetTest.php). --- */
+.fwpromo-line,
+.fwpromo-line[data-fwpromo-ready] {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    gap: 6px;
+    margin: 2px 0 6px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--theme-color-text-lighter, #646464);
+}
+
+/* the Feinwerk Plugins logo at the start of the tip line (Peter, 2026-11-17: "feinwerk logo immer dabei"), at text
+   height; its colours and dark variants come from stylesheets/feinwerklogo.css. On narrow screens only the round mark (a
+   media query: a size container would need containment, which can collapse the line in another plugin's layout); the
+   sentence shortens as before. */
+.fwpromo-line .fwlogo {
+    flex: none;
+    gap: 4px;
+    align-self: center;
+}
+
+/* only the round mark when the line is too short for the word mark (javascripts/promo.js) */
+.fwpromo-line--compact .fwlogo .fwlogo__word {
+    display: none;
+}
+
+/* everything stays inside the line, also with an older promo.js that knows no compact line: the sentence gives way
+   first, then the logo, the link last (with an ellipsis) */
+.fwpromo-line[data-fwpromo-ready] .fwpromo-line__text {
+    flex-shrink: 1000;
+}
+
+.fwpromo-line[data-fwpromo-ready] .fwlogo {
+    flex: 0 10 auto;
+    min-width: 14px;
+    overflow: hidden;
+}
+
+.fwpromo-line[data-fwpromo-ready] .fwpromo-line__link {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fwpromo-line .fwlogo .fwlogo__mark {
+    width: 14px;
+    height: 14px;
+}
+
+.fwpromo-line .fwlogo .fwlogo__word {
+    font-size: 12px;
+}
+
+@media (max-width: 600px) {
+    .fwpromo-line .fwlogo .fwlogo__word {
+        display: none;
+    }
+}
+
+.fwpromo-line__text {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.fwpromo-line__link {
+    flex: none;
+    white-space: nowrap;
+}
+
+.fwpromo-line__dismiss {
+    flex: none;
+}
+
+/* the hide control sits right after the link, also in wide reports (Peter, 2026-11-13); boxes and banner keep it at the
+   right edge. The attribute selector outranks the "margin-left: auto" of older kit copies. */
+.fwpromo-line[data-fwpromo-placement="line"] .fwpromo-line__dismiss {
+    margin-left: 0;
+}
+
+/* Other plugins' CSS may style the tip line without the ready attribute, for example `.fwpromo-line { position:
+   relative; padding-right: 24px }` with an absolutely placed hide control at the right edge (Tracking Spam Score 5.0.1,
+   seen on stats 2026-11-15). In Matomo's merged CSS that moves every plugin's × away from the link; these rules outrank
+   such class-only rules in any load order, so the × stays right after the link. */
+.fwpromo-line[data-fwpromo-ready] {
+    position: static;
+    padding: 0;
+}
+
+.fwpromo-line[data-fwpromo-ready] .fwpromo-line__dismiss {
+    position: static;
+}
+
+/* the link, and the Feinwerk logo at the end of the row (templates/_feinwerkLogo.twig) */
+.fwpromo-box__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+}
+
+.fwpromo-box__foot .fwlogo {
+    margin-left: auto;
+}
+
+.fwpromo-line__link,
+.fwpromo-box__link {
+    color: var(--theme-color-link, #1976d2);
+    text-decoration: underline;
+}
+
+.fwpromo-line__dismiss,
+.fwpromo-box__dismiss {
+    margin: 0 0 0 auto;
+    padding: 0 4px;
+    border: 0;
+    background: transparent;
+    color: var(--theme-color-text-lighter, #646464);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.fwpromo-line__dismiss:hover,
+.fwpromo-line__dismiss:focus-visible,
+.fwpromo-box__dismiss:hover,
+.fwpromo-box__dismiss:focus-visible {
+    color: var(--theme-color-text, #212121);
+}
+
+.fwpromo-line__dismiss:focus-visible,
+.fwpromo-box__dismiss:focus-visible {
+    outline: 2px solid var(--theme-color-focus-ring, #0969da);
+    outline-offset: 2px;
+}
+
+/* --- Banner on Matomo's admin home and context box at the end of Matomo's report pages --- */
+.fwpromo-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 0 0 20px;
+    padding: 12px 14px 12px 16px;
+    background: var(--theme-color-background-contrast, #fff);
+    border: 1px solid var(--theme-color-background-tinyContrast, #e0e0e0);
+    border-left: 4px solid var(--theme-color-brand, #43a047);
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--theme-color-text, #212121);
+}
+
+.fwpromo-box--banner {
+    margin-top: 10px;
+}
+
+.fwpromo-box__body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.fwpromo-box p.fwpromo-box__label,
+.fwpromo-box p.fwpromo-box__title,
+.fwpromo-box p.fwpromo-box__text {
+    margin: 0 0 4px;
+    padding: 0;
+}
+
+.fwpromo-box p.fwpromo-box__label {
+    font-size: 12px;
+    color: var(--theme-color-text-lighter, #646464);
+}
+
+.fwpromo-box p.fwpromo-box__title {
+    font-weight: bold;
+    color: var(--theme-color-text, #212121);
+}
+
+.fwpromo-box p.fwpromo-box__text {
+    margin-bottom: 6px;
+    color: var(--theme-color-text-light, #444);
+}
+
+.fwpromo-box__dismiss {
+    margin: 0;
+    font-size: 18px;
+}

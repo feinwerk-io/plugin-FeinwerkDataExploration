@@ -13,7 +13,11 @@ use Piwik\DataTable;
 use Piwik\Piwik;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\DimensionCatalog;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\MetricCatalog;
+use Piwik\Plugins\FeinwerkDataExploration\Definition\ComparisonList;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\ExplorationDefinition;
+use Piwik\Plugins\FeinwerkDataExploration\Definition\FunnelDefinition;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\FunnelExplorer;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\SiteGoals;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\Explorer;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\AccessPolicy;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\CostGuard;
@@ -21,7 +25,10 @@ use Piwik\Plugins\FeinwerkDataExploration\Engine\ExplorationWindow;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\PeriodSuggestion;
 use Piwik\Plugins\FeinwerkDataExploration\Query\QueryRunner;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\LimitsProvider;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\TextColumns;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\TrendExplorer;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\ExplorationException;
+use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationCopier;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationRules;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationStore;
 use Piwik\Segment;
@@ -56,11 +63,16 @@ class API extends \Piwik\Plugin\API
      *                           a selected metric gt, lt)
      * @param string $segment a Matomo segment definition
      * @param int $readableColumns 1 names the columns in the user's language
+     * @param string $comparisons JSON, optional: comparison columns after the own one (Matomo's comparison of segments and
+     *                            periods), e.g. [{"segment": "browserCode==FF", "period": "day", "date": "2026-03-27"}];
+     *                            up to 2 (3 columns per metric with the own one). With comparisons the first row is the
+     *                            total row (metadata fwde_total), and each row gets {metric}__share and per comparison n
+     *                            {metric}__c{n} with {metric}__c{n}__share (segments) or {metric}__c{n}__change (periods)
      * @return DataTable label, secondary_label (two dimensions) and the metric columns; rows carry a "segment"
      *                   metadata for the visits behind them where the dimensions have one
-     * @unsanitized the definition is JSON and the segment is parsed by Matomo's Segment class
+     * @unsanitized the definition and the comparisons are JSON and segments are parsed by Matomo's Segment class
      */
-    public function getExploration(int $idSite, string $period, string $date, string $definition, string $segment = '', int $readableColumns = 0): DataTable
+    public function getExploration(int $idSite, string $period, string $date, string $definition, string $segment = '', int $readableColumns = 0, string $comparisons = ''): DataTable
     {
         self::checkAccess($idSite);
 
@@ -68,9 +80,76 @@ class API extends \Piwik\Plugin\API
         $metrics = new MetricCatalog();
         $limits = (new LimitsProvider())->get();
         $parsed = ExplorationDefinition::fromJson($definition, $idSite, $dimensions, $metrics, $limits);
+        $compared = ComparisonList::fromJson($comparisons, $limits);
 
-        return (new Explorer($dimensions, $metrics, $limits))
-            ->explore($idSite, trim($period), trim($date), $parsed, trim($segment), $readableColumns === 1);
+        return TextColumns::skipInTotals((new Explorer($dimensions, $metrics, $limits))
+            ->explore($idSite, trim($period), trim($date), $parsed, trim($segment), $readableColumns === 1, $compared));
+    }
+
+    /**
+     * The trend of an exploration: the first rows of the table (as getExploration() returns them for the same
+     * parameters) per day of the period, or per hour for a period of one day; with comparisons the total of the own
+     * view (line 0) and of each comparison (line 1, 2, ...) per day or hour of its own period. Days and hours are
+     * counted in the site's timezone as the dimensions "Date" and "Hour" count them; every day or hour of a line's
+     * period is in the result.
+     *
+     * @param int $idSite one website; roll-up sites have no raw data and are refused
+     * @param 'day'|'week'|'month'|'range' $period one period, at most 31 days (see the plugin settings)
+     * @param string $date as for getExploration()
+     * @param string $definition JSON as for getExploration(); its row filters choose the rows, number filters do not
+     *                           remove days
+     * @param string $segment a Matomo segment definition: only its visits count
+     * @param string $comparisons JSON as for getExploration()
+     * @return DataTable one row per line and day or hour: label (and secondary_label for two dimensions) of the row or
+     *                   the title of the comparison, time (YYYY-MM-DD or the hour 0 to 23) and the definition's
+     *                   metrics; metadata fwde_line, fwde_key (rows) or fwde_kind (comparisons)
+     * @unsanitized the definition and the comparisons are JSON and the segment is parsed by Matomo's Segment class
+     */
+    public function getTrend(int $idSite, string $period, string $date, string $definition, string $segment = '', string $comparisons = ''): DataTable
+    {
+        self::checkAccess($idSite);
+
+        $dimensions = new DimensionCatalog();
+        $metrics = new MetricCatalog();
+        $limits = (new LimitsProvider())->get();
+        $parsed = ExplorationDefinition::fromJson($definition, $idSite, $dimensions, $metrics, $limits);
+        $compared = ComparisonList::fromJson($comparisons, $limits);
+
+        return TextColumns::skipInTotals((new TrendExplorer($dimensions, $metrics, $limits))
+            ->trend($idSite, trim($period), trim($date), $parsed, trim($segment), $compared));
+    }
+
+    /**
+     * A funnel straight from the raw data of one site: how many visits reached each step, in this order (other actions
+     * in between are allowed, one action counts for one step only, a goal step may be met by the conversion of the
+     * previous step's action, entry only through step 1).
+     *
+     * The definition is JSON, e.g. {"steps": [{"type": "pageUrl", "operator": "contains", "value": "/shop"},
+     * {"type": "eventAction", "operator": "equals", "value": "Add to cart"}, {"type": "goal", "idGoal": 2}]}.
+     * Types: pageUrl, pageTitle (contains, equals, startsWith), eventCategory, eventAction, eventName, siteSearch,
+     * download, outlink (contains, equals), goal (idGoal) and anyGoal. Texts are compared without case.
+     *
+     * With readableColumns=1 the columns are named in the user's language (exports).
+     *
+     * @param int $idSite one website; roll-up sites have no raw data and are refused
+     * @param 'day'|'week'|'month'|'range' $period one period, at most 31 days (see the plugin settings)
+     * @param string $date as for getExploration()
+     * @param string $definition JSON: 2 to 3 steps (another plugin may allow more through FeinwerkDataExploration.getLimits)
+     * @param string $segment a Matomo segment definition: only its visits count
+     * @param int $readableColumns 1 names the columns in the user's language
+     * @return DataTable one row per step: step, label, nb_visits, share_of_start and share_of_previous (percent),
+     *                   nb_dropoffs
+     * @unsanitized the definition is JSON and the segment is parsed by Matomo's Segment class
+     */
+    public function getFunnel(int $idSite, string $period, string $date, string $definition, string $segment = '', int $readableColumns = 0): DataTable
+    {
+        self::checkAccess($idSite);
+
+        $limits = (new LimitsProvider())->get();
+        $parsed = FunnelDefinition::fromJson($definition, SiteGoals::names($idSite), $limits);
+
+        $table = (new FunnelExplorer($limits))->explore($idSite, trim($period), trim($date), $parsed, trim($segment), $readableColumns === 1);
+        return TextColumns::skipInTotals($table);
     }
 
     /**
@@ -298,16 +377,41 @@ class API extends \Piwik\Plugin\API
     }
 
     /**
+     * Copies a saved exploration to other websites (Matomo's "copy to other websites" dialog, Matomo 5.14 and newer).
+     * The copy belongs to the current user, is shared only where the user may share, and maps a goal by its name;
+     * websites the user may not use, without a goal of that name or at the user's limit are skipped and named in the
+     * message.
+     *
+     * @param int $idSite the website of the exploration
+     * @param int $idSaved the saved exploration (own or shared)
+     * @param array $idDestinationSites website ids
+     * @return array{success: bool, message: string, additionalData: array}
+     */
+    public function copySavedExploration(int $idSite, int $idSaved, array $idDestinationSites): array
+    {
+        self::checkAccess($idSite);
+        $row = self::visible($idSite, $idSaved);
+        return (new SavedExplorationCopier())->copy($row, $idDestinationSites, Piwik::getCurrentUserLogin());
+    }
+
+    /** The row when the current user may see it (own, shared, or super user); another site's counts as missing. */
+    private static function visible(int $idSite, int $idSaved): array
+    {
+        $row = (new SavedExplorationStore())->get($idSaved);
+        if ($row === null || $row['idsite'] !== $idSite || (!$row['shared'] && !self::canEdit($row))) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedNotFound', [], 404);
+        }
+        return $row;
+    }
+
+    /**
      * The row when the current user may change it; an exploration of another site counts as missing.
      */
     private static function editable(int $idSite, int $idSaved): array
     {
-        $row = (new SavedExplorationStore())->get($idSaved);
-        if ($row === null || $row['idsite'] !== $idSite || (!$row['shared'] && !self::canEdit($row))) {
-            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedNotFound');
-        }
+        $row = self::visible($idSite, $idSaved);
         if (!self::canEdit($row)) {
-            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedNotYours');
+            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedNotYours', [], 403);
         }
         return $row;
     }
@@ -320,7 +424,7 @@ class API extends \Piwik\Plugin\API
     private static function checkShare(int $idSite, int $shared): void
     {
         if ($shared === 1 && !AccessPolicy::canShare($idSite)) {
-            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedShareNeedsWrite');
+            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedShareNeedsWrite', [], 403);
         }
     }
 

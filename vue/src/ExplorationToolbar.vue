@@ -6,6 +6,7 @@
 <template>
   <div class="fwde-toolbar">
     <div
+      v-if="state"
       class="fwde-switch"
       role="group"
       :aria-label="translate('FeinwerkDataExploration_View')"
@@ -26,7 +27,10 @@
         @click="$emit('view', option.view)"
       >{{ option.label }}</button>
     </div>
-    <label class="fwde-toolbar__limit">
+    <label
+      v-if="state"
+      class="fwde-toolbar__limit"
+    >
       <span>{{ translate('FeinwerkDataExploration_Rows') }}</span>
       <select
         class="browser-default fwde-select"
@@ -41,6 +45,7 @@
       </select>
     </label>
     <div
+      v-if="state || exportUrlFor"
       ref="exportMenu"
       class="fwde-menu"
     >
@@ -71,7 +76,7 @@
         >
           <a
             class="fwde-menu__item"
-            :href="exportUrl(state, format)"
+            :href="exportHref(format)"
             target="_blank"
             rel="noreferrer noopener"
             @click="exportOpen = false"
@@ -103,10 +108,16 @@ import { exportUrl } from './exportLink';
 
 export default defineComponent({
   props: {
-    state: { type: Object as PropType<ExplorationState>, required: true },
-    maxRows: { type: Number, required: true },
-    view: { type: String as PropType<ChartView>, required: true },
-    canChart: { type: Boolean, required: true },
+    /** the free-form table; null for pages without view switch and row limit (funnel) */
+    state: { type: Object as PropType<ExplorationState|null>, default: null },
+    maxRows: { type: Number, default: 0 },
+    view: { type: String as PropType<ChartView>, default: 'table' },
+    canChart: { type: Boolean, default: false },
+    /** the export link of a page without state (funnel) */
+    exportUrlFor: {
+      type: Function as PropType<(format: 'CSV'|'TSV') => string>,
+      default: undefined,
+    },
   },
   emits: ['limit', 'view'],
   data() {
@@ -145,7 +156,12 @@ export default defineComponent({
   },
   methods: {
     translate,
-    exportUrl,
+    exportHref(format: 'CSV'|'TSV'): string {
+      if (this.exportUrlFor) {
+        return this.exportUrlFor(format);
+      }
+      return this.state ? exportUrl(this.state, format) : '';
+    },
     onLimit(event: Event) {
       this.$emit('limit', Number((event.target as HTMLSelectElement).value));
     },

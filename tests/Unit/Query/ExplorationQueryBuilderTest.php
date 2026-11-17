@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\CustomDimensionSource;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\ColumnProbe;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\DimensionCatalog;
+use Piwik\Plugins\FeinwerkDataExploration\Catalog\DimensionDefinition;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\LabelFormatter;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\MetricCatalog;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\ExplorationDefinition;
@@ -393,7 +394,130 @@ class ExplorationQueryBuilderTest extends TestCase
         $this->assertSame([self::START, self::END, 1, '%shop%', 1, self::START, self::END, 3, 0.0], $query['bind']);
     }
 
-    private function build(string $json, array $resolvedFilters = [], bool $sortOutsideGrouping = false): array
+    /**
+     * Comparison columns (comparison design 5): the rows of the own view. The database decides which group belongs to
+     * which own row (its collation groups "Shoes" and "shoes" as one), so the query returns the own row's index;
+     * IN lists filter first. No number filters, no sorting, no limit.
+     */
+    public function test_only_keys_return_the_own_row_index_without_number_filters_and_limit(): void
+    {
+        $query = $this->build('{"dimensions": ["browser"], "metrics": ["nb_visits"], "limit": 10, '
+            . '"filters": [{"target": "nb_visits", "operator": "gt", "value": 5}]}', [], true, [['Firefox', null], [null, null], ['Chrome', null]]);
+
+        $this->assertStringContainsString('CASE WHEN (fwde_a.fwde_k1 <=> ?) THEN 0 WHEN (fwde_a.fwde_k1 <=> ?) THEN 1 WHEN (fwde_a.fwde_k1 <=> ?) THEN 2 END AS fwde_row', $query['sql']);
+        $this->assertStringContainsString('WHERE (fwde_a.fwde_k1 IN (?, ?) OR fwde_a.fwde_k1 IS NULL)', $query['sql']);
+        $this->assertStringContainsString('GROUP BY fwde_row HAVING fwde_row IS NOT NULL', $query['sql']);
+        $this->assertStringNotContainsString('fwde_k1 AS fwde_k1', $query['sql']);
+        $this->assertStringNotContainsString('LIMIT', $query['sql']);
+        $this->assertStringNotContainsString('ORDER BY', $query['sql']);
+        $this->assertStringNotContainsString('nb_visits > ?', $query['sql']);
+        // CASE binds lead (the select list comes first), the IN lists close
+        $this->assertSame(['Firefox', null, 'Chrome'], array_slice($query['bind'], 0, 3));
+        $this->assertSame(['Firefox', 'Chrome'], array_slice($query['bind'], -2));
+        $this->assertSame(substr_count($query['sql'], '?'), count($query['bind']) - count($this->stageACalls[0][3]));
+    }
+
+    public function test_two_dimensions_match_both_keys(): void
+    {
+        $query = $this->build('{"dimensions": ["browser", "country"], "metrics": ["nb_visits"]}', [], false, [['Firefox', 'de']]);
+
+        $this->assertStringContainsString('WHEN (fwde_a.fwde_k1 <=> ? AND fwde_a.fwde_k2 <=> ?) THEN 0', $query['sql']);
+        $this->assertStringContainsString('(fwde_a.fwde_k1 IN (?)) AND (fwde_a.fwde_k2 IN (?))', $query['sql']);
+    }
+
+    public function test_no_keys_match_nothing(): void
+    {
+        $query = $this->build('{"dimensions": ["browser"], "metrics": ["nb_visits"]}', [], false, []);
+
+        $this->assertStringContainsString('WHERE 1 = 0', $query['sql']);
+    }
+
+    /** The total row (comparison design 3): what the table covers, before number filters and the row limit. */
+    public function test_totals_have_no_grouping_but_keep_text_filters(): void
+    {
+        $json = '{"dimensions": ["pageUrl"], "metrics": ["nb_visits", "nb_pageviews"], '
+            . '"filters": [{"target": "label", "operator": "contains", "value": "blog"}, {"target": "nb_visits", "operator": "gt", "value": 2}]}';
+        $query = $this->totals($json);
+
+        $this->assertStringContainsString('LIKE ?', $this->stageACalls[0][2]);
+        // one row per visit (never per page and visit), so a visit with two pages counts once
+        $this->assertSame('log_link_visit_action.idvisit', $this->stageACalls[0][4]);
+        $this->assertStringNotContainsString('AS fwde_k1', $this->stageACalls[0][0]);
+        $this->assertContains('%blog%', $query['bind']);
+        $this->assertStringNotContainsString('GROUP BY fwde_a.', $query['sql']);
+        $this->assertStringNotContainsString('HAVING', $query['sql']);
+        $this->assertStringNotContainsString('LIMIT', $query['sql']);
+        $this->assertStringNotContainsString('fwde_k1 AS fwde_k1', $query['sql']);
+        $this->assertStringContainsString(' AS nb_visits', $query['sql']);
+        $this->assertStringContainsString(' AS nb_pageviews', $query['sql']);
+        // the fake stage A keeps its binds but not its WHERE text: count stage B's placeholders only
+        $this->assertSame(substr_count($query['sql'], '?'), count($query['bind']) - count($this->stageACalls[0][3]));
+    }
+
+    /** Trend (trend design 5): the own rows by their index and the time key, without number filters and limit. */
+    public function test_trend_rows_group_by_row_index_and_time_without_number_filters_and_limit(): void
+    {
+        $query = $this->trend('{"dimensions": ["browser"], "metrics": ["nb_visits"], "limit": 10, '
+            . '"filters": [{"target": "nb_visits", "operator": "gt", "value": 5}]}', [['Firefox', null], ['Chrome', null]]);
+
+        $this->assertStringContainsString('DATE(fwde_local_time) AS fwde_t', $this->stageACalls[0][0]);
+        $this->assertStringContainsString('fwde_a.fwde_t AS fwde_t', $query['sql']);
+        $this->assertStringContainsString('CASE WHEN (fwde_a.fwde_k1 <=> ?) THEN 0 WHEN (fwde_a.fwde_k1 <=> ?) THEN 1 END AS fwde_row', $query['sql']);
+        $this->assertStringContainsString('GROUP BY fwde_row, fwde_a.fwde_t HAVING fwde_row IS NOT NULL', $query['sql']);
+        $this->assertStringNotContainsString('LIMIT', $query['sql']);
+        $this->assertStringNotContainsString('ORDER BY', $query['sql']);
+        $this->assertStringNotContainsString('nb_visits > ?', $query['sql']);
+        $this->assertSame(substr_count($query['sql'], '?'), count($query['bind']) - count($this->stageACalls[0][3]));
+    }
+
+    public function test_trend_totals_group_by_time_only(): void
+    {
+        $query = $this->trend('{"dimensions": ["browser"], "metrics": ["nb_visits"], '
+            . '"filters": [{"target": "label", "operator": "equals", "value": "FF"}]}', null);
+
+        $this->assertStringContainsString('DATE(fwde_local_time) AS fwde_t', $this->stageACalls[0][0]);
+        $this->assertStringNotContainsString('AS fwde_k1', $this->stageACalls[0][0], 'no dimension key in the totals');
+        $this->assertStringEndsWith('GROUP BY fwde_a.fwde_t', $query['sql']);
+        $this->assertStringNotContainsString('fwde_row', $query['sql']);
+        $this->assertContains('FF', $this->stageACalls[0][3], 'text filters still apply');
+    }
+
+    public function test_trend_in_action_scope_groups_stage_a_by_time_and_visit(): void
+    {
+        $this->trend('{"dimensions": ["pageTitle"], "metrics": ["nb_pageviews"]}', null);
+        $this->assertSame('fwde_t, log_link_visit_action.idvisit', $this->stageACalls[0][4]);
+
+        $this->stageACalls = [];
+        $this->trend('{"dimensions": ["pageTitle"], "metrics": ["nb_pageviews"]}', [['Home', null]]);
+        $this->assertSame('fwde_k1, fwde_t, log_link_visit_action.idvisit', $this->stageACalls[0][4]);
+    }
+
+    public function test_trend_with_no_keys_matches_nothing(): void
+    {
+        $this->assertStringContainsString('WHERE 1 = 0', $this->trend('{"dimensions": ["browser"], "metrics": ["nb_visits"]}', [])['sql']);
+    }
+
+    private function trend(string $json, ?array $onlyKeys): array
+    {
+        [$definition, $dimensionDefinitions, $context, $builder] = $this->parts($json);
+        $time = new DimensionDefinition('date', 'time', DimensionCatalog::SCOPE_VISIT, 'Date', 'raw',
+            fn () => 'DATE(fwde_local_time)', null, new LabelFormatter(fn (string $key) => $key));
+        return $builder->buildTrend($definition, $dimensionDefinitions, 1, $context, [], $time, $onlyKeys);
+    }
+
+    private function totals(string $json): array
+    {
+        [$definition, $dimensionDefinitions, $context, $builder] = $this->parts($json);
+        return $builder->buildTotals($definition, $dimensionDefinitions, 1, $context);
+    }
+
+    private function build(string $json, array $resolvedFilters = [], bool $sortOutsideGrouping = false, ?array $onlyKeys = null): array
+    {
+        [$definition, $dimensionDefinitions, $context, $builder] = $this->parts($json);
+        return $builder->build($definition, $dimensionDefinitions, 1, $context, $resolvedFilters, $sortOutsideGrouping, $onlyKeys);
+    }
+
+    private function parts(string $json): array
     {
         $dimensions = $this->dimensions();
         $definition = ExplorationDefinition::fromJson($json, 1, $dimensions, new MetricCatalog(), new Limits());
@@ -408,7 +532,7 @@ class ExplorationQueryBuilderTest extends TestCase
             fn (string $table): string => 'matomo_' . $table
         );
 
-        return $builder->build($definition, $dimensionDefinitions, 1, $context, $resolvedFilters, $sortOutsideGrouping);
+        return [$definition, $dimensionDefinitions, $context, $builder];
     }
 
     private function dimensions(): DimensionCatalog

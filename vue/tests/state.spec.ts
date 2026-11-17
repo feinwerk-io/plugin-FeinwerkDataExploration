@@ -34,6 +34,7 @@ describe('parseState', () => {
       ],
       view: 'chart' as const,
       chartMetric: 'nb_pageviews',
+      chartType: 'trend' as const,
     };
     expect(parseState(toHashParams(state), CATALOG, LIMITS)).toEqual(state);
   });
@@ -119,7 +120,17 @@ describe('toHashParams', () => {
       fwdeFilters: '',
       fwdeView: '',
       fwdeChart: '',
+      fwdeChartType: '',
     });
+  });
+
+  it('keeps the chart type in the hash', () => {
+    expect(parseState({ fwdeDims: 'browser', fwdeChartType: 'trend' }, CATALOG, LIMITS).chartType)
+      .toBe('trend');
+    expect(parseState({ fwdeDims: 'browser', fwdeChartType: 'pie' }, CATALOG, LIMITS).chartType)
+      .toBeNull();
+    const state = parseState({ fwdeDims: 'browser', fwdeChartType: 'bar' }, CATALOG, LIMITS);
+    expect(toHashParams(state).fwdeChartType).toBe('bar');
   });
 
   it('keeps the view and the chart metric', () => {

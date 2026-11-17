@@ -72,6 +72,8 @@ class TranslationsTest extends TestCase
     public function testGermanTextsUseMatomosTerms(): void
     {
         foreach (self::keys('de') as $key => $text) {
+            // product names keep their spelling (the tip line names "Feinwerk Conversions API")
+            $text = str_replace('Conversions API', '', $text);
             foreach (['/\bConversions?\b/u', '/\bEvents?\b/u', '/Event-/u', '/Seitenaufruf/u'] as $word) {
                 $this->assertSame(0, preg_match($word, $text), "de $key uses a word Matomo's German interface does not use");
             }

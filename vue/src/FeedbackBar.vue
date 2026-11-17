@@ -13,7 +13,10 @@
     class="fwde-feedback"
   >
     <template v-if="feedback.enabled && !vote">
-      <span class="fwde-feedback__question">{{ question }}</span>
+      <span
+        class="fwde-feedback__question"
+        :title="question"
+      >{{ question }}</span>
       <button
         v-for="choice in choices"
         :key="choice"
@@ -46,7 +49,17 @@
       target="_blank"
       rel="noopener noreferrer"
       :title="tr('SupportTitle')"
-    >{{ tr('Support') }}</a>
+    ><svg
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      aria-hidden="true"
+      class="fwde-feedback__help"
+    ><circle
+      cx="12"
+      cy="12"
+      r="9"
+    /><path :d="helpPath" /></svg>{{ tr('Support') }}</a>
   </div>
 </template>
 
@@ -60,6 +73,9 @@ import {
 /** a thumb outline (24 x 24); the down thumb is the same, rotated */
 const THUMB_PATH = 'M3 10h4v10H3zM7 10l4-7c1.3 0 2.2 1.1 2 2.4L12.4 9H19a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 '
   + '17.8 20H7';
+
+/** question mark inside the help circle (24 x 24) */
+const HELP_PATH = 'M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01';
 
 function browserStorage(): Storage|null {
   try {
@@ -93,6 +109,9 @@ export default defineComponent({
     },
     thumbPath(): string {
       return THUMB_PATH;
+    },
+    helpPath(): string {
+      return HELP_PATH;
     },
     /** after a vote the thanks takes the place of question and thumbs (one line); empty before */
     thanks(): string {

@@ -39,10 +39,12 @@ final class ConcurrencyGate
                 return $lock;
             }
         }
-        throw new ExplorationException('FeinwerkDataExploration_ErrorBusy');
+        // every slot taken: a server condition, the client may retry later (503, not 400)
+        throw new ExplorationException('FeinwerkDataExploration_ErrorBusy', [], 503);
     }
 
-    private static function ttl(Limits $limits): int
+    /** Seconds a slot lasts: long enough for one query at the time limit, renewed before each further one (LazySlot). */
+    public static function ttl(Limits $limits): int
     {
         return $limits->timeoutSeconds > 0 ? 2 * $limits->timeoutSeconds + 30 : 900;
     }

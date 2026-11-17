@@ -3,9 +3,38 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 import {
-  canChart, chartMetricFor, chartModel, effectiveView, linePath, niceScale, resultTitle,
-  truncateLabel,
+  axisLabelStep, canChart, chartMetricFor, chartModel, effectiveView, linePath, niceScale,
+  resultTitle, truncateLabel,
 } from '../src/chart';
+
+describe('axisLabelStep', () => {
+  it('labels days weekly when every day does not fit, as Matomo\'s graphs do', () => {
+    // October: 31 days on 690 pixels, labels like "Thu, Oct 1" about 78 pixels wide
+    expect(axisLabelStep(31, 690, 78, 'day')).toBe(7);
+  });
+
+  it('labels every day or every second day when there is room', () => {
+    expect(axisLabelStep(7, 690, 78, 'day')).toBe(1);
+    expect(axisLabelStep(14, 690, 78, 'day')).toBe(2);
+  });
+
+  it('labels a narrow month fortnightly, never just its first day', () => {
+    expect(axisLabelStep(31, 320, 78, 'day')).toBe(14);
+    expect(axisLabelStep(31, 170, 78, 'day')).toBe(14);
+  });
+
+  it('labels hours in steps of 1, 2, 3, 4, 6 or 12', () => {
+    expect(axisLabelStep(24, 690, 40, 'hour')).toBe(2);
+    expect(axisLabelStep(24, 320, 40, 'hour')).toBe(3);
+    expect(axisLabelStep(24, 150, 40, 'hour')).toBe(12);
+  });
+
+  it('labels other categories as many as fit', () => {
+    expect(axisLabelStep(7, 690, 80, 'other')).toBe(1);
+    expect(axisLabelStep(7, 200, 80, 'other')).toBe(3);
+    expect(axisLabelStep(1, 690, 80, 'day')).toBe(1);
+  });
+});
 import { parseState } from '../src/state';
 import { CATALOG, LIMITS } from './fixtures';
 
@@ -78,9 +107,44 @@ describe('effectiveView', () => {
     expect(effectiveView(state({}), 5)).toBe('both');
     expect(effectiveView(state({}), 1)).toBe('table');
     expect(effectiveView(state({ fwdeView: 'chart' }), 5)).toBe('chart');
-    expect(effectiveView(state({ fwdeView: 'chart' }), 1)).toBe('table');
     expect(effectiveView(state({ fwdeView: 'table' }), 5)).toBe('table');
     expect(canChart(2)).toBe(true);
+  });
+});
+
+describe('effectiveView, one row', () => {
+  it('offers the chart for one row when a trend is possible, the table by default', () => {
+    expect(effectiveView(state({ fwdeDims: 'browser' }), 1)).toBe('table');
+    expect(effectiveView(state({ fwdeDims: 'browser', fwdeView: 'chart' }), 1)).toBe('chart');
+    expect(effectiveView(state({ fwdeDims: 'date', fwdeView: 'chart' }), 1)).toBe('table');
+    expect(canChart(1, state({ fwdeDims: 'browser' }))).toBe(true);
+    expect(canChart(1)).toBe(false);
+  });
+});
+
+describe('chartModel, time in second place', () => {
+  it('takes a time dimension in second place as the axis', () => {
+    const rows = [
+      { label: 'Chrome', secondary_label: '2026-03-27', nb_visits: 2 },
+      { label: 'Chrome', secondary_label: '2026-03-28', nb_visits: 3 },
+      { label: 'Firefox', secondary_label: '2026-03-27', nb_visits: 1 },
+    ];
+    const model = chartModel(rows, state({ fwdeDims: 'browser,date', fwdeMetrics: 'nb_visits' }), 'nb_visits', {
+      weekdayNames: [], periodDays: ['2026-03-27', '2026-03-28'],
+    });
+    expect(model.type).toBe('line');
+    expect(model.categories).toEqual(['2026-03-27', '2026-03-28']);
+    expect(model.series.map((s) => s.label)).toEqual(['Chrome', 'Firefox']);
+  });
+
+  it('draws as many time lines as allowed', () => {
+    const rows = ['A', 'B', 'C', 'D', 'E', 'F'].map((browser, i) => ({
+      label: '2026-03-27', secondary_label: browser, nb_visits: 10 - i,
+    }));
+    const lines = (maxSeries: number) => chartModel(rows, state({ fwdeDims: 'date,browser', fwdeMetrics: 'nb_visits' }),
+      'nb_visits', { weekdayNames: [], maxSeries }).series.length;
+    expect(lines(6)).toBe(6);
+    expect(lines(5)).toBe(5);
   });
 });
 

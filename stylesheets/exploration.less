@@ -120,6 +120,11 @@
   margin-top: 12px;
 }
 
+// Materialize colours a focused button teal (button:focus, after a click); the picker keeps its own colours
+.fwde-picker__current:focus {
+  background: @theme-color-background-base;
+}
+
 .fwde-picker__current {
   display: flex;
   justify-content: space-between;
@@ -561,9 +566,13 @@
   }
 
   th {
-    background: @theme-color-background-tinyContrast;
     white-space: nowrap;
   }
+}
+
+// the header's shade, level 1: Matomo sets every table.dataTable th to its base background with !important
+.fwde-table table.fwde-table__table thead th {
+  background: var(--fwde-head-1) !important;
 }
 
 // Matomo's report tables align header cells to the right; dimension columns read from the left
@@ -594,13 +603,88 @@
   font-variant-numeric: tabular-nums;
 }
 
-// Matomo keeps report label cells on one line (table.dataTable td.label); long values such as page URLs wrap here,
-// otherwise they run into the next column and push the row menu out of the card
+// Dimension values stay on one line and are shortened in the middle (the end of a URL stays visible, the full text in
+// the cell's title): the head shrinks with an ellipsis, the tail keeps its last characters
 .fwde-table table.fwde-table__table td.fwde-table__label {
-  min-width: 8em;
-  max-width: 420px;
+  min-width: 6em;
+  white-space: nowrap;
+}
+
+.fwde-ellipsis {
+  display: flex;
+  min-width: 0;
+  max-width: 32em;
+}
+
+// A short value (no tail) stays whole. The head of a long value may break anywhere, so its column's smallest width is
+// about 6em plus the tail (a nowrap text would keep the column as wide as the value and push the table sideways), and
+// shows only its first line with an ellipsis: the table gives the column the value's full width when there is room and
+// shortens it only when there is none.
+.fwde-ellipsis__head {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.fwde-ellipsis--long .fwde-ellipsis__head {
+  flex: 0 1 auto;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  min-width: 6em;
+  overflow: hidden;
   white-space: normal;
   overflow-wrap: anywhere;
+}
+
+.fwde-ellipsis__tail {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+// Table look (Peter, 2026-11-17): dimensions left, metrics as narrow as their numbers, a line between both blocks, bars
+// behind counts and sums, header levels apart. Own shades with a dark variant: Matomo's tinyContrast and lowContrast are
+// almost the same in dark mode.
+.fwde-table {
+  --fwde-head-1: #dfe4ea;
+  --fwde-head-2: #eceff3;
+  --fwde-total: #e9f2fb;
+  --fwde-divider: #8c97a3;
+  --fwde-cell-bar: rgba(87, 177, 255, 0.24);
+
+  .inDarkMode({
+    --fwde-head-1: #34505b;
+    --fwde-head-2: #223b44;
+    --fwde-total: #1d4256;
+    --fwde-divider: #7f949d;
+    --fwde-cell-bar: rgba(87, 177, 255, 0.28);
+  });
+}
+
+.fwde-table table.fwde-table__table th.fwde-table__metric,
+.fwde-table table.fwde-table__table td.fwde-table__metric,
+.fwde-table table.fwde-compare__table th.fwde-compare__column,
+.fwde-table table.fwde-compare__table td.fwde-compare__cell {
+  width: 1%;
+}
+
+.fwde-table table.fwde-table__table .fwde-table__dimension-last {
+  border-right: 2px solid var(--fwde-divider);
+}
+
+// Matomo colours every cell border of a report table with !important (table.dataTable td): the lines between the blocks
+// need the same weight to run through the rows, not only through the header
+.fwde-table table.fwde-table__table td.fwde-table__dimension-last {
+  border-right-color: var(--fwde-divider) !important;
+}
+
+.fwde-table table.fwde-compare__table td.fwde-compare__group-start {
+  border-left-color: var(--fwde-divider) !important;
+}
+
+// a bar from the left behind the number, the cell's full height; --fwde-bar is set per cell
+.fwde-table table.fwde-table__table td.fwde-cellbar {
+  background-image: linear-gradient(90deg, var(--fwde-cell-bar) 0, var(--fwde-cell-bar) var(--fwde-bar), transparent var(--fwde-bar));
+  background-repeat: no-repeat;
 }
 
 .fwde-table__footer {
@@ -637,6 +721,11 @@
     background: @theme-color-background-lowContrast;
   }
 
+  // Materialize colours a focused button teal (after a click); the switch keeps its own colours
+  &:focus {
+    background: @theme-color-background-base;
+  }
+
   &:focus-visible {
     outline: 2px solid @theme-color-focus-ring;
     outline-offset: -2px;
@@ -649,6 +738,7 @@
 }
 
 .fwde-switch__button--active,
+.fwde-switch__button--active:focus,
 .fwde-switch__button--active:hover:not(:disabled) {
   background: var(--fwde-selected);
   color: @theme-color-text;
@@ -657,23 +747,58 @@
 
 // Chart: own SVG, colours from the theme; series colours with a dark variant
 
-.fwde-chart {
-  --fwde-series-1: #1976d2;
-  --fwde-series-2: #f57c00;
-  --fwde-series-3: #388e3c;
-  --fwde-series-4: #d32f2f;
-  --fwde-series-5: #7b1fa2;
-  --fwde-series-6: #00838f;
-  margin-bottom: 16px;
+// The series colours of Matomo's own graphs (also for the comparison table's column dots) (its palette @graph-series0-color to -7 and the first two shades,
+// Matomo 5.14 and 6), written out because older Matomo 5 versions lack the variables; Matomo uses them in dark mode too.
+// While comparing, Matomo's .comparison-series-color[data-name] rules colour the lines as its comparison series.
+.fwde-chart,
+.fwde-table {
+  --fwde-series-1: #57B1FF;
+  --fwde-series-2: #FF8F00;
+  --fwde-series-3: #A60F58;
+  --fwde-series-4: #7A45E6;
+  --fwde-series-5: #56CA00;
+  --fwde-series-6: #35C4C4;
+  --fwde-series-7: #283593;
+  --fwde-series-8: #F56E2F;
+  --fwde-series-9: #40C4FF;
+  --fwde-series-10: #FFD740;
+}
 
-  .inDarkMode({
-    --fwde-series-1: #6aa9f0;
-    --fwde-series-2: #ffb74d;
-    --fwde-series-3: #81c784;
-    --fwde-series-4: #e57373;
-    --fwde-series-5: #ce93d8;
-    --fwde-series-6: #4dd0e1;
-  });
+.fwde-chart {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+// the plot and its tooltip (Matomo's .ui-tooltip with the evolution graph's header and colour dots)
+.fwde-chart__plot {
+  position: relative;
+}
+
+.fwde-chart .fwde-chart__tooltip {
+  display: block;
+  position: absolute;
+  pointer-events: none;
+  white-space: nowrap;
+
+  .tooltip-series-color {
+    background-color: currentColor;
+  }
+}
+
+.fwde-chart__hover {
+  fill: transparent;
+  pointer-events: all;
+  outline: none;
+}
+
+.fwde-chart__svg:focus-visible {
+  outline: 2px solid @theme-color-focus-ring;
+  outline-offset: 2px;
+}
+
+// "Bars | Trend" (trend design 3): the view switch's look, next to the metric
+.fwde-chart__type {
+  align-self: flex-end;
 }
 
 .fwde-chart__header {
@@ -714,7 +839,7 @@
 
 .fwde-chart__tick {
   fill: @theme-color-text-light;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .fwde-chart__category {
@@ -729,20 +854,36 @@
 
 .fwde-chart__line {
   fill: none;
-  stroke-width: 2;
+  stroke-width: 1.5;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
 
+// a compared period other than the page's
+.fwde-chart__line--dashed {
+  stroke-dasharray: 6 4;
+}
+
 .fwde-chart__point {
+  fill: currentColor;
   stroke: @theme-color-widget-background;
   stroke-width: 1.5;
 }
 
+// under the time axis: whose hours it shows
+.fwde-chart__axis-title {
+  margin: 2px 0 0;
+  color: @theme-color-text-light;
+  font-size: 11px;
+  text-align: center;
+}
+
+// the legend below the plot, centred, with round markers, as in Matomo's graphs
 .fwde-chart__legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
+  justify-content: center;
+  gap: 4px 20px;
   margin: 8px 0 0;
   padding: 0;
   list-style: none;
@@ -751,10 +892,10 @@
 .fwde-page .fwde-chart__legend-item {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin: 0;
-  color: @theme-color-text;
-  font-size: 13px;
+  color: @theme-color-text-light;
+  font-size: 12px;
   list-style: none;
 }
 
@@ -763,24 +904,35 @@
   width: 12px;
   height: 12px;
   border-radius: 2px;
+  background: currentColor;
 }
 
+.fwde-chart__legend .fwde-chart__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+// the legend of a dashed line: short dashes in the line's colour
+.fwde-page .fwde-chart__swatch--dashed {
+  width: 18px;
+  height: 3px;
+  border-radius: 0;
+  background: repeating-linear-gradient(90deg, currentColor 0 6px, transparent 6px 10px);
+}
+
+.fwde-chart__line {
+  stroke: currentColor;
+}
+
+.fwde-chart__bar {
+  fill: currentColor;
+}
+
+// a series' colour; lines, dots, bars and swatches draw in it (currentColor)
 .fwde-chart__series(@n) {
   .fwde-chart__series-@{n} {
-    .fwde-chart__bar,
-    .fwde-chart__point,
-    .fwde-chart__swatch {
-      fill: ~"var(--fwde-series-@{n})";
-      background: ~"var(--fwde-series-@{n})";
-    }
-
-    .fwde-chart__line {
-      stroke: ~"var(--fwde-series-@{n})";
-    }
-  }
-
-  .fwde-chart__bar.fwde-chart__series-@{n} {
-    fill: ~"var(--fwde-series-@{n})";
+    color: ~"var(--fwde-series-@{n})";
   }
 }
 
@@ -790,6 +942,10 @@
 .fwde-chart__series(4);
 .fwde-chart__series(5);
 .fwde-chart__series(6);
+.fwde-chart__series(7);
+.fwde-chart__series(8);
+.fwde-chart__series(9);
+.fwde-chart__series(10);
 
 // a button that reads like a link inside an alert
 .fwde-alert-link {
@@ -859,24 +1015,35 @@
   white-space: normal;
 }
 
-// Feedback question and support link under the result, one compact line (Feinwerk feedback kit, Peter, 2026-11-11):
-// question, thumbs and a plain link in small muted type; after a vote the thanks takes the place of question and thumbs.
+// Feedback row under the result, footer variant A (Peter, 2026-11-13; PageFilterReport docs/footer.md): one line,
+// question (ellipsis), thumbs, and a quiet "Support" with a help icon at the right end; after a vote the thanks takes the
+// place of question and thumbs.
 .fwde-feedback {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 4px 6px;
-  margin: 6px 0 2px;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid @theme-color-border-alternative;
   color: @theme-color-text-lighter;
   font-size: 12px;
   line-height: 1.4;
 }
 
+.fwde-feedback__question {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .fwde-feedback__thumb {
   display: inline-flex;
+  flex: none;
   align-items: center;
   padding: 1px 4px;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 3px;
   background: none;
   color: @theme-color-text-lighter;
@@ -892,7 +1059,6 @@
 
   &:hover,
   &:focus-visible {
-    background: @theme-color-background-lowContrast;
     color: @theme-color-brand;
   }
 }
@@ -902,6 +1068,10 @@
 }
 
 .fwde-feedback__thanks {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   color: @theme-color-text-light;
 
   // stays in the document while empty (so screen readers announce the thanks), but takes no room
@@ -915,7 +1085,285 @@
 }
 
 .fwde-feedback__support {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
-  color: @theme-color-link;
-  text-decoration: underline;
+  color: @theme-color-text-lighter;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    color: @theme-color-link;
+    text-decoration: none;
+  }
+}
+
+.fwde-feedback__help {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+// Funnel: step editor in the sidebar, bars and table in the result card
+
+.fwde-steps__list {
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.fwde-step {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 10px;
+  border: 1px solid @theme-color-border;
+  border-radius: 4px;
+  background: @theme-color-background-tinyContrast;
+}
+
+.fwde-step__number,
+.fwde-funnel__number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background: @theme-color-background-base;
+  border: 1px solid @theme-color-border;
+  color: @theme-color-text;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.fwde-step__fields {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+
+  .fwde-select {
+    width: 100%;
+  }
+}
+
+.fwde-step__remove {
+  width: 28px;
+  height: 28px;
+  border-color: transparent;
+  background: transparent;
+
+  [class^="icon-"] {
+    font-size: 12px;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+}
+
+.fwde-steps__add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.fwde-steps__add-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.fwde-steps__limit,
+.fwde-funnel__hint,
+.fwde-funnel__dropoffs {
+  color: @theme-color-text-light;
+  font-size: 13px;
+}
+
+.fwde-funnel__hint {
+  margin-bottom: 12px;
+}
+
+.fwde-funnel {
+  --fwde-funnel-bar: #1976d2;
+
+  .inDarkMode({
+    --fwde-funnel-bar: #6aa9f0;
+  });
+}
+
+.fwde-funnel__bars {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.fwde-funnel__step {
+  margin-bottom: 12px;
+}
+
+.fwde-funnel__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  color: @theme-color-text;
+}
+
+.fwde-funnel__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.fwde-funnel__visits,
+.fwde-funnel__share {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.fwde-funnel__share {
+  min-width: 4.5em;
+  color: @theme-color-text-light;
+  text-align: right;
+}
+
+.fwde-funnel__track {
+  height: 12px;
+  border-radius: 3px;
+  background: @theme-color-background-tinyContrast;
+  border: 1px solid @theme-color-border;
+  overflow: hidden;
+}
+
+.fwde-funnel__bar {
+  height: 100%;
+  background: var(--fwde-funnel-bar);
+}
+
+.fwde-funnel__dropoffs {
+  margin-top: 2px;
+}
+
+.fwde-funnel__total {
+  margin: 12px 0 0;
+  color: @theme-color-text;
+  font-weight: bold;
+}
+
+// Comparison table: one column group per metric, the total row first, share or change under the value, a bar
+
+.fwde-table table.fwde-compare__table thead th.fwde-compare__group {
+  text-align: center;
+  border-left: 2px solid var(--fwde-divider);
+}
+
+.fwde-table table.fwde-compare__table .fwde-compare__group-start {
+  border-left: 2px solid var(--fwde-divider);
+}
+
+.fwde-table table.fwde-compare__table thead th.fwde-compare__column {
+  background: var(--fwde-head-2) !important;
+  font-weight: normal;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.fwde-compare__dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  vertical-align: baseline;
+}
+
+.fwde-compare__period {
+  display: block;
+  color: @theme-color-text-light;
+  font-size: 12px;
+}
+
+.fwde-table table.fwde-compare__table tbody tr.fwde-compare__total td {
+  font-weight: bold;
+  background-color: var(--fwde-total);
+}
+
+.fwde-compare__cell {
+  position: relative;
+  vertical-align: top;
+}
+
+.fwde-compare__extra {
+  display: block;
+  color: @theme-color-text-light;
+  font-size: 12px;
+}
+
+.fwde-compare__hint {
+  margin: 0 0 8px;
+  color: @theme-color-text-light;
+  font-size: 13px;
+}
+
+// Saved explorations: the select and Matomo's copy action on one line (the action wrapped below the select)
+.fwde-saved__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .fwde-saved__select {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+.fwde-saved__copy {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+
+  .entity-duplicator-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    margin: 0;
+    border: 1px solid @theme-color-border;
+    border-radius: 4px;
+    color: @theme-color-text;
+    text-decoration: none;
+
+    &:hover {
+      background: @theme-color-background-lowContrast;
+    }
+  }
+}
+
+// Matomo 5's Materialize colours every focused button teal (button:focus, after a click), which outranks a single class.
+// The plugin's buttons keep their own background: the boxed ones their base, the plain ones none. Hover keeps its
+// colour; the menu items keep their keyboard highlight (:focus-visible).
+.fwde-button:focus:not(:hover),
+.fwde-icon-button:focus:not(:hover) {
+  background-color: @theme-color-background-base;
+}
+
+.fwde-table__sort:focus:not(:hover),
+.fwde-alert-link:focus:not(:hover),
+.fwde-step__remove:focus:not(:hover),
+.fwde-filters__remove:focus:not(:hover),
+.fwde-rowmenu__toggle:focus:not(:hover),
+.fwde-feedback__thumb:focus:not(:hover),
+.fwde-menu__item:focus:not(:hover):not(:focus-visible) {
+  background-color: transparent;
 }

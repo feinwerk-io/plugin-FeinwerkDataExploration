@@ -70,11 +70,13 @@ class SettingsAndAccessTest extends IntegrationTestCase
         }
     }
 
-    public function testComparisonModeIsOffOnTheExplorationPage(): void
+    /** The table page compares with Matomo's own controls (comparison design, Peter: "A, passt"); the funnel does not. */
+    public function testComparisonModeIsOnForTheTableOnly(): void
     {
         $pages = \Piwik\Plugins\API\API::getInstance()->getPagesComparisonsDisabledFor();
 
-        $this->assertContains('FeinwerkDataExploration_Explorations.FeinwerkDataExploration_FreeFormTable', $pages);
+        $this->assertNotContains('FeinwerkDataExploration_Explorations.FeinwerkDataExploration_FreeFormTable', $pages);
+        $this->assertContains('FeinwerkDataExploration_Explorations.FeinwerkDataExploration_Funnel', $pages);
     }
 
     public function testGeneralSettingsShowTheNameWithSpaces(): void

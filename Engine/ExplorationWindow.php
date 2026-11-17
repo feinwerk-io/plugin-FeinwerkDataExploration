@@ -25,7 +25,10 @@ final class ExplorationWindow
         public readonly Date $end,
         public readonly string $startUtc,
         public readonly string $endUtc,
-        public readonly bool $includesToday
+        public readonly bool $includesToday,
+        /** the period's first and last day in the site's timezone (YYYY-MM-DD) */
+        public readonly string $firstDay = '',
+        public readonly string $lastDay = ''
     ) {
     }
 
@@ -43,7 +46,16 @@ final class ExplorationWindow
         $start = $builtPeriod->getDateTimeStart()->setTimezone($timezone);
         $end = $builtPeriod->getDateTimeEnd()->setTimezone($timezone);
         $includesToday = $builtPeriod->getDateEnd()->toString() >= Date::factory('today', $timezone)->toString();
-        return new self($timezone, $start, $end, $start->getDatetime(), $end->getDatetime(), $includesToday);
+        return new self(
+            $timezone,
+            $start,
+            $end,
+            $start->getDatetime(),
+            $end->getDatetime(),
+            $includesToday,
+            $builtPeriod->getDateStart()->toString(),
+            $builtPeriod->getDateEnd()->toString()
+        );
     }
 
     /** Seconds results of this window may be reused: one hour, five minutes while today's data still changes. */

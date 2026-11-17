@@ -4,9 +4,11 @@
  */
 import { AjaxHelper, Matomo } from 'CoreHome';
 import {
-  Catalog, DimensionInfo, ExplorationState, MetricInfo,
+  Catalog, ComparisonColumn, DimensionInfo, ExplorationState, FunnelRow, FunnelStepState,
+  MetricInfo,
 } from './types';
 import { toDefinition } from './state';
+import { toFunnelDefinition } from './funnelState';
 
 export interface Goal {
   id: number;
@@ -14,6 +16,13 @@ export interface Goal {
 }
 
 export type ResultRow = Record<string, string|number>;
+
+/** A row of getTrend: one line (fwde_line) at one day or hour (time); rates may be null. */
+export type TrendRow = Record<string, string|number|null> & {
+  time: string;
+  fwde_line: number;
+  fwde_kind?: string;
+};
 
 const OPTIONS = { createErrorNotification: false };
 
@@ -140,6 +149,62 @@ export function runExploration(
   return AjaxHelper.post<ResultRow[]>(
     { method: 'FeinwerkDataExploration.getExploration', format: 'json', filter_limit: -1 },
     { definition: JSON.stringify(toDefinition(state)) },
+    { ...OPTIONS, abortController },
+  );
+}
+
+/**
+ * Runs the funnel for the period and segment in the URL (POST body as runExploration).
+ */
+export function runFunnel(
+  steps: FunnelStepState[],
+  abortController: AbortController,
+): Promise<FunnelRow[]> {
+  return AjaxHelper.post<FunnelRow[]>(
+    { method: 'FeinwerkDataExploration.getFunnel', format: 'json', filter_limit: -1 },
+    { definition: JSON.stringify(toFunnelDefinition(steps)) },
+    { ...OPTIONS, abortController },
+  );
+}
+
+/**
+ * The exploration with one comparison column (…__c1) and, with it, the total row and the own
+ * view's shares; the page asks for each column separately.
+ */
+export function runComparison(
+  state: ExplorationState,
+  column: ComparisonColumn,
+  abortController: AbortController,
+): Promise<ResultRow[]> {
+  return AjaxHelper.post<ResultRow[]>(
+    { method: 'FeinwerkDataExploration.getExploration', format: 'json', filter_limit: -1 },
+    {
+      definition: JSON.stringify(toDefinition(state)),
+      comparisons: JSON.stringify([
+        { segment: column.segment, period: column.period, date: column.date },
+      ]),
+    },
+    { ...OPTIONS, abortController },
+  );
+}
+
+/**
+ * The trend (trend design): without a column the first rows of the table per day or hour; with a
+ * comparison column the own total (line 0) and that column's total (line 1).
+ */
+export function runTrend(
+  state: ExplorationState,
+  column: ComparisonColumn|null,
+  abortController: AbortController,
+): Promise<TrendRow[]> {
+  return AjaxHelper.post<TrendRow[]>(
+    { method: 'FeinwerkDataExploration.getTrend', format: 'json', filter_limit: -1 },
+    {
+      definition: JSON.stringify(toDefinition(state)),
+      comparisons: column === null ? '' : JSON.stringify([
+        { segment: column.segment, period: column.period, date: column.date },
+      ]),
+    },
     { ...OPTIONS, abortController },
   );
 }

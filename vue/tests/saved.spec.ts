@@ -3,8 +3,8 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 import {
-  dialogDefaults, differsFromSaved, findSaved, groupSaved, linkNamesOnlySaved, savedHashParams,
-  stateToSave, STATE_KEYS,
+  dialogDefaults, differsFromSaved, findSaved, funnelDiffersFromSaved, groupSaved, linkNamesOnlySaved,
+  savedHashParams, savedKind, stateToSave, STATE_KEYS,
 } from '../src/saved';
 import { SavedExploration } from '../src/api';
 import { parseState, toHashParams } from '../src/state';
@@ -20,6 +20,14 @@ const saved = (id: number, owner: string, shared = false): SavedExploration => (
   segment: id === 2 ? 'browserCode==FF' : '',
 });
 
+describe('savedHashParams, chart type', () => {
+  it('saves and opens the chart type', () => {
+    const trend = { ...saved(3, 'anna'), state: { fwdeDims: 'browser', fwdeChartType: 'trend' } };
+    expect(savedHashParams(trend).fwdeChartType).toBe('trend');
+    expect(STATE_KEYS).toContain('fwdeChartType');
+  });
+});
+
 describe('savedHashParams', () => {
   it('opens a saved exploration: its state, its segment and its id, every other state key emptied', () => {
     const params = savedHashParams(saved(2, 'bert', true));
@@ -28,7 +36,24 @@ describe('savedHashParams', () => {
     expect(params.fwdeFilters).toBe('');
     expect(params.segment).toBe('browserCode==FF');
     expect(params.fwdeSaved).toBe('2');
-    expect(Object.keys(params).sort()).toEqual([...STATE_KEYS, 'fwdeSaved', 'segment'].sort());
+    expect(Object.keys(params).sort()).toEqual([...STATE_KEYS, 'fwdeSaved', 'segment', 'subcategory'].sort());
+    expect(params.subcategory).toBe('FeinwerkDataExploration_FreeFormTable');
+    expect(params.fwdeSteps).toBe('');
+  });
+
+  it('a funnel opens the funnel page with its steps and empties the table keys', () => {
+    const funnel = {
+      ...saved(5, 'anna'),
+      state: { fwdeKind: 'funnel', fwdeSteps: 'pageUrl~contains~%2Fa;anyGoal~~', fwdeDims: 'browser' },
+    };
+    expect(savedKind(funnel)).toBe('funnel');
+    expect(savedKind(saved(1, 'anna'))).toBe('table');
+    const params = savedHashParams(funnel);
+    expect(params.subcategory).toBe('FeinwerkDataExploration_Funnel');
+    expect(params.fwdeSteps).toBe('pageUrl~contains~%2Fa;anyGoal~~');
+    expect(params.fwdeDims).toBe('');
+    expect(params.fwdeKind).toBe('');
+    expect(params.fwdeSaved).toBe('5');
   });
 
   it('ignores keys and values a saved exploration must not set', () => {
@@ -40,8 +65,26 @@ describe('savedHashParams', () => {
 describe('stateToSave', () => {
   it('keeps the state keys of the page only', () => {
     expect(stateToSave({
-      fwdeDims: 'country', fwdeMetrics: 'nb_visits', fwdeSaved: '4', segment: 'x', period: 'day',
+      fwdeDims: 'country', fwdeMetrics: 'nb_visits', fwdeSaved: '4', segment: 'x', period: 'day', fwdeSteps: 'anyGoal~~',
     })).toEqual({ fwdeDims: 'country', fwdeMetrics: 'nb_visits' });
+  });
+
+  it('a funnel saves its kind and steps only', () => {
+    expect(stateToSave({ fwdeSteps: 'anyGoal~~;anyGoal~~', fwdeDims: 'country' }, 'funnel'))
+      .toEqual({ fwdeKind: 'funnel', fwdeSteps: 'anyGoal~~;anyGoal~~' });
+  });
+});
+
+describe('funnelDiffersFromSaved', () => {
+  const funnel = {
+    ...saved(6, 'anna'),
+    segment: '',
+    state: { fwdeKind: 'funnel', fwdeSteps: 'pageUrl~contains~%2Fa;goal~~1' },
+  };
+  it('compares the steps as the page reads them, and the segment', () => {
+    expect(funnelDiffersFromSaved(funnel, 'pageUrl~contains~%2Fa;goal~~1', '', [1], 3)).toBe(false);
+    expect(funnelDiffersFromSaved(funnel, 'pageUrl~contains~%2Fb;goal~~1', '', [1], 3)).toBe(true);
+    expect(funnelDiffersFromSaved(funnel, 'pageUrl~contains~%2Fa;goal~~1', 'browserCode==FF', [1], 3)).toBe(true);
   });
 });
 
@@ -54,6 +97,15 @@ describe('groupSaved', () => {
 });
 
 describe('findSaved', () => {
+  it('a page takes only saved explorations of its own kind as the open one', () => {
+    const funnel = { ...saved(5, 'anna'), state: { fwdeKind: 'funnel', fwdeSteps: 'anyGoal~~;anyGoal~~' } };
+    const list = [saved(1, 'anna'), funnel];
+    expect(findSaved(list, '1', 'funnel')).toBeNull();
+    expect(findSaved(list, '5', 'funnel')?.id).toBe(5);
+    expect(findSaved(list, '5', 'table')).toBeNull();
+    expect(findSaved(list, '1', 'table')?.id).toBe(1);
+  });
+
   it('finds the open exploration by the id in the link', () => {
     const list = [saved(1, 'anna'), saved(2, 'bert', true)];
     expect(findSaved(list, '2')?.id).toBe(2);

@@ -29,6 +29,7 @@
             :saved="saved"
             :current="currentSaved"
             :login="login"
+            :can-copy="canCopy"
             @open="openSaved"
           />
         </section>
@@ -85,6 +86,7 @@
             :max-rows="maxRows"
             :view="view"
             :can-chart="canChart"
+            :export-url-for="comparing ? compareExportUrl : undefined"
             @limit="update({ limit: $event })"
             @view="update({ view: $event })"
           />
@@ -152,13 +154,39 @@
             :loading="loading"
             :loading-message="translate('FeinwerkDataExploration_LoadingExploration')"
           />
+          <Alert
+            v-if="comparing && comparison.cut"
+            severity="info"
+          >{{ compareLimitText }}</Alert>
+          <Alert
+            v-for="(message, n) in columnErrors"
+            :key="`column-${n}`"
+            severity="warning"
+          >{{ message }}</Alert>
           <div
-            v-if="!loading && !error && rows && !rows.length"
+            v-if="!loading && !error && ownRows && !ownRows.length"
             class="pk-emptyDataTable"
           >{{ translate('CoreHome_ThereIsNoDataForThisReport') }}</div>
+          <p
+            v-if="comparing && !error && ownRows && ownRows.length && view !== 'table'"
+            class="fwde-compare__hint"
+          >{{ translate(chartShowsComparison
+            ? 'FeinwerkDataExploration_CompareTrendHint'
+            : 'FeinwerkDataExploration_CompareChartHint') }}</p>
+          <template v-if="showsTrend">
+            <Alert
+              v-if="trendError"
+              severity="warning"
+            >{{ trendError }}</Alert>
+            <Alert
+              v-for="(message, n) in trendErrors"
+              :key="`trend-${n}`"
+              severity="warning"
+            >{{ message }}</Alert>
+          </template>
           <ResultChart
-            v-if="!error && rows && rows.length && view !== 'table'"
-            :rows="rows"
+            v-if="!error && ownRows && ownRows.length && view !== 'table'"
+            :rows="ownRows"
             :state="state"
             :catalog="catalog"
             :metric="chartMetric"
@@ -166,11 +194,34 @@
             :currency-symbol="currencySymbol"
             :hour-labels="hourLabels"
             :period-days="periodDays"
+            :chart-type="chartType"
+            :show-type-switch="showTypeSwitch"
+            :trend-rows="trendRows"
+            :trend-loading="trendLoading"
+            :max-lines="maxTrendLines"
+            :compare-columns="compareTimeColumns"
             :class="{ 'fwde-main__stale': loading }"
             @metric="update({ chartMetric: $event })"
+            @chart-type="update({ chartType: $event })"
+          />
+          <CompareTable
+            v-if="comparing && !error && rows && ownRows && ownRows.length && view !== 'chart'"
+            :rows="rows"
+            :state="state"
+            :catalog="catalog"
+            :columns="comparison.columns"
+            :column-errors="columnErrors"
+            :action-scope="actionScope"
+            :currency-symbol="currencySymbol"
+            :visits-log-enabled="visitsLogEnabled"
+            :class="{ 'fwde-main__stale': loading }"
+            @sort="sortBy"
+            @row-filter="filterToRow"
+            @row-breakdown="breakDownRow"
+            @row-visits="showRowVisits"
           />
           <ResultTable
-            v-if="!error && rows && rows.length && view !== 'chart'"
+            v-if="!comparing && !error && rows && rows.length && view !== 'chart'"
             :rows="rows"
             :state="state"
             :catalog="catalog"
@@ -190,6 +241,11 @@
             :question="translate('FeinwerkDataExploration_FeedbackQuestion_free_form_table')"
             :feedback="feedback"
           />
+          <PromoLine
+            v-if="!error && rows"
+            :promo="promo"
+            :dismiss-label="translate('FeinwerkDataExploration_PromoDismiss')"
+          />
         </div>
       </section>
     </div>
@@ -199,42 +255,59 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import {
-  ActivityIndicator, Alert, MatomoUrl, NumberFormatter, translate,
+  ActivityIndicator, Alert, ComparisonsStoreInstance, MatomoUrl, translate,
 } from 'CoreHome';
+import { RUN_DELAY_MS, needsSmallerPeriod } from './hints';
 import {
-  RUN_DELAY_MS, canRetry, isLargePeriod, isSlow, needsSmallerPeriod, noSmallerPeriodKey,
-} from './hints';
+  largePeriodHint, noSmallerPeriodKeyForUser, rawDataRange, retryAllowed, showsRawDataWarning,
+  slowHint, suggestedPeriodLabel,
+} from './pageHints';
 import DimensionPicker from './DimensionPicker.vue';
 import MetricPicker from './MetricPicker.vue';
 import FilterEditor from './FilterEditor.vue';
 import ResultTable from './ResultTable.vue';
+import CompareTable from './CompareTable.vue';
+import {
+  comparisonColumns, isComparing, mergeColumn, remainingColumns, requestColumns,
+  withoutComparisonColumns,
+} from './comparison';
+import { exportUrl } from './exportLink';
 import ExplorationToolbar from './ExplorationToolbar.vue';
 import SavedPicker from './SavedPicker.vue';
 import SaveDialog from './SaveDialog.vue';
 import FeedbackBar from './FeedbackBar.vue';
+import PromoLine, { PromoVariables } from './PromoLine.vue';
 import { FeedbackSettings } from './feedback';
 import {
-  differsFromSaved, findSaved, linkNamesOnlySaved, savedHashParams, stateToSave, STATE_KEYS,
+  differsFromSaved, findSaved, linkNamesOnlySaved, savedHashParams, savedKind, stateToSave,
+  STATE_KEYS,
 } from './saved';
 import ResultChart from './ResultChart.vue';
-import { Catalog, ChartView, ExplorationState } from './types';
+import {
+  Catalog, ChartType, ChartView, ComparisonColumn, ExplorationState,
+} from './types';
 import { parseState, toDefinition, toHashParams } from './state';
 import {
-  canChart, chartMetricFor, effectiveView, resultTitle,
+  canChart, chartMetricFor, effectiveView, resultTitle, TIME_DIMENSIONS,
 } from './chart';
+import {
+  canTrend, chartTypeFor, mergeTrendLines, needsOwnLine, trendColumns, trendIsCurrent, withOwnLine,
+} from './trend';
 import { combinedSegment, filtersForRow } from './rows';
-import { periodDays as daysOfPeriod, rangeFromDay, startsBefore } from './period';
+import { periodDays as daysOfPeriod } from './period';
 import { createRequestGuard } from './requestGuard';
 import { createRunQueue } from './runQueue';
 import {
   addSaved, deleteSaved, errorText, Goal, loadCatalog, loadGoals, loadPeriodVisits, loadSaved,
-  loadSuggestedPeriod, PeriodVisits, ResultRow, runExploration, SavedExploration, SuggestedPeriod,
-  updateSaved,
+  loadSuggestedPeriod, PeriodVisits, ResultRow, runComparison, runExploration, runTrend,
+  SavedExploration, SuggestedPeriod, TrendRow, updateSaved,
 } from './api';
 
 const HASH_KEYS = [
   'fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder', 'fwdeLimit', 'fwdeFilters',
-  'fwdeView', 'fwdeChart',
+  'fwdeView', 'fwdeChart', 'fwdeChartType',
+  // Matomo's comparison of segments and periods (comparison design)
+  'compareSegments', 'comparePeriods', 'compareDates',
 ];
 
 /** Globals of Matomo's Live plugin (segmented visits log). */
@@ -279,6 +352,19 @@ interface Data {
   guard: ReturnType<typeof createRequestGuard>;
   queue: ReturnType<typeof createRunQueue>;
   unmounted: boolean;
+  /** by comparison column index: why that column could not be computed */
+  columnErrors: Record<number, string>;
+  /** the trend's lines (trend design), null until loaded */
+  trendRows: TrendRow[]|null;
+  trendLoading: boolean;
+  /** why the trend could not be loaded (without comparing) */
+  trendError: string;
+  /** by comparison column index: why its trend line could not be computed */
+  trendErrors: Record<number, string>;
+  /** the definition the trend was asked for ('' none): the same setup needs no new request */
+  trendKey: string;
+  trendSequence: number;
+  trendAbort: AbortController|null;
 }
 
 export default defineComponent({
@@ -290,11 +376,13 @@ export default defineComponent({
     MetricPicker,
     FilterEditor,
     ResultTable,
+    CompareTable,
     ResultChart,
     ExplorationToolbar,
     SavedPicker,
     SaveDialog,
     FeedbackBar,
+    PromoLine,
   },
   props: {
     idSite: { type: Number, required: true },
@@ -302,6 +390,11 @@ export default defineComponent({
     defaultRows: { type: Number, required: true },
     /** at least write access to the site: may share saved explorations */
     canShare: { type: Boolean, default: false },
+    canCopy: { type: Boolean, default: false },
+    promo: {
+      type: Object as PropType<PromoVariables|null>,
+      default: null,
+    },
     feedback: {
       type: Object as PropType<FeedbackSettings>,
       default: () => ({ enabled: false, supportUrl: '', version: '' }),
@@ -310,6 +403,10 @@ export default defineComponent({
     rawDataFrom: { type: String, default: null },
     currencySymbol: { type: String, default: '' },
     hourLabels: { type: Array as PropType<string[]>, default: () => [] },
+    /** columns per metric when comparing, the own one included (free: 3) */
+    maxCompareColumns: { type: Number, default: 3 },
+    /** lines of a line chart (free: 5) */
+    maxTrendLines: { type: Number, default: 5 },
   },
   data(): Data {
     return {
@@ -335,6 +432,14 @@ export default defineComponent({
       guard: createRequestGuard(),
       queue: createRunQueue(),
       unmounted: false,
+      columnErrors: {},
+      trendRows: null,
+      trendLoading: false,
+      trendError: '',
+      trendErrors: {},
+      trendKey: '',
+      trendSequence: 0,
+      trendAbort: null,
     };
   },
   created() {
@@ -360,11 +465,33 @@ export default defineComponent({
     if (this.abortController) {
       this.abortController.abort();
     }
+    if (this.trendAbort) {
+      this.trendAbort.abort();
+    }
   },
   computed: {
     hashState(): string {
       const hash = MatomoUrl.hashParsed.value;
       return HASH_KEYS.map((key) => String(hash[key] ?? '')).join('|');
+    },
+    /** Matomo's comparison controls: the table's columns (the own one first) */
+    comparison(): { columns: ComparisonColumn[], cut: boolean } {
+      return comparisonColumns(
+        ComparisonsStoreInstance.getSegmentComparisons(),
+        ComparisonsStoreInstance.getPeriodComparisons(),
+        this.maxCompareColumns,
+        translate('General_Unknown'),
+      );
+    },
+    comparing(): boolean {
+      return isComparing(this.comparison.columns);
+    },
+    compareLimitText(): string {
+      return translate('FeinwerkDataExploration_CompareLimit', String(this.maxCompareColumns));
+    },
+    /** the rows without the total row */
+    ownRows(): ResultRow[]|null {
+      return this.rows ? this.rows.filter((row) => !row.fwde_total) : null;
     },
     actionScope(): boolean {
       const { catalog, state } = this;
@@ -375,55 +502,53 @@ export default defineComponent({
         || catalog.metrics.some((m) => state.metrics.includes(m.id) && m.scope === 'action');
     },
     view(): ChartView {
-      return this.state ? effectiveView(this.state, this.rows ? this.rows.length : 0) : 'table';
+      const rowCount = this.ownRows ? this.ownRows.length : 0;
+      return this.state ? effectiveView(this.state, rowCount) : 'table';
     },
     canChart(): boolean {
-      return canChart(this.rows ? this.rows.length : 0);
+      return this.state ? canChart(this.ownRows ? this.ownRows.length : 0, this.state) : false;
+    },
+    chartType(): ChartType {
+      return this.state ? chartTypeFor(this.state, this.ownRows ? this.ownRows.length : 0) : 'bar';
+    },
+    /** "Bars | Trend": a trend is possible and there are two rows or more (one row: the trend) */
+    showTypeSwitch(): boolean {
+      return !!this.state && canTrend(this.state) && !!this.ownRows && this.ownRows.length >= 2;
+    },
+    showsTrend(): boolean {
+      return !this.error && !!this.ownRows && this.ownRows.length > 0 && this.view !== 'table'
+        && this.chartType === 'trend';
+    },
+    /** a table of one time dimension while comparing: one line per column, from the table */
+    compareTimeColumns(): ComparisonColumn[] {
+      const { state } = this;
+      return this.comparing && state && state.dimensions.length === 1
+        && TIME_DIMENSIONS.includes(state.dimensions[0]) ? this.comparison.columns : [];
+    },
+    chartShowsComparison(): boolean {
+      return this.chartType === 'trend' || this.compareTimeColumns.length > 1;
+    },
+    /** the setup the visible trend needs, '' while none is visible or the table still loads */
+    trendRequestKey(): string {
+      return this.showsTrend && !this.loading ? this.lastDefinition : '';
     },
     chartMetric(): string {
       return this.state ? chartMetricFor(this.state) : '';
     },
     largePeriodHint(): string {
-      const info = this.periodVisits;
-      if (!info || !isLargePeriod(info.visits, info.maxVisits)) {
-        return '';
-      }
-      const visits = NumberFormatter.formatNumber(info.visits, 0, 0);
-      return info.timeoutSeconds > 0
-        ? translate('FeinwerkDataExploration_LargePeriodHint', visits, String(info.timeoutSeconds))
-        : translate('FeinwerkDataExploration_LargePeriodHintNoLimit', visits);
+      return largePeriodHint(this.periodVisits);
     },
     slowHint(): string {
-      const timeout = this.periodVisits ? this.periodVisits.timeoutSeconds : 0;
-      if (this.loading || this.error || this.elapsedMs === null) {
-        return '';
-      }
-      if (!isSlow(this.elapsedMs, timeout)) {
-        return '';
-      }
-      const seconds = NumberFormatter.formatNumber(this.elapsedMs / 1000, 0, 0);
-      return timeout > 0
-        ? translate('FeinwerkDataExploration_SlowQueryHint', seconds, String(timeout))
-        : translate('FeinwerkDataExploration_SlowQueryHintNoLimit', seconds);
+      return slowHint(this.elapsedMs, this.periodVisits, this.loading, this.error);
     },
     suggestedPeriodLabel(): string {
-      const days = this.suggestedPeriod?.days || 0;
-      return days === 1
-        ? translate('FeinwerkDataExploration_LoadLastDay')
-        : translate('FeinwerkDataExploration_LoadLastDays', String(days));
+      return suggestedPeriodLabel(this.suggestedPeriod?.days || 0);
     },
     canRetry(): boolean {
-      // both role variants of the time limit message start with the same sentence
-      const timeout = translate('FeinwerkDataExploration_ErrorTimeout', '\u0000');
-      return canRetry(
-        this.error,
-        translate('FeinwerkDataExploration_ErrorBusy'),
-        timeout.includes('\u0000') ? timeout.slice(0, timeout.indexOf('\u0000')) : '',
-      );
+      return retryAllowed(this.error);
     },
     noSmallerPeriodKey(): string {
-      const { piwik } = window as unknown as WindowWithLive;
-      return noSmallerPeriodKey(!!(piwik && piwik.hasSuperUserAccess));
+      return noSmallerPeriodKeyForUser();
     },
     visitsLogEnabled(): boolean {
       const { piwik } = window as unknown as WindowWithLive;
@@ -436,7 +561,7 @@ export default defineComponent({
       return this.catalog && this.state ? resultTitle(this.state, this.catalog) : '';
     },
     currentSaved(): SavedExploration|null {
-      return findSaved(this.saved, String(MatomoUrl.parsed.value.fwdeSaved || ''));
+      return findSaved(this.saved, String(MatomoUrl.parsed.value.fwdeSaved || ''), 'table');
     },
     /** The page shows another setup than the open saved exploration (changed, or an older link). */
     savedChanged(): boolean {
@@ -463,23 +588,21 @@ export default defineComponent({
       return daysOfPeriod(String(parsed.period), String(parsed.date), today);
     },
     rawDataRange(): string|null {
-      if (!this.rawDataFrom) {
-        return null;
-      }
-      const parsed = MatomoUrl.parsed.value;
-      const today = new Date().toISOString().substring(0, 10);
-      return rangeFromDay(String(parsed.period), String(parsed.date), this.rawDataFrom, today);
+      return rawDataRange(this.rawDataFrom);
     },
     showRawDataWarning(): boolean {
-      const parsed = MatomoUrl.parsed.value;
-      const today = new Date().toISOString().substring(0, 10);
-      return startsBefore(String(parsed.period), String(parsed.date), this.rawDataFrom, today);
+      return showsRawDataWarning(this.rawDataFrom);
     },
   },
   watch: {
     hashState() {
       // back/forward or a pasted link changed the exploration parameters
       this.readState();
+    },
+    trendRequestKey(key: string) {
+      if (key !== '' && key !== this.trendKey) {
+        this.loadTrend(key);
+      }
     },
   },
   methods: {
@@ -503,10 +626,17 @@ export default defineComponent({
         this.openSecondDimension();
         MatomoUrl.updateHash({ ...MatomoUrl.hashParsed.value, fwdeBreakdown: '' });
       }
-      const definition = JSON.stringify(toDefinition(state));
+      const definition = JSON.stringify([
+        toDefinition(state),
+        this.comparing ? this.comparison.columns : [],
+      ]);
       if (definition !== this.lastDefinition) {
         const first = this.lastDefinition === '';
         this.lastDefinition = definition;
+        // a trend of the old setup is void: its open and further requests stop
+        if (this.trendAbort) {
+          this.trendAbort.abort();
+        }
         // a short pause, so a few quick changes start one request; the table is dimmed meanwhile
         window.clearTimeout(this.runTimer);
         if (first) {
@@ -587,7 +717,8 @@ export default defineComponent({
         shared: event.shared,
       };
       const current = this.currentSaved;
-      const request = current && current.canEdit && !event.asNew
+      // a saved funnel is never overwritten by a table (its page saves it)
+      const request = current && current.canEdit && !event.asNew && savedKind(current) === 'table'
         ? updateSaved(current.id, fields).then(() => current.id)
         : addSaved(fields).then((result) => Number(result.id));
       this.saveBusy = true;
@@ -669,6 +800,104 @@ export default defineComponent({
         this.start();
       }
     },
+    /**
+     * The comparison table, column by column (comparison design 5): first the own view with its
+     * total and shares (asked as its own column 1), then each comparison in its own request; a
+     * column that fails gets a hint, the others stay.
+     */
+    runCompared(
+      state: ExplorationState,
+      latest: () => boolean,
+      abortController: AbortController,
+    ): Promise<void> {
+      const { columns } = this.comparison;
+      return runComparison(state, columns[0], abortController).then((first) => {
+        if (!latest()) {
+          return undefined;
+        }
+        this.rows = withoutComparisonColumns(first);
+        this.columnErrors = {};
+        return requestColumns(
+          remainingColumns(this.rows, columns),
+          (n) => runComparison(state, columns[n], abortController),
+          () => latest() && !abortController.signal.aborted,
+          (n, rows) => {
+            if (this.rows) {
+              this.rows = mergeColumn(this.rows, rows, n);
+            }
+          },
+          (n, e) => {
+            this.columnErrors = { ...this.columnErrors, [n]: errorText(e) };
+          },
+        );
+      });
+    },
+    /**
+     * The trend (trend design 3): only while it is visible, after the table; without comparing one
+     * request for the first rows, otherwise one per comparison column. A newer setup makes older
+     * answers void; a failing column keeps the other lines.
+     */
+    loadTrend(key: string) {
+      if (!this.state) {
+        return;
+      }
+      if (this.trendAbort) {
+        this.trendAbort.abort();
+      }
+      const abortController = new AbortController();
+      this.trendAbort = abortController;
+      this.trendSequence += 1;
+      const sequence = this.trendSequence;
+      const latest = () => !this.unmounted && trendIsCurrent({ sequence, key }, {
+        sequence: this.trendSequence,
+        definition: this.lastDefinition,
+        aborted: abortController.signal.aborted,
+      });
+      const { state } = this;
+      const { columns } = this.comparison;
+      this.trendKey = key;
+      this.trendRows = null;
+      this.trendError = '';
+      this.trendErrors = {};
+      this.trendLoading = true;
+      let lines: TrendRow[] = [];
+      requestColumns(
+        trendColumns(columns),
+        (n) => runTrend(state, n === 0 ? null : columns[n], abortController),
+        latest,
+        (n, rows) => {
+          lines = mergeTrendLines(lines, rows as TrendRow[], n);
+          this.trendRows = lines;
+        },
+        (n, e) => {
+          if (n === 0) {
+            this.trendError = errorText(e);
+            // the same setup may be asked again (switch away and back)
+            this.trendKey = '';
+          } else {
+            this.trendErrors = { ...this.trendErrors, [n]: errorText(e) };
+          }
+        },
+      ).then(() => {
+        // every comparison failed: the own line still shows
+        if (!latest() || !needsOwnLine(lines, columns)) {
+          return undefined;
+        }
+        return runTrend(state, columns[0], abortController).then((rows) => {
+          if (latest()) {
+            lines = withOwnLine(lines, rows as TrendRow[]);
+            this.trendRows = lines;
+          }
+        }).catch(() => undefined);
+      }).finally(() => {
+        if (latest()) {
+          this.trendLoading = false;
+        }
+      });
+    },
+    compareExportUrl(format: 'CSV'|'TSV'): string {
+      return this.state ? exportUrl(this.state, format, this.comparison.columns) : '';
+    },
     start() {
       if (!this.state || this.unmounted) {
         this.queue.finish();
@@ -679,9 +908,16 @@ export default defineComponent({
       const id = this.guard.start();
       const started = Date.now();
       this.elapsedMs = null;
-      runExploration(this.state, abortController).then((rows) => {
-        if (this.guard.isLatest(id) && !this.queue.isPending()) {
-          this.rows = rows;
+      const latest = () => this.guard.isLatest(id) && !this.queue.isPending();
+      const request = this.comparing
+        ? this.runCompared(this.state, latest, abortController)
+        : runExploration(this.state, abortController).then((rows) => {
+          if (latest()) {
+            this.rows = rows;
+          }
+        });
+      request.then(() => {
+        if (latest()) {
           this.elapsedMs = Date.now() - started;
         }
       }).catch((e) => {

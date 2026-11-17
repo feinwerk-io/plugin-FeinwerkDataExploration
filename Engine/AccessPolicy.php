@@ -33,6 +33,19 @@ final class AccessPolicy
      * Who may share an exploration with the website's users: at least write access (Peter, 2026-10-20). Users with
      * view access save explorations for themselves only.
      */
+    /**
+     * Matomo's copy dialog lists only websites with write access: without write access anywhere, the page shows no copy
+     * action.
+     */
+    public static function canCopy(): bool
+    {
+        try {
+            return Piwik::isUserHasSomeWriteAccess();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
     public static function canShare(int $idSite): bool
     {
         try {

@@ -10,14 +10,11 @@
 namespace Piwik\Plugins\FeinwerkDataExploration\Widgets;
 
 use Piwik\Common;
-use Piwik\Container\StaticContainer;
-use Piwik\Plugin\Manager as PluginManager;
+use Piwik\Plugins\FeinwerkDataExploration\Definition\ComparisonList;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\AccessPolicy;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\LimitsProvider;
-use Piwik\Plugins\FeinwerkDataExploration\Engine\RawDataRetention;
-use Piwik\Plugins\FeinwerkDataExploration\Feedback\PluginFeedback;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\TrendExplorer;
 use Piwik\Site;
-use Piwik\Translation\Translator;
 use Piwik\Widget\Widget;
 use Piwik\Widget\WidgetConfig;
 
@@ -45,20 +42,13 @@ class GetExploration extends Widget
         }
 
         $limits = (new LimitsProvider())->get();
-        $config->setClientSideProps([
-            'idSite' => $idSite,
+        $config->setClientSideProps(WidgetProps::common($idSite, $limits) + [
             'maxRows' => $limits->maxRows,
+            'maxCompareColumns' => ComparisonList::maxColumns($limits),
+            'maxTrendLines' => TrendExplorer::maxLines($limits),
             'defaultRows' => $limits->defaultRows,
-            'maxDays' => $limits->maxDays,
-            'rawDataFrom' => RawDataRetention::earliestCompleteDay($idSite),
             'currencySymbol' => Site::getCurrencySymbolFor($idSite),
             'hourLabels' => self::hourLabels(),
-            'canShare' => AccessPolicy::canShare($idSite),
-            'feedback' => PluginFeedback::clientProps(
-                StaticContainer::get(PluginFeedback::class)->isEnabled(),
-                (string) StaticContainer::get(Translator::class)->getCurrentLanguage(),
-                (string) PluginManager::getInstance()->getLoadedPlugin(PluginFeedback::PLUGIN)->getVersion()
-            ),
         ]);
     }
 

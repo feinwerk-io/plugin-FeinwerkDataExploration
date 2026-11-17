@@ -21,7 +21,13 @@ final class Limits
         public readonly int $timeoutSeconds = 30,
         public readonly int $maxVisits = 2000000,
         public readonly int $maxConcurrent = 2,
-        public readonly bool $useReader = true
+        public readonly bool $useReader = true,
+        /** steps of a funnel; the free version has 3, FunnelDefinition::maxSteps() clamps it to 2..10 */
+        public readonly int $maxFunnelSteps = 3,
+        /** columns per metric when comparing, the own one included; ComparisonList::maxColumns() clamps it to 1..10 */
+        public readonly int $maxCompareColumns = 3,
+        /** lines of a line chart (trend and time dimensions); TrendExplorer::maxLines() clamps it to 1..10 */
+        public readonly int $maxTrendLines = 5
     ) {
     }
 }

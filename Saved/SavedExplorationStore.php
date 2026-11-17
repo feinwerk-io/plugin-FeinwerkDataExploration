@@ -12,6 +12,7 @@ namespace Piwik\Plugins\FeinwerkDataExploration\Saved;
 use Piwik\Common;
 use Piwik\Date;
 use Piwik\Db;
+use Piwik\Plugins\UsersManager\Model as UsersModel;
 use Piwik\DbHelper;
 
 /**
@@ -21,6 +22,12 @@ use Piwik\DbHelper;
 final class SavedExplorationStore
 {
     public const TABLE = 'fw_dataexploration_saved';
+
+    /**
+     * A login compared exactly: this table's collation may be looser than Matomo's user table (case, accents), where
+     * "bob" and "Bob" or "jurgen" and "jürgen" are different users. The first comparison keeps the index in use.
+     */
+    private const SAME_LOGIN = '(login = ? AND CAST(login AS BINARY) = CAST(? AS BINARY))';
 
     public function install(): void
     {
@@ -49,8 +56,8 @@ final class SavedExplorationStore
     public function listVisible(int $idSite, string $login): array
     {
         $rows = Db::fetchAll(
-            'SELECT * FROM `' . $this->table() . '` WHERE idsite = ? AND (login = ? OR shared = 1) ORDER BY name ASC, idsaved ASC',
-            [$idSite, $login]
+            'SELECT * FROM `' . $this->table() . '` WHERE idsite = ? AND (' . self::SAME_LOGIN . ' OR shared = 1) ORDER BY name ASC, idsaved ASC',
+            [$idSite, $login, $login]
         );
         return array_map([self::class, 'row'], $rows);
     }
@@ -85,9 +92,34 @@ final class SavedExplorationStore
         Db::query('DELETE FROM `' . $this->table() . '` WHERE idsaved = ?', [$id]);
     }
 
-    public function deleteForUser(string $login): void
+    /**
+     * The explorations of a deleted user (UsersManager.deleteUser, after the user row is gone). Matomo hands the login
+     * over as the caller spelled it, so the rows the table's collation matches are checked one exact login at a time:
+     * a login goes when it is exactly the deleted one or when no Matomo user has it any more; it stays when it is
+     * another existing user's or when the lookup fails.
+     *
+     * @param callable(string): bool|null $userExists whether a Matomo user has this login (default: Matomo's lookup)
+     */
+    public function deleteForUser(string $login, ?callable $userExists = null): void
     {
-        Db::query('DELETE FROM `' . $this->table() . '` WHERE login = ?', [$login]);
+        $userExists = $userExists ?? static function (string $candidate): bool {
+            return !empty((new UsersModel())->getUser($candidate));
+        };
+        $candidates = Db::fetchAll('SELECT login FROM `' . $this->table() . '` WHERE login = ?', [$login]);
+        // exact, in PHP: DISTINCT would fold the spellings together under the table's collation
+        $logins = array_values(array_unique(array_map(static fn (array $row): string => (string) $row['login'], $candidates), SORT_STRING));
+        foreach ($logins as $candidate) {
+            if ($candidate !== $login) {
+                try {
+                    if ($userExists($candidate)) {
+                        continue;
+                    }
+                } catch (\Throwable $e) {
+                    continue;
+                }
+            }
+            Db::query('DELETE FROM `' . $this->table() . '` WHERE ' . self::SAME_LOGIN, [$candidate, $candidate]);
+        }
     }
 
     public function deleteForSite(int $idSite): void
@@ -97,7 +129,7 @@ final class SavedExplorationStore
 
     public function countFor(int $idSite, string $login): int
     {
-        return (int) Db::fetchOne('SELECT COUNT(*) FROM `' . $this->table() . '` WHERE idsite = ? AND login = ?', [$idSite, $login]);
+        return (int) Db::fetchOne('SELECT COUNT(*) FROM `' . $this->table() . '` WHERE idsite = ? AND ' . self::SAME_LOGIN, [$idSite, $login, $login]);
     }
 
     public function table(): string

@@ -3,8 +3,38 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 import {
-  formatMetric, formatDuration, Formatters, rowCountKey,
+  formatDay, formatHour, formatMetric, formatDuration, Formatters, rowCountKey,
 } from '../src/format';
+
+describe('formatHour', () => {
+  it('writes a bare hour as a time of day', () => {
+    expect(formatHour('7')).toBe('07:00');
+    expect(formatHour('00')).toBe('00:00');
+    expect(formatHour('14')).toBe('14:00');
+  });
+
+  it('keeps Matomo\'s hour labels that already read as a time', () => {
+    expect(formatHour('2 PM')).toBe('2 PM');
+    expect(formatHour('00 Uhr')).toBe('00 Uhr');
+  });
+});
+
+describe('formatDay', () => {
+  it('writes a day as Matomo\'s graphs do: weekday, month and day in the user\'s language', () => {
+    expect(formatDay('2026-09-15', 'en')).toBe('Tue, Sep 15');
+    expect(formatDay('2026-03-29', 'en')).toBe('Sun, Mar 29');
+    expect(formatDay('2026-09-15', 'de')).not.toBe('Tue, Sep 15');
+  });
+
+  it('writes the full date for a tooltip, as Matomo\'s tooltip does', () => {
+    expect(formatDay('2026-09-23', 'en', true)).toBe('Wednesday, September 23, 2026');
+  });
+
+  it('leaves anything else as it is', () => {
+    expect(formatDay('14h', 'en')).toBe('14h');
+    expect(formatDay('Chrome', 'en')).toBe('Chrome');
+  });
+});
 
 const formatters: Formatters = {
   number: (v) => `n${v}`,

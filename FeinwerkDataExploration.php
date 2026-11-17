@@ -61,16 +61,18 @@ class FeinwerkDataExploration extends \Piwik\Plugin
     }
 
     /**
-     * Matomo's comparison mode does not apply to explorations (one table of one period and segment).
+     * Matomo's comparison mode: the free-form table compares segments and periods in its own columns; the funnel does
+     * not compare (yet).
      */
     public function disableComparison(&$pages)
     {
-        $pages[] = 'FeinwerkDataExploration_Explorations.FeinwerkDataExploration_FreeFormTable';
+        $pages[] = 'FeinwerkDataExploration_Explorations.FeinwerkDataExploration_Funnel';
     }
 
     public function getJavaScriptFiles(&$files)
     {
         $files[] = 'plugins/FeinwerkDataExploration/javascripts/exploreAction.js';
+        $files[] = 'plugins/FeinwerkDataExploration/javascripts/promo.js';
     }
 
     /**
@@ -90,6 +92,8 @@ class FeinwerkDataExploration extends \Piwik\Plugin
     public function getStylesheetFiles(&$stylesheets)
     {
         $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/exploration.less';
+        $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/promo.css';
+        $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/feinwerklogo.css';
     }
 
     /**
@@ -103,6 +107,10 @@ class FeinwerkDataExploration extends \Piwik\Plugin
         }
         array_push($translationKeys, 'General_Unknown', 'CoreHome_ThereIsNoDataForThisReport', 'General_Export', 'General_Search');
         array_push($translationKeys, 'General_Save', 'General_Cancel', 'General_Delete');
+        // the funnel table names its visits column as Matomo does
+        $translationKeys[] = 'General_ColumnNbVisits';
+        // the comparison table's total row
+        $translationKeys[] = 'General_Total';
         // the chart orders weekdays by Matomo's own names
         for ($day = 1; $day <= 7; $day++) {
             $translationKeys[] = 'Intl_Day_Long_StandAlone_' . $day;

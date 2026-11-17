@@ -16,6 +16,7 @@ use Piwik\Plugins\FeinwerkDataExploration\Catalog\DimensionCatalog;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\LabelFormatter;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\MetricCatalog;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\ExplorationDefinition;
+use Piwik\Plugins\FeinwerkDataExploration\Definition\FunnelDefinition;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\Limits;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\ResultCache;
 
@@ -51,6 +52,27 @@ class ResultCacheTest extends TestCase
 
         $this->assertNotContains($base, $variants);
         $this->assertCount(5, array_unique($variants));
+    }
+
+    public function testFunnelKeyDiffersFromTheTableKeyAndFollowsTheSteps(): void
+    {
+        $cache = new ResultCache();
+        $funnel = fn (string $value): FunnelDefinition => FunnelDefinition::fromJson(
+            json_encode(['steps' => [['type' => 'pageUrl', 'operator' => 'contains', 'value' => $value], ['type' => 'anyGoal']]]),
+            [],
+            new Limits()
+        );
+        $base = $cache->funnelKey(1, self::START, self::END, '', $funnel('/a'), '1.0.0');
+        $this->assertSame(1, preg_match('/^fwde_[0-9a-f]{40}$/', $base), $base);
+        $this->assertSame($base, $cache->funnelKey(1, self::START, self::END, '', $funnel('/a'), '1.0.0'));
+        $variants = [
+            $cache->funnelKey(1, self::START, self::END, '', $funnel('/b'), '1.0.0'),
+            $cache->funnelKey(1, self::START, self::END, 'browserCode==FF', $funnel('/a'), '1.0.0'),
+            $cache->funnelKey(2, self::START, self::END, '', $funnel('/a'), '1.0.0'),
+            $cache->key(1, self::START, self::END, '', $this->definition('["nb_visits"]'), '1.0.0'),
+        ];
+        $this->assertNotContains($base, $variants);
+        $this->assertCount(4, array_unique($variants));
     }
 
     public function testTtlTodayIsFiveMinutes(): void

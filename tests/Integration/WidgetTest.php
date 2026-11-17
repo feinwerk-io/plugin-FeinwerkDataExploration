@@ -64,6 +64,8 @@ class WidgetTest extends IntegrationTestCase
         $props = $widget->getClientSideProps();
         $this->assertSame(1, $props['idSite']);
         $this->assertSame(1000, $props['maxRows']);
+        $this->assertSame(3, $props['maxCompareColumns']);
+        $this->assertSame(5, $props['maxTrendLines']);
         $this->assertSame(100, $props['defaultRows']);
         $this->assertSame(31, $props['maxDays']);
         $this->assertNull($props['rawDataFrom']);
@@ -92,11 +94,58 @@ class WidgetTest extends IntegrationTestCase
         $this->assertNotNull($this->widget());
     }
 
-    private function widget(): ?WidgetConfig
+    public function testFunnelWidgetIsListedWithClientComponent(): void
+    {
+        FakeAccess::clearAccess(false, [], [1], 'viewer');
+
+        $widget = $this->widget('getFunnel');
+
+        $this->assertNotNull($widget);
+        $this->assertSame('FeinwerkDataExploration_Explorations', $widget->getCategoryId());
+        $this->assertSame('FeinwerkDataExploration_Funnel', $widget->getSubcategoryId());
+        $this->assertSame(['plugin' => 'FeinwerkDataExploration', 'name' => 'FunnelPage'], $widget->getClientSideComponent());
+        $props = $widget->getClientSideProps();
+        $this->assertSame(
+            ['idSite', 'maxDays', 'rawDataFrom', 'canShare', 'canCopy', 'feedback', 'promo', 'maxSteps'],
+            array_keys($props)
+        );
+        $this->assertSame(1, $props['idSite']);
+        $this->assertSame(3, $props['maxSteps']);
+        $this->assertFalse($props['canShare']);
+        $this->assertTrue($widget->isWide());
+        $this->assertFalse($widget->isWidgetizeable());
+
+        $subcategories = array_filter(
+            \Piwik\Category\CategoryList::get()->getCategory('FeinwerkDataExploration_Explorations')->getSubcategories(),
+            static fn ($s) => $s->getId() === 'FeinwerkDataExploration_Funnel'
+        );
+        $this->assertCount(1, $subcategories);
+        $this->assertSame(2, array_values($subcategories)[0]->getOrder());
+    }
+
+    public function testFunnelWidgetHiddenForRefusedUsers(): void
+    {
+        FakeAccess::clearAccess(false, [], [1], 'anonymous');
+        $this->assertNull($this->widget('getFunnel'), 'anonymous users never see explorations');
+
+        FakeAccess::clearAccess(false, [], [], 'superUserLogin');
+        FakeAccess::$superUser = true;
+        $settings = new SystemSettings();
+        $settings->minimumRole->setValue('write');
+        $settings->save();
+
+        FakeAccess::clearAccess(false, [], [1], 'viewer');
+        $this->assertNull($this->widget('getFunnel'), 'the role setting asks for write access');
+
+        FakeAccess::clearAccess(false, [], [1], 'writer', [1]);
+        $this->assertNotNull($this->widget('getFunnel'));
+    }
+
+    private function widget(string $action = 'getExploration'): ?WidgetConfig
     {
         Cache::getTransientCache()->flushAll();
         foreach (WidgetsList::get()->getWidgetConfigs() as $config) {
-            if ($config->getModule() === 'FeinwerkDataExploration' && $config->getAction() === 'getExploration') {
+            if ($config->getModule() === 'FeinwerkDataExploration' && $config->getAction() === $action) {
                 return $config;
             }
         }

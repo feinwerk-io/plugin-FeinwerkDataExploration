@@ -16,7 +16,10 @@
                 sortable: true,
                 columnSorted: state.sort === column.key,
                 'fwde-table__number': column.isMetric,
+                'fwde-table__metric': column.isMetric,
                 label: !column.isMetric,
+                'fwde-table__dimension': !column.isMetric,
+                'fwde-table__dimension-last': column.key === lastDimension,
               }"
               :aria-sort="ariaSort(column.key)"
             >
@@ -46,12 +49,35 @@
             v-for="(row, index) in sortedRows"
             :key="index"
           >
-            <td
+            <template
               v-for="column in columns"
               :key="column.key"
-              :class="column.isMetric ? 'fwde-table__number' : 'label fwde-table__label'"
-              :title="column.isMetric ? undefined : String(row[column.key])"
-            >{{ column.isMetric ? format(column.key, row[column.key]) : row[column.key] }}</td>
+            >
+              <td
+                v-if="column.isMetric"
+                :class="{
+                  'fwde-table__number': true,
+                  'fwde-table__metric': true,
+                  'fwde-cellbar': barStyle(column.key, row) !== null,
+                }"
+                :style="barStyle(column.key, row) || undefined"
+              >{{ format(column.key, row[column.key]) }}</td>
+              <td
+                v-else
+                :class="{
+                  label: true,
+                  'fwde-table__label': true,
+                  'fwde-table__dimension': true,
+                  'fwde-table__dimension-last': column.key === lastDimension,
+                }"
+                :title="String(row[column.key])"
+              >
+                <span :class="ellipsisClasses(row[column.key])">
+                  <span class="fwde-ellipsis__head">{{ labelPart(row[column.key], 0) }}</span>
+                  <span class="fwde-ellipsis__tail">{{ labelPart(row[column.key], 1) }}</span>
+                </span>
+              </td>
+            </template>
             <td class="fwde-table__menu">
               <RowMenu
                 :label="rowLabel(row)"
@@ -68,8 +94,8 @@
       </table>
     </div>
     <p class="fwde-table__footer">
-      {{ translate(rowCountKey(rows.length), formatNumber(rows.length)) }}
-      <span v-if="rows.length >= state.limit">
+      {{ translate(rowCountKey(dataRows.length), formatNumber(dataRows.length)) }}
+      <span v-if="dataRows.length >= state.limit">
         {{ translate('FeinwerkDataExploration_LimitReached') }}
       </span>
     </p>
@@ -87,6 +113,8 @@ import {
 import { shouldSortClientSide, sortByLabel } from './sorting';
 import RowMenu from './RowMenu.vue';
 import { canFilterTo } from './rows';
+import { barMaximum, cellBarWidth, headAndTail } from './cellBars';
+import { SHARE_METRICS } from './comparison';
 
 export interface Column {
   key: string;
@@ -124,11 +152,27 @@ export default defineComponent({
       });
       return columns;
     },
+    /** the key of the last dimension column: a line separates the dimensions from the metrics */
+    lastDimension(): string {
+      return this.state.dimensions.length > 1 ? 'secondary_label' : 'label';
+    },
+    /** what each count's bar is measured against: the column's largest value (not the sorting) */
+    barMaxima(): Record<string, number> {
+      const maxima: Record<string, number> = {};
+      this.state.metrics.filter((id) => SHARE_METRICS.includes(id)).forEach((id) => {
+        maxima[id] = barMaximum(this.dataRows, [id]);
+      });
+      return maxima;
+    },
+    /** the rows without a total row: one stays from a comparison until the new result arrives */
+    dataRows(): ResultRow[] {
+      return this.rows.filter((row) => !row.fwde_total);
+    },
     sortedRows(): ResultRow[] {
-      if (!shouldSortClientSide(this.rows.length, this.state.limit, this.state.sort)) {
-        return this.rows;
+      if (!shouldSortClientSide(this.dataRows.length, this.state.limit, this.state.sort)) {
+        return this.dataRows;
       }
-      return sortByLabel(this.rows, this.state.sort, this.state.sortOrder, Matomo.language);
+      return sortByLabel(this.dataRows, this.state.sort, this.state.sortOrder, Matomo.language);
     },
     formatters(): Formatters {
       return {
@@ -140,6 +184,22 @@ export default defineComponent({
     },
   },
   methods: {
+    /** head (0) or tail (1) of a dimension value, shortened in the middle by the stylesheet */
+    labelPart(value: unknown, part: 0|1): string {
+      return headAndTail(String(value))[part];
+    },
+    /** a long value (with a tail) may shrink when the table runs out of room; a short one never */
+    ellipsisClasses(value: unknown): Record<string, boolean> {
+      return { 'fwde-ellipsis': true, 'fwde-ellipsis--long': headAndTail(String(value))[1] !== '' };
+    },
+    /** the cell's bar behind a count or sum; null for rates, averages and empty values */
+    barStyle(metricId: string, row: ResultRow): Record<string, string>|null {
+      if (!(metricId in this.barMaxima)) {
+        return null;
+      }
+      const width = cellBarWidth(row[metricId], this.barMaxima[metricId]);
+      return width === null ? null : { '--fwde-bar': `${width}%` };
+    },
     rowLabel(row: ResultRow): string {
       return row.secondary_label === undefined
         ? String(row.label)

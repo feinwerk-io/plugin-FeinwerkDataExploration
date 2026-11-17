@@ -72,8 +72,8 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
         $id = $this->api()->addSavedExploration(1, 'Bert for all', self::STATE, '', 1)['id'];
 
         $this->as('anna', [1]);
-        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotYours', fn () => $this->api()->updateSavedExploration(1, $id, 'Taken', self::STATE));
-        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotYours', fn () => $this->api()->deleteSavedExploration(1, $id));
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotYours', fn () => $this->api()->updateSavedExploration(1, $id, 'Taken', self::STATE), 403);
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotYours', fn () => $this->api()->deleteSavedExploration(1, $id), 403);
 
         FakeAccess::$superUser = true;
         FakeAccess::$identity = 'admin';
@@ -88,8 +88,8 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
         $this->as('anna', [1, 2], [2]);
         $id = $this->api()->addSavedExploration(2, 'Site two', self::STATE, '', 1)['id'];
 
-        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotFound', fn () => $this->api()->updateSavedExploration(1, $id, 'X', self::STATE));
-        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotFound', fn () => $this->api()->deleteSavedExploration(1, $id));
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotFound', fn () => $this->api()->updateSavedExploration(1, $id, 'X', self::STATE), 404);
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotFound', fn () => $this->api()->deleteSavedExploration(1, $id), 404);
         $this->assertSame([], $this->api()->getSavedExplorations(1));
     }
 
@@ -97,9 +97,9 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
     public function testOnlyUsersWithWriteAccessCanShare(): void
     {
         $this->as('viewer', [1]);
-        $this->assertRefused('FeinwerkDataExploration_ErrorSavedShareNeedsWrite', fn () => $this->api()->addSavedExploration(1, 'Shared', self::STATE, '', 1));
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedShareNeedsWrite', fn () => $this->api()->addSavedExploration(1, 'Shared', self::STATE, '', 1), 403);
         $id = $this->api()->addSavedExploration(1, 'Private', self::STATE)['id'];
-        $this->assertRefused('FeinwerkDataExploration_ErrorSavedShareNeedsWrite', fn () => $this->api()->updateSavedExploration(1, $id, 'Private', self::STATE, '', 1));
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedShareNeedsWrite', fn () => $this->api()->updateSavedExploration(1, $id, 'Private', self::STATE, '', 1), 403);
         $this->api()->updateSavedExploration(1, $id, 'Still private', self::STATE);
 
         $this->as('writer', [1], [1]);
@@ -197,6 +197,36 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
         $this->assertSame([], $store->listVisible(2, 'dora'));
     }
 
+    /** Matomo hands the deleted login over as the caller spelled it: the user's explorations go anyway. */
+    public function testDeletingAUserSpelledDifferentlyRemovesTheirExplorations(): void
+    {
+        $store = new SavedExplorationStore();
+        $store->add(1, 'Carla', 'Of a deleted user', [], '', true);
+        Fixture::createSuperUser(false);
+        UsersManagerApi::getInstance()->addUser('Carla', 'secret-password-1', 'carla@example.org');
+
+        try {
+            UsersManagerApi::getInstance()->deleteUser('carla');
+        } catch (\Exception $e) {
+            $this->markTestSkipped('this database compares logins exactly, so "carla" is not "Carla": ' . $e->getMessage());
+        }
+
+        $this->assertSame([], $store->listVisible(1, 'admin'));
+    }
+
+    public function testFunnelIsSavedAndListedWithItsKind(): void
+    {
+        $this->as('anna', [1]);
+        $state = '{"fwdeKind":"funnel","fwdeSteps":"pageUrl~contains~%2Fshop;anyGoal~~"}';
+        $id = $this->api()->addSavedExploration(1, 'Shop funnel', $state, 'browserCode==FF')['id'];
+
+        $listed = array_column($this->api()->getSavedExplorations(1), null, 'id')[$id];
+
+        $this->assertSame(['fwdeKind' => 'funnel', 'fwdeSteps' => 'pageUrl~contains~%2Fshop;anyGoal~~'], $listed['state']);
+        $this->assertSame('browserCode==FF', $listed['segment']);
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedState', fn () => $this->api()->addSavedExploration(1, 'Odd', '{"fwdeKind":"chart"}'));
+    }
+
     private function as(string $login, array $viewSites, array $writeSites = []): void
     {
         FakeAccess::clearAccess(false, [], $viewSites, $login, $writeSites);
@@ -207,13 +237,15 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
         return API::getInstance();
     }
 
-    private function assertRefused(string $key, callable $call): void
+    /** @param int $httpCode the status Matomo answers with (the exception is an HttpCodeException) */
+    private function assertRefused(string $key, callable $call, int $httpCode = 400): void
     {
         try {
             $call();
             $this->fail('expected ' . $key);
         } catch (ExplorationException $e) {
             $this->assertSame($key, $e->getTranslationKey());
+            $this->assertSame($httpCode, $e->getCode(), $key);
         }
     }
 }

@@ -44,7 +44,8 @@ class QueryRunner
             return $db->fetchAll($sql, $query['bind']);
         } catch (\Exception $e) {
             if (StatementTimeLimit::isTimeoutError($e, $db)) {
-                throw new ExplorationException(RoleText::key('FeinwerkDataExploration_ErrorTimeout'), [$this->limits->timeoutSeconds]);
+                // the time limit of the instance: a server condition (503, not 400); a shorter period may fit
+                throw new ExplorationException(RoleText::key('FeinwerkDataExploration_ErrorTimeout'), [$this->limits->timeoutSeconds], 503);
             }
             throw $e;
         }

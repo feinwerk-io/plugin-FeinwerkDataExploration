@@ -16,7 +16,7 @@ const NO_ZERO_METRICS = [
 ];
 
 /** Metrics counted in whole numbers (and seconds): their axis steps by whole numbers. */
-const INTEGER_METRICS = [
+export const INTEGER_METRICS = [
   'nb_visits', 'nb_uniq_visitors', 'nb_actions', 'nb_conversions', 'nb_pageviews',
   'nb_uniq_pageviews', 'nb_events', 'nb_downloads', 'nb_outlinks', 'avg_time_on_site',
   'nb_searches', 'max_actions',
@@ -48,10 +48,16 @@ export interface ChartPoint {
   label: string;
   /** null: no value (a gap in a line) */
   value: number|null;
+  /** the real date or hour of a compared period lined up by position (tooltip) */
+  date?: string;
 }
 
 export interface ChartSeries {
   label: string;
+  /** a compared period other than the page's (trend) */
+  dashed?: boolean;
+  /** a comparison column: coloured as Matomo colours its comparison series */
+  comparison?: boolean;
   /** one point per category, in the order of the categories */
   points: ChartPoint[];
 }
@@ -75,16 +81,60 @@ export function resultTitle(state: ExplorationState, catalog: Catalog): string {
     .join(' × ');
 }
 
-export function canChart(rowCount: number): boolean {
-  return rowCount >= 2;
+/** Readable steps between axis labels: days, weeks, fortnights; hours in parts of a day. */
+const LABEL_STEPS: Record<'day'|'hour', number[]> = {
+  day: [1, 2, 7, 14, 28],
+  hour: [1, 2, 3, 4, 6, 12],
+};
+
+/**
+ * Every how many categories the time axis is labelled: the smallest readable step whose labels
+ * do not overlap (days weekly as in Matomo's graphs, always on the first day's weekday). When even
+ * the largest step does not fit, the first and the last category, or only the first.
+ *
+ * @param plotWidth the width from the first to the last category, in pixels
+ * @param labelWidth the width one label needs, gap included
+ */
+export function axisLabelStep(
+  count: number,
+  plotWidth: number,
+  labelWidth: number,
+  kind: 'day'|'hour'|'other',
+): number {
+  if (count <= 1) {
+    return 1;
+  }
+  const spacing = plotWidth / (count - 1);
+  const steps = kind === 'other'
+    ? Array.from({ length: count - 1 }, (_, i) => i + 1)
+    : LABEL_STEPS[kind].filter((step) => step < count);
+  const fitting = steps.find((step) => step * spacing >= labelWidth);
+  if (fitting !== undefined) {
+    return fitting;
+  }
+  return plotWidth >= labelWidth ? count - 1 : count;
 }
 
-/** Both where a chart makes sense, the table otherwise; a chosen view only while it is possible. */
+/** A trend is possible without a time dimension (with one, the chart has a time axis already). */
+export function canTrend(state: ExplorationState): boolean {
+  return !state.dimensions.some((id) => TIME_DIMENSIONS.includes(id));
+}
+
+/** Two rows or more; one row when its trend can be shown (with the state). */
+export function canChart(rowCount: number, state?: ExplorationState): boolean {
+  return rowCount >= 2
+    || (rowCount === 1 && state !== undefined && canTrend(state));
+}
+
+/**
+ * Both where a chart makes sense, the table otherwise; a chosen view only while it is possible.
+ * One row (its trend) shows the table unless a chart view was chosen.
+ */
 export function effectiveView(state: ExplorationState, rowCount: number): ChartView {
-  if (!canChart(rowCount)) {
-    return 'table';
+  if (rowCount >= 2) {
+    return state.view || 'both';
   }
-  return state.view || 'both';
+  return canChart(rowCount, state) ? state.view || 'table' : 'table';
 }
 
 /** The chosen chart metric, else the sorted metric, else the first metric. */
@@ -147,7 +197,7 @@ function valueOf(row: ResultRow, metric: string): number {
 }
 
 /** Position on the time axis: dates as they are, hours and weekdays as Matomo orders them. */
-function timeOrder(
+export function timeOrder(
   dimension: string,
   weekdayNames: string[],
   hourLabels: string[],
@@ -167,7 +217,7 @@ function timeOrder(
   return (label) => label;
 }
 
-function compareKeys(a: number|string, b: number|string): number {
+export function compareKeys(a: number|string, b: number|string): number {
   if (typeof a === 'number' && typeof b === 'number') {
     return (Number.isNaN(a) ? Infinity : a) - (Number.isNaN(b) ? Infinity : b);
   }
@@ -266,9 +316,9 @@ function lineModel(
 }
 
 /**
- * The chart of a result: a line over time when the first dimension is a time dimension (one line
- * per value of the second dimension), otherwise one bar per row. Values are never added up, so
- * every metric works.
+ * The chart of a result: a line over time when a dimension is a time dimension (the first one when
+ * both are; one line per value of the other dimension), otherwise one bar per row. Values are never
+ * added up, so every metric works.
  *
  * A missing point is zero only when the result is complete (not cut at the row limit), no metric
  * filter removed rows and the metric is a count or a sum; then every hour, weekday and day of the
@@ -284,7 +334,13 @@ export function chartModel(
     weekdayNames, hourLabels = [], periodDays = null, complete = true,
     tickCount = 5, maxBars = 20, maxSeries = 5,
   } = options;
-  const dimension = state.dimensions[0];
+  let dimension = state.dimensions[0];
+  let data = rows;
+  if (!TIME_DIMENSIONS.includes(dimension) && TIME_DIMENSIONS.includes(state.dimensions[1])) {
+    // "Browser x Date": the date is the axis, one line per browser (trend design 3)
+    [, dimension] = state.dimensions;
+    data = rows.map((row) => ({ ...row, label: row.secondary_label, secondary_label: row.label }));
+  }
   if (!TIME_DIMENSIONS.includes(dimension)) {
     return barModel(rows, metric, maxBars, tickCount);
   }
@@ -301,7 +357,7 @@ export function chartModel(
     }
   }
   return lineModel(
-    rows,
+    data,
     metric,
     timeOrder(dimension, weekdayNames, hourLabels),
     allCategories,

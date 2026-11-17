@@ -73,36 +73,20 @@ final class ExplorationQueryBuilder
      * @param array<int, array{values: list<string>, includeNull: bool}> $resolvedFilters by filter index: text filters on
      *        coded dimensions, already resolved to stored values (see LabelFilterResolver)
      * @param bool $sortOutsideGrouping sort in an outer query (MySQL before 8.0, see GroupingQuirk)
+     * @param list<array{0: ?string, 1: ?string}>|null $onlyKeys only these rows (raw keys of fwde_k1, fwde_k2), without
+     *        number filters, sorting and limit: a comparison column for the rows of the own view. The result then has
+     *        fwde_row (the index in $onlyKeys) instead of the keys: the database matches the groups with its own
+     *        collation (it groups "Shoes" and "shoes" as one, and either spelling may come back)
      * @return array{sql: string, bind: array} result columns fwde_k1, fwde_k2 (two dimensions only) and the metric ids
      */
-    public function build(ExplorationDefinition $definition, array $dimensions, int $idSite, QueryContext $context, array $resolvedFilters = [], bool $sortOutsideGrouping = false): array
+    public function build(ExplorationDefinition $definition, array $dimensions, int $idSite, QueryContext $context, array $resolvedFilters = [], bool $sortOutsideGrouping = false, ?array $onlyKeys = null): array
     {
-        $isAction = $context->scope === QueryContext::SCOPE_ACTION;
         $keys = $this->keys($dimensions, $context);
         $stageA = $this->stageA($definition, $dimensions, $keys, $idSite, $context, $resolvedFilters);
-
-        $hasVisitMetric = $this->hasMetricOfScope($definition, MetricCatalog::SCOPE_VISIT);
-        $hasGoalMetric = $this->hasMetricOfScope($definition, MetricCatalog::SCOPE_GOAL);
-
-        $select = [];
-        foreach (array_keys($keys) as $alias) {
-            $select[] = 'fwde_a.' . $alias . ' AS ' . $alias;
+        if ($onlyKeys !== null) {
+            return $this->restricted($definition, array_keys($keys), $stageA, $idSite, $context, $onlyKeys);
         }
-        foreach ($definition->metricIds as $metricId) {
-            $select[] = $this->metricSql($metricId, $isAction) . ' AS ' . $metricId;
-        }
-
-        $sql = 'SELECT ' . implode(', ', $select) . ' FROM (' . $stageA['sql'] . ') AS fwde_a';
-        $bind = $stageA['bind'];
-
-        if ($isAction && $hasVisitMetric) {
-            $sql .= ' INNER JOIN ' . ($this->prefixTable)(self::VISIT) . ' AS fwde_v ON fwde_v.idvisit = fwde_a.fwde_idvisit';
-        }
-        if ($hasGoalMetric) {
-            $conversions = $this->conversions($definition, $idSite, $context);
-            $sql .= ' LEFT JOIN (' . $conversions['sql'] . ') AS fwde_c ON fwde_c.idvisit = fwde_a.fwde_idvisit';
-            $bind = array_merge($bind, $conversions['bind']);
-        }
+        [$sql, $bind] = $this->stageB($definition, array_keys($keys), $stageA, $idSite, $context);
 
         $groupBy = array_map(fn (string $alias) => 'fwde_a.' . $alias, array_keys($keys));
         $sql .= ' GROUP BY ' . implode(', ', $groupBy);
@@ -126,6 +110,126 @@ final class ExplorationQueryBuilder
     }
 
     /**
+     * The totals of a definition (comparison design 3): its metrics over everything the table covers (text filters and,
+     * in action scope, the dimensions' kind of action), before number filters and the row limit; one row. In action
+     * scope stage A has one row per visit, so a visit with several matching actions counts once.
+     *
+     * @return array{sql: string, bind: array} one row with the metric ids as columns
+     */
+    public function buildTotals(ExplorationDefinition $definition, array $dimensions, int $idSite, QueryContext $context, array $resolvedFilters = []): array
+    {
+        $keys = $this->keys($dimensions, $context);
+        $stageA = $this->stageA($definition, $dimensions, $keys, $idSite, $context, $resolvedFilters, true);
+        [$sql, $bind] = $this->stageB($definition, [], $stageA, $idSite, $context);
+        return ['sql' => $sql, 'bind' => $bind];
+    }
+
+    /**
+     * The trend (trend design 5): with $onlyKeys the rows of the own view by their index (fwde_row, as in build()) and
+     * the time key, otherwise the totals (as buildTotals()) by the time key. The time key fwde_t is the expression of
+     * the "Date" or "Hour" dimension, so the trend counts days and hours as those dimensions do. No number filters,
+     * no sorting, no limit.
+     *
+     * @param list<array{0: ?string, 1: ?string}>|null $onlyKeys
+     * @return array{sql: string, bind: array} result columns fwde_t, the metric ids and, with $onlyKeys, fwde_row
+     */
+    public function buildTrend(ExplorationDefinition $definition, array $dimensions, int $idSite, QueryContext $context, array $resolvedFilters, DimensionDefinition $time, ?array $onlyKeys): array
+    {
+        $keys = $this->keys($dimensions, $context);
+        $stageA = $this->stageA($definition, $dimensions, $keys, $idSite, $context, $resolvedFilters, $onlyKeys === null, $time);
+        if ($onlyKeys !== null) {
+            return $this->restricted($definition, array_keys($keys), $stageA, $idSite, $context, $onlyKeys, true);
+        }
+        [$sql, $bind] = $this->stageB($definition, ['fwde_t'], $stageA, $idSite, $context);
+        return ['sql' => $sql . ' GROUP BY fwde_a.fwde_t', 'bind' => $bind];
+    }
+
+    /**
+     * Stage B without grouping: the given key aliases and the metrics over stage A, with the visit and conversion joins.
+     *
+     * @param string[] $keyAliases
+     * @param array{sql: string, bind: array}|null $leading a first select column (its binds come first)
+     * @return array{0: string, 1: array}
+     */
+    private function stageB(ExplorationDefinition $definition, array $keyAliases, array $stageA, int $idSite, QueryContext $context, ?array $leading = null): array
+    {
+        $isAction = $context->scope === QueryContext::SCOPE_ACTION;
+        $select = $leading === null ? [] : [$leading['sql']];
+        foreach ($keyAliases as $alias) {
+            $select[] = 'fwde_a.' . $alias . ' AS ' . $alias;
+        }
+        foreach ($definition->metricIds as $metricId) {
+            $select[] = $this->metricSql($metricId, $isAction) . ' AS ' . $metricId;
+        }
+
+        $sql = 'SELECT ' . implode(', ', $select) . ' FROM (' . $stageA['sql'] . ') AS fwde_a';
+        $bind = array_merge($leading['bind'] ?? [], $stageA['bind']);
+
+        if ($isAction && $this->hasMetricOfScope($definition, MetricCatalog::SCOPE_VISIT)) {
+            $sql .= ' INNER JOIN ' . ($this->prefixTable)(self::VISIT) . ' AS fwde_v ON fwde_v.idvisit = fwde_a.fwde_idvisit';
+        }
+        if ($this->hasMetricOfScope($definition, MetricCatalog::SCOPE_GOAL)) {
+            $conversions = $this->conversions($definition, $idSite, $context);
+            $sql .= ' LEFT JOIN (' . $conversions['sql'] . ') AS fwde_c ON fwde_c.idvisit = fwde_a.fwde_idvisit';
+            $bind = array_merge($bind, $conversions['bind']);
+        }
+        return [$sql, $bind];
+    }
+
+    /**
+     * Stage B for the rows of the own view: each group gets the index of the own row it belongs to (fwde_row), as the
+     * database compares (collation, NULL-safe); IN lists per key filter first, so the CASE runs only on candidates.
+     *
+     * @param string[] $aliases fwde_k1, fwde_k2
+     * @param list<array{0: ?string, 1: ?string}> $onlyKeys
+     * @param bool $byTime also by the time key fwde_t of stage A (trend)
+     */
+    private function restricted(ExplorationDefinition $definition, array $aliases, array $stageA, int $idSite, QueryContext $context, array $onlyKeys, bool $byTime = false): array
+    {
+        $whens = [];
+        $caseBind = [];
+        foreach ($onlyKeys as $index => $keys) {
+            $parts = [];
+            foreach ($aliases as $i => $alias) {
+                $parts[] = 'fwde_a.' . $alias . ' <=> ?';
+                $caseBind[] = $keys[$i] ?? null;
+            }
+            $whens[] = 'WHEN (' . implode(' AND ', $parts) . ') THEN ' . (int) $index;
+        }
+        $leading = $onlyKeys === []
+            ? ['sql' => 'NULL AS fwde_row', 'bind' => []]
+            : ['sql' => 'CASE ' . implode(' ', $whens) . ' END AS fwde_row', 'bind' => $caseBind];
+        [$sql, $bind] = $this->stageB($definition, $byTime ? ['fwde_t'] : [], $stageA, $idSite, $context, $leading);
+
+        if ($onlyKeys === []) {
+            return ['sql' => $sql . ' WHERE 1 = 0', 'bind' => $bind];
+        }
+        $filters = [];
+        foreach ($aliases as $i => $alias) {
+            $values = [];
+            $hasNull = false;
+            foreach ($onlyKeys as $keys) {
+                if (($keys[$i] ?? null) === null) {
+                    $hasNull = true;
+                } else {
+                    $values[(string) $keys[$i]] = true;
+                }
+            }
+            $parts = [];
+            if ($values !== []) {
+                $parts[] = 'fwde_a.' . $alias . ' IN (' . implode(', ', array_fill(0, count($values), '?')) . ')';
+                array_push($bind, ...array_map('strval', array_keys($values)));
+            }
+            if ($hasNull) {
+                $parts[] = 'fwde_a.' . $alias . ' IS NULL';
+            }
+            $filters[] = '(' . implode(' OR ', $parts) . ')';
+        }
+        $sql .= ' WHERE ' . implode(' AND ', $filters) . ' GROUP BY fwde_row' . ($byTime ? ', fwde_a.fwde_t' : '') . ' HAVING fwde_row IS NOT NULL';
+        return ['sql' => $sql, 'bind' => $bind];
+    }
+
+    /**
      * @return array<string, string> alias => key SQL
      */
     private function keys(array $dimensions, QueryContext $context): array
@@ -138,8 +242,13 @@ final class ExplorationQueryBuilder
         return $keys;
     }
 
-    private function stageA(ExplorationDefinition $definition, array $dimensions, array $keys, int $idSite, QueryContext $context, array $resolvedFilters): array
+    /**
+     * @param bool $perVisit totals: no key columns, and in action scope one row per visit
+     * @param DimensionDefinition|null $time a time key fwde_t, selected and grouped in both modes (trend)
+     */
+    private function stageA(ExplorationDefinition $definition, array $dimensions, array $keys, int $idSite, QueryContext $context, array $resolvedFilters, bool $perVisit = false, ?DimensionDefinition $time = null): array
     {
+        $timeKeys = $time === null ? [] : ['fwde_t' => $time->keySql($context, 'fwde_t')];
         $isAction = $context->scope === QueryContext::SCOPE_ACTION;
         $base = $isAction ? self::ACTION : self::VISIT;
 
@@ -155,13 +264,16 @@ final class ExplorationQueryBuilder
         foreach (array_values($dimensions) as $i => $dimension) {
             $joins = array_merge($joins, $dimension->joins($context, 'fwde_k' . ($i + 1)));
         }
-        if ($isAction && $this->readsLogVisit($keys, $joins)) {
+        if ($time !== null) {
+            $joins = array_merge($joins, $time->joins($context, 'fwde_t'));
+        }
+        if ($isAction && $this->readsLogVisit($keys + $timeKeys, $joins)) {
             $from[] = self::VISIT;
         }
         $from = array_merge($from, $joins);
 
         $select = [$base . '.idvisit AS fwde_idvisit'];
-        foreach ($keys as $alias => $keySql) {
+        foreach (($perVisit ? [] : $keys) + $timeKeys as $alias => $keySql) {
             $select[] = $keySql . ' AS ' . $alias;
         }
         foreach ($this->stageAMeasures($definition, $dimensions, $isAction) as $alias => $sql) {
@@ -198,7 +310,8 @@ final class ExplorationQueryBuilder
             }
         }
 
-        $groupBy = $isAction ? implode(', ', array_keys($keys)) . ', log_link_visit_action.idvisit' : null;
+        $grouped = array_keys(($perVisit ? [] : $keys) + $timeKeys);
+        $groupBy = $isAction ? implode(', ', array_merge($grouped, ['log_link_visit_action.idvisit'])) : null;
 
         return ($this->segmentedSelect)(implode(', ', $select), $from, $where, $bind, $groupBy);
     }

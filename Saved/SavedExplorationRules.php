@@ -21,7 +21,12 @@ final class SavedExplorationRules
     public const MAX_NAME = 100;
     public const STATE_KEYS = [
         'fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder', 'fwdeLimit', 'fwdeFilters', 'fwdeView', 'fwdeChart',
+        // the chart type (trend design 3)
+        'fwdeChartType',
+        // a funnel (spec 3): its kind and steps; a state without fwdeKind is a free-form table
+        'fwdeKind', 'fwdeSteps',
     ];
+    public const KIND_FUNNEL = 'funnel';
     /** Five filters of 1,000 characters, URL-encoded by the page at up to 9 bytes each, with targets and operators. */
     private const MAX_STATE_VALUE = 46000;
     /** The whole state fits the TEXT column (65,535 bytes). */
@@ -47,6 +52,9 @@ final class SavedExplorationRules
         }
         foreach ($state as $key => $value) {
             if (!in_array($key, self::STATE_KEYS, true) || !is_string($value) || strlen($value) > self::MAX_STATE_VALUE) {
+                throw new ExplorationException('FeinwerkDataExploration_ErrorSavedState');
+            }
+            if ($key === 'fwdeKind' && $value !== self::KIND_FUNNEL) {
                 throw new ExplorationException('FeinwerkDataExploration_ErrorSavedState');
             }
         }

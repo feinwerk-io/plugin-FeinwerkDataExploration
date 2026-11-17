@@ -29,6 +29,30 @@ class SavedExplorationRulesTest extends TestCase
         $this->assertSame($filters, $state['fwdeFilters']);
     }
 
+    /** The chart type (trend design 3) belongs to a saved table. */
+    public function testChartTypeIsKept(): void
+    {
+        $state = SavedExplorationRules::state(json_encode(['fwdeDims' => 'browser', 'fwdeChartType' => 'trend']));
+        $this->assertSame(['fwdeDims' => 'browser', 'fwdeChartType' => 'trend'], $state);
+    }
+
+    /** A saved funnel carries its kind and steps (spec 3 "Speichern"); entries without a kind are tables. */
+    public function testFunnelKeysAreAcceptedAndKindIsChecked(): void
+    {
+        $steps = implode(';', array_fill(0, 3, 'pageUrl~contains~' . rawurlencode(str_repeat('€', 1000))));
+        $state = SavedExplorationRules::state(json_encode(['fwdeKind' => 'funnel', 'fwdeSteps' => $steps]));
+        $this->assertSame(['fwdeKind' => 'funnel', 'fwdeSteps' => $steps], $state);
+
+        foreach (['table', 'x', ''] as $kind) {
+            try {
+                SavedExplorationRules::state(json_encode(['fwdeKind' => $kind, 'fwdeSteps' => 'anyGoal~~']));
+                $this->fail('kind ' . $kind . ' was accepted');
+            } catch (ExplorationException $e) {
+                $this->assertSame('FeinwerkDataExploration_ErrorSavedState', $e->getTranslationKey());
+            }
+        }
+    }
+
     public function testAStateTooLargeForTheTableIsRefused(): void
     {
         $huge = array_fill_keys(SavedExplorationRules::STATE_KEYS, str_repeat('a', 9000));

@@ -94,7 +94,8 @@ class GuardsTest extends IntegrationTestCase
         $this->assertTrue($slots[1]->acquireLock('slot2', 60));
 
         try {
-            $this->assertExplorationError('FeinwerkDataExploration_ErrorBusy', fn () => $this->explore('day', '2026-03-27'));
+            // a server condition the client should retry later: 503, not 400 (pre-release review, 2026-11-17)
+            $this->assertExplorationError('FeinwerkDataExploration_ErrorBusy', fn () => $this->explore('day', '2026-03-27'), 503);
         } finally {
             $slots[0]->unlock();
             $slots[1]->unlock();
@@ -133,9 +134,9 @@ class GuardsTest extends IntegrationTestCase
             'sql' => 'SELECT COUNT(*) AS c FROM information_schema.columns a, information_schema.columns b, information_schema.columns c',
             'bind' => [],
         ];
-        $this->assertExplorationError('FeinwerkDataExploration_ErrorTimeoutSuperUser', fn () => $runner->fetchAll($slow));
+        $this->assertExplorationError('FeinwerkDataExploration_ErrorTimeoutSuperUser', fn () => $runner->fetchAll($slow), 503);
         FakeAccess::clearAccess(false, [], [1], 'viewer');
-        $this->assertExplorationError('FeinwerkDataExploration_ErrorTimeout', fn () => $runner->fetchAll($slow));
+        $this->assertExplorationError('FeinwerkDataExploration_ErrorTimeout', fn () => $runner->fetchAll($slow), 503);
     }
 
     public function testDateTodayIsAccepted(): void
@@ -154,7 +155,7 @@ class GuardsTest extends IntegrationTestCase
         return API::getInstance()->getExploration(1, $period, $date, self::DEFINITION);
     }
 
-    private function assertExplorationError(string $key, callable $call): void
+    private function assertExplorationError(string $key, callable $call, ?int $httpStatus = null): void
     {
         try {
             $call();
@@ -162,6 +163,9 @@ class GuardsTest extends IntegrationTestCase
         } catch (ExplorationException $e) {
             $this->assertSame($key, $e->getTranslationKey());
             $this->assertStringNotContainsString('FeinwerkDataExploration_', $e->getMessage(), 'message is translated');
+            if ($httpStatus !== null) {
+                $this->assertSame($httpStatus, $e->getCode(), 'HTTP status for API clients');
+            }
         }
     }
 }

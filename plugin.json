@@ -1,7 +1,7 @@
 {
     "name": "FeinwerkDataExploration",
-    "description": "Explore your raw data on the spot: a free-form table with a secondary dimension and up to five metrics, without creating or archiving a report.",
-    "version": "5.0.1",
+    "description": "Ad hoc analysis from your raw data: free-form tables with a second dimension, funnels, trends and comparisons, without setting up a report.",
+    "version": "5.1.0",
     "theme": false,
     "keywords": [
         "exploration",
@@ -23,10 +23,13 @@
             "homepage": "https://feinwerk.io"
         }
     ],
-    "homepage": "https://feinwerk.io",
+    "homepage": "https://plugins.feinwerk.io/en/plugins/FeinwerkDataExploration?mtm_campaign=matomo-marketplace&mtm_source=FeinwerkDataExploration",
     "license": "GPL v3+",
     "support": {
         "email": "support@feinwerk.io",
         "docs": "https://plugins.feinwerk.io/en/docs/plugins/FeinwerkDataExploration"
+    },
+    "preview": {
+        "demo_url": "https://demo.feinwerk.io/demo/data-exploration"
     }
 }

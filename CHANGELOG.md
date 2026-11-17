@@ -1,5 +1,35 @@
 # Changelog
 
+## 5.1.0
+
+- The table is easier to read: both dimensions side by side on the left and a line before the metrics, long values on
+  one line shortened in the middle (the full text on hover), a bar behind every count and sum, and header rows that
+  stand apart, in light and dark mode. While comparing, each column shows the colour of its comparison with its
+  segment and period on two lines.
+- Saved explorations compare logins exactly: two users whose logins differ only in upper and lower case or in accents
+  never see each other's private explorations, and deleting one of them keeps the other's explorations.
+- The chart has a trend: "Bars | Trend" turns the first 5 rows of the table into lines over the days of the period
+  (the hours of a single day); while comparing, one line per comparison column, a compared period dashed and lined up
+  day by day. A table with a time dimension in second place (for example "Browser × Date") is now drawn as lines too.
+- The free-form table compares segments and periods with Matomo's own comparison: one column per comparison for every
+  metric, a total row, shares, and the change against your period; up to 3 columns per metric.
+- New page **Explorations → Funnel**: up to three steps (page, event, site search, download, outlink, goal or any goal),
+  counted per visit and in order from the raw data of the period, with bars, a table, export, saving and sharing.
+- Saved explorations can be copied to other websites (Matomo 5.14 and newer): a goal is matched by its name, and a
+  copy is shared only where you may share.
+- Below the result, administrators see a one-line tip on another Feinwerk offer, starting with the Feinwerk Plugins
+  logo (on narrow screens only its round mark); `promotions = 0` in the `[FeinwerkDataExploration]` section of
+  `config/config.ini.php` switches it off.
+- The feedback row below the result follows the compact footer of all Feinwerk plugins, with "Support" at its right end.
+- API requests that fail answer with an HTTP status: 400 for a request the plugin cannot answer (for example a period
+  longer than 31 days), 403 or 404 for a saved exploration you may not change or that does not exist, and 503 while
+  other explorations take all places or a query reached the time limit. The plugin's own page shows its messages as
+  before.
+- A copy of a saved exploration on another website uses that website's custom dimension or goal of the same name in
+  its segment too; without one, the website is skipped with a note.
+- Explorations with two dimensions, trends and funnels no longer write "Trying to add two strings" warnings to Matomo's
+  log for every request.
+
 ## 5.0.1
 
 - The feedback question below the result now takes a single compact line.

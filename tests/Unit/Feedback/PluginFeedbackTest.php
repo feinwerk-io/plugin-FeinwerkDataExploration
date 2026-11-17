@@ -77,6 +77,15 @@ class PluginFeedbackTest extends TestCase
         PluginFeedback::payload('free_form_table', 'maybe', '1.0.0', '6.0.0', '', 'en');
     }
 
+    /** The funnel page asks its own question (spec 5); the store learns the topic with the release. */
+    public function testFunnelIsATopic(): void
+    {
+        $this->assertSame(['free_form_table', 'funnel'], PluginFeedback::TOPICS);
+        $payload = PluginFeedback::payload('funnel', 'down', '1', '6', '', 'en');
+        $this->assertSame('funnel', $payload['topic']);
+        $this->assertSame(1, preg_match('/^[a-z_]{1,30}$/', $payload['topic']));
+    }
+
     public function testOnlyTheQuestionThePluginAsks(): void
     {
         $this->expectException(\InvalidArgumentException::class);
