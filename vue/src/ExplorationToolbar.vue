@@ -5,28 +5,14 @@
 
 <template>
   <div class="fwde-toolbar">
-    <div
+    <SegmentedSwitch
       v-if="state"
-      class="fwde-switch"
-      role="group"
-      :aria-label="translate('FeinwerkDataExploration_View')"
-    >
-      <button
-        v-for="option in viewOptions"
-        :key="option.view"
-        type="button"
-        :class="{
-          'fwde-switch__button': true,
-          'fwde-switch__button--active': view === option.view,
-        }"
-        :aria-pressed="view === option.view ? 'true' : 'false'"
-        :disabled="option.view !== 'table' && !canChart"
-        :title="option.view !== 'table' && !canChart
-          ? translate('FeinwerkDataExploration_ChartNeedsRows')
-          : option.label"
-        @click="$emit('view', option.view)"
-      >{{ option.label }}</button>
-    </div>
+      class="fwde-toolbar__view"
+      :options="viewSwitch"
+      :model-value="view"
+      :label="translate('FeinwerkDataExploration_View')"
+      @update:model-value="$emit('view', $event)"
+    />
     <label
       v-if="state"
       class="fwde-toolbar__limit"
@@ -105,8 +91,10 @@ import { translate } from 'CoreHome';
 import { ChartView, ExplorationState } from './types';
 import { LIMIT_OPTIONS } from './state';
 import { exportUrl } from './exportLink';
+import SegmentedSwitch from './SegmentedSwitch.vue';
 
 export default defineComponent({
+  components: { SegmentedSwitch },
   props: {
     /** the free-form table; null for pages without view switch and row limit (funnel) */
     state: { type: Object as PropType<ExplorationState|null>, default: null },
@@ -147,6 +135,18 @@ export default defineComponent({
         { view: 'chart', label: translate('FeinwerkDataExploration_ViewChart') },
         { view: 'both', label: translate('FeinwerkDataExploration_ViewBoth') },
       ];
+    },
+    /** Chart and Both need rows: disabled with the reason as tooltip */
+    viewSwitch(): { value: string, label: string, disabled: boolean, title?: string }[] {
+      return this.viewOptions.map((option) => {
+        const needsRows = option.view !== 'table' && !this.canChart;
+        return {
+          value: option.view,
+          label: option.label,
+          disabled: needsRows,
+          title: needsRows ? translate('FeinwerkDataExploration_ChartNeedsRows') : undefined,
+        };
+      });
     },
     copyText(): string {
       return translate(this.copied

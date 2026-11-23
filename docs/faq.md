@@ -12,20 +12,13 @@ The rows come from your own view (its segment and period, sorted and limited as 
 values of exactly these rows: 0 means the compared segment or period has no visits with that value. Rows that only
 the compared segment or period has do not appear; compare the other way round to see them.
 
-__Why does my funnel differ from a funnel report set up in advance?__
-A funnel report set up in advance counts from the day it was set up. Feinwerk Data Exploration counts a funnel
-afterwards from the raw data of the chosen period, per visit: a visit counts when it reached the steps in this order
-within the period, with other actions in between. Funnels defined differently (for example with required steps or
-entries on later steps) count differently.
-
 __What does a saved exploration keep, and who sees it?__
-Its dimensions, metrics, goal, filters, sorting, number of rows, view, chart metric and chart type (bars or trend),
-and its segment; a saved funnel keeps its steps and its segment. Not the
-period: it opens with the period you have selected, so one exploration serves last week as well as today. A private
-exploration is seen only by you; a shared one by everyone who may use explorations on the website (never by
+Its dimensions, metrics, goal, filters (with "match all" or "match any"), sorting, number of rows, view, chart metric and
+chart type (bars, trend or donut), and its segment. Not the period: it opens with the period you have selected, so one exploration serves last week as
+well as today. A private exploration is seen only by you; a shared one by everyone who may use explorations on the website (never by
 anonymous users). Sharing needs at least write access to the website; with view access you save explorations for
-yourself. Only the person who saved it, or a super user, can change or delete it. Each person can save up
-to 100 explorations per website.
+yourself. Only the person who saved it, or a super user, can change it; administrators of the website can also delete
+shared ones. Each person can save up to 100 explorations per website.
 
 __Why at most 31 days?__
 Explorations read raw data. A month keeps the queries fast and protects your database. For long periods, archived

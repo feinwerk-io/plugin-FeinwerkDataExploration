@@ -32,6 +32,8 @@ use Piwik\Log\NullLogger;
  */
 class ApiTrendTest extends IntegrationTestCase
 {
+    use FunnelsSwitch;
+
     /** @var ExplorationFixture */
     public static $fixture = null;
 
@@ -54,6 +56,12 @@ class ApiTrendTest extends IntegrationTestCase
         Fixture::loadAllTranslations();
         FakeAccess::$superUser = true;
         Cache::getLazyCache()->flushAll(); // results are cached across tests of one PHP process
+    }
+
+    public function tearDown(): void
+    {
+        self::funnels(false);
+        parent::tearDown();
     }
 
     public function testLinesEqualTheDateTableDayByDay(): void
@@ -80,6 +88,7 @@ class ApiTrendTest extends IntegrationTestCase
      */
     public function testMatomosTotalsRowLogsNoWarnings(): void
     {
+        self::funnels(true);
         $messages = [];
         // Matomo's logger (Piwik\Log\LoggerInterface); this signature fits psr/log 1 (Matomo 5) and 3 (Matomo 6)
         $logger = new class ($messages) extends NullLogger {

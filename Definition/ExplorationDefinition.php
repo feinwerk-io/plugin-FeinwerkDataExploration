@@ -25,9 +25,11 @@ final class ExplorationDefinition
     public const SORT_LABEL = 'label';
     public const SORT_SECONDARY_LABEL = 'secondary_label';
     public const MAX_FILTERS = 5;
+    public const MATCH_ALL = 'all';
+    public const MATCH_ANY = 'any';
     // long enough for a stored URL ("filter to this value" in the row menu)
     public const MAX_FILTER_TEXT = 1000;
-    public const TEXT_OPERATORS = ['contains', 'equals', 'notContains'];
+    public const TEXT_OPERATORS = ['contains', 'equals', 'notContains', 'notEquals', 'startsWith', 'endsWith'];
     public const NUMBER_OPERATORS = ['gt', 'lt'];
 
     /**
@@ -42,7 +44,9 @@ final class ExplorationDefinition
         public readonly string $sortColumn,
         public readonly string $sortOrder,
         public readonly int $limit,
-        public readonly array $filters = []
+        public readonly array $filters = [],
+        /** "all" joins the filters with AND, "any" with OR (2026-11-20) */
+        public readonly string $match = self::MATCH_ALL
     ) {
     }
 
@@ -109,7 +113,12 @@ final class ExplorationDefinition
 
         $filters = self::filters($data['filters'] ?? [], count($dimensionIds), $metricIds);
 
-        return new self($dimensionIds, $metricIds, $idGoal, $sortColumn, $sortOrder, $limit, $filters);
+        $match = $data['match'] ?? self::MATCH_ALL;
+        if (!in_array($match, [self::MATCH_ALL, self::MATCH_ANY], true)) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorInvalidDefinition');
+        }
+
+        return new self($dimensionIds, $metricIds, $idGoal, $sortColumn, $sortOrder, $limit, $filters, $match);
     }
 
     /**
@@ -174,6 +183,7 @@ final class ExplorationDefinition
             'sortOrder' => $this->sortOrder,
             'limit' => $this->limit,
             'filters' => $this->filters,
+            'match' => $this->match,
         ];
     }
 
@@ -191,5 +201,19 @@ final class ExplorationDefinition
             }
         }
         return $value;
+    }
+
+    /** "Match any" with a number filter: a row may qualify by its number alone, so every filter applies to the grouped rows. */
+    public function matchesAnyByNumber(): bool
+    {
+        if ($this->match !== self::MATCH_ANY) {
+            return false;
+        }
+        foreach ($this->filters as $filter) {
+            if (in_array($filter['operator'], self::NUMBER_OPERATORS, true)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

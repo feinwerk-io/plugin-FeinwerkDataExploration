@@ -92,14 +92,30 @@ final class ExplorationQueryBuilder
         $sql .= ' GROUP BY ' . implode(', ', $groupBy);
 
         $having = [];
-        foreach ($definition->filters as $filter) {
+        $havingBind = [];
+        $anyByNumber = $definition->matchesAnyByNumber();
+        $unrestricted = false;
+        foreach ($definition->filters as $i => $filter) {
             if (in_array($filter['operator'], ExplorationDefinition::NUMBER_OPERATORS, true)) {
                 $having[] = $filter['target'] . ($filter['operator'] === 'gt' ? ' > ?' : ' < ?');
-                $bind[] = $filter['value'];
+                $havingBind[] = $filter['value'];
+            } elseif ($anyByNumber) {
+                // "match any" with a number filter: the text filters test the grouped key here, not each unit in stage A.
+                // The key goes inside an aggregate: MySQL (not MariaDB) may check a bare column of the merged derived
+                // table against a row of another group; within a group every key is equal, so MAX() is the group's key.
+                $alias = 'MAX(fwde_a.fwde_k' . ($filter['target'] === ExplorationDefinition::SORT_LABEL ? 1 : 2) . ')';
+                $condition = self::textCondition($filter, $i, $dimensions, $alias, $resolvedFilters, $havingBind);
+                if ($condition === null) {
+                    $unrestricted = true;
+                } else {
+                    $having[] = $condition;
+                }
             }
         }
-        if ($having !== []) {
-            $sql .= ' HAVING ' . implode(' AND ', $having);
+        // binds join only with their conditions: an OR group that a filter excluding nothing drops takes its binds along
+        if ($having !== [] && !($anyByNumber && $unrestricted)) {
+            $sql .= ' HAVING ' . ($anyByNumber ? '(' . implode(' OR ', $having) . ')' : implode(' AND ', $having));
+            array_push($bind, ...$havingBind);
         }
 
         $orderBy = ' ORDER BY ' . $this->orderBy($definition, array_keys($keys)) . ' LIMIT ' . $definition->limit;
@@ -107,6 +123,64 @@ final class ExplorationQueryBuilder
         $sql = $sortOutsideGrouping ? 'SELECT * FROM (' . $sql . ') AS fwde_g' . $orderBy : $sql . $orderBy;
 
         return ['sql' => $sql, 'bind' => $bind];
+    }
+
+    /**
+     * The exact rest of a cut table (design 2026-11-20): the definition's metrics over everything the table covers (as
+     * build(): its filters in stage A, the dimensions' kind of action) except the shown rows, one row. Stage A keeps the
+     * keys, so the shown key tuples are compared on the grouped units, null-safe (a "not defined" row has a NULL key).
+     * Exact only when the table adds up (Engine\Additivity); the caller checks that.
+     *
+     * @param list<array{0: ?string, 1: ?string}> $shownKeys raw keys of the shown rows (Explorer::rowKeys)
+     * @return array{sql: string, bind: array} one row with the metric ids as columns
+     */
+    public function buildOthers(ExplorationDefinition $definition, array $dimensions, int $idSite, QueryContext $context, array $resolvedFilters, array $shownKeys): array
+    {
+        $keys = $this->keys($dimensions, $context);
+        $aliases = array_keys($keys);
+        $stageA = $this->stageA($definition, $dimensions, $keys, $idSite, $context, $resolvedFilters);
+        [$sql, $bind] = $this->stageB($definition, [], $stageA, $idSite, $context);
+        if ($shownKeys === []) {
+            return ['sql' => $sql, 'bind' => $bind];
+        }
+
+        // a shown row needs each key among the shown ones: IN lists (looked up quickly, with the collation the database
+        // groups by) first; with two dimensions the null-safe pairs decide only for the rows that pass them
+        $parts = [];
+        foreach ($aliases as $i => $alias) {
+            $values = [];
+            $hasNull = false;
+            foreach ($shownKeys as $tuple) {
+                if (($tuple[$i] ?? null) === null) {
+                    $hasNull = true;
+                } else {
+                    $values[(string) $tuple[$i]] = true;
+                }
+            }
+            $tests = [];
+            if ($values !== []) {
+                $tests[] = 'fwde_a.' . $alias . ' IN (' . implode(', ', array_fill(0, count($values), '?')) . ')';
+                array_push($bind, ...array_map('strval', array_keys($values)));
+            }
+            if ($hasNull) {
+                $tests[] = 'fwde_a.' . $alias . ' IS NULL';
+            }
+            $parts[] = count($tests) > 1 && count($aliases) > 1 ? '(' . implode(' OR ', $tests) . ')' : implode(' OR ', $tests);
+        }
+        if (count($aliases) > 1) {
+            $pairs = [];
+            foreach ($shownKeys as $tuple) {
+                $pair = [];
+                foreach ($aliases as $i => $alias) {
+                    $pair[] = 'fwde_a.' . $alias . ' <=> ?';
+                    $bind[] = $tuple[$i] ?? null;
+                }
+                $pairs[] = '(' . implode(' AND ', $pair) . ')';
+            }
+            $parts[] = '(' . implode(' OR ', $pairs) . ')';
+        }
+        // IS NOT TRUE, not NOT: a NULL key against an IN list without NULL is unknown, and that row belongs to the rest
+        return ['sql' => $sql . ' WHERE (' . implode(' AND ', $parts) . ') IS NOT TRUE', 'bind' => $bind];
     }
 
     /**
@@ -292,21 +366,32 @@ final class ExplorationQueryBuilder
         }
 
         $bind = [$context->windowStartUtc, $context->windowEndUtc, $idSite];
-        foreach ($definition->filters as $i => $filter) {
-            if (!in_array($filter['operator'], ExplorationDefinition::TEXT_OPERATORS, true)) {
-                continue;
+        // "match any" with a number filter tests the text filters on the grouped rows (build()), else here per unit
+        if (!$definition->matchesAnyByNumber()) {
+            $conditions = [];
+            $conditionBind = [];
+            $unrestricted = false;
+            foreach ($definition->filters as $i => $filter) {
+                if (!in_array($filter['operator'], ExplorationDefinition::TEXT_OPERATORS, true)) {
+                    continue;
+                }
+                $key = $keys['fwde_k' . ($filter['target'] === ExplorationDefinition::SORT_LABEL ? 1 : 2)];
+                $condition = self::textCondition($filter, $i, $dimensions, $key, $resolvedFilters, $conditionBind);
+                if ($condition === null) {
+                    $unrestricted = true;
+                } else {
+                    $conditions[] = $condition;
+                }
             }
-            $index = $filter['target'] === ExplorationDefinition::SORT_LABEL ? 0 : 1;
-            $key = $keys['fwde_k' . ($index + 1)];
-            // Matomo stores titles, event names, keywords and custom dimension values HTML-escaped
-            $value = array_values($dimensions)[$index]->storesSanitizedText
-                ? Common::sanitizeInputValue((string) $filter['value'])
-                : (string) $filter['value'];
-            $condition = isset($resolvedFilters[$i])
-                ? self::resolvedFilterSql($key, $filter['operator'], $resolvedFilters[$i], $bind)
-                : self::textFilterSql($key, $filter['operator'], $value, $bind);
-            if ($condition !== null) {
-                $where .= ' AND ' . $condition;
+            if ($definition->match === ExplorationDefinition::MATCH_ANY) {
+                // one filter that excludes nothing lets every unit through; the dropped group takes its binds along
+                if ($conditions !== [] && !$unrestricted) {
+                    $where .= ' AND (' . implode(' OR ', $conditions) . ')';
+                    array_push($bind, ...$conditionBind);
+                }
+            } elseif ($conditions !== []) {
+                $where .= ' AND ' . implode(' AND ', $conditions);
+                array_push($bind, ...$conditionBind);
             }
         }
 
@@ -317,20 +402,38 @@ final class ExplorationQueryBuilder
     }
 
     /**
+     * The SQL of one text filter on $key (a key expression in stage A or a key alias of the grouped rows), null when it
+     * excludes nothing. Matomo stores titles, event names, keywords and custom dimension values HTML-escaped.
+     *
+     * @param DimensionDefinition[] $dimensions
+     */
+    private static function textCondition(array $filter, int $i, array $dimensions, string $key, array $resolvedFilters, array &$bind): ?string
+    {
+        $index = $filter['target'] === ExplorationDefinition::SORT_LABEL ? 0 : 1;
+        $value = array_values($dimensions)[$index]->storesSanitizedText
+            ? Common::sanitizeInputValue((string) $filter['value'])
+            : (string) $filter['value'];
+        return isset($resolvedFilters[$i])
+            ? self::resolvedFilterSql($key, $filter['operator'], $resolvedFilters[$i], $bind)
+            : self::textFilterSql($key, $filter['operator'], $value, $bind);
+    }
+
+    /**
      * A text filter on the stored value (labels equal stored values for these dimensions).
      */
     private static function textFilterSql(string $key, string $operator, string $value, array &$bind): string
     {
-        if ($operator === 'equals') {
+        if ($operator === 'equals' || $operator === 'notEquals') {
             $bind[] = $value;
-            return '(' . $key . ') = ?';
+            return $operator === 'equals' ? '(' . $key . ') = ?' : '((' . $key . ') IS NULL OR (' . $key . ') <> ?)';
         }
 
         // LIKE treats % and _ as wildcards and \ as escape character; the filter text is matched literally
-        $bind[] = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value) . '%';
-        return $operator === 'contains'
-            ? '(' . $key . ') LIKE ?'
-            : '((' . $key . ') IS NULL OR (' . $key . ') NOT LIKE ?)';
+        $literal = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
+        $bind[] = ($operator === 'startsWith' ? '' : '%') . $literal . ($operator === 'endsWith' ? '' : '%');
+        return $operator === 'notContains'
+            ? '((' . $key . ') IS NULL OR (' . $key . ') NOT LIKE ?)'
+            : '(' . $key . ') LIKE ?';
     }
 
     /**
@@ -345,7 +448,7 @@ final class ExplorationQueryBuilder
         $placeholders = implode(', ', array_fill(0, count($values), '?'));
         array_push($bind, ...$values);
 
-        if ($operator !== 'notContains') {
+        if ($operator !== 'notContains' && $operator !== 'notEquals') {
             if ($values === []) {
                 return $resolved['includeNull'] ? '((' . $key . ') IS NULL)' : '1 = 0';
             }

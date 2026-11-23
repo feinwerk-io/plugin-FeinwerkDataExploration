@@ -12,6 +12,7 @@ namespace Piwik\Plugins\FeinwerkDataExploration\Widgets;
 use Piwik\Common;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\FunnelDefinition;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\AccessPolicy;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\FunnelSwitch;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\LimitsProvider;
 use Piwik\Widget\Widget;
 use Piwik\Widget\WidgetConfig;
@@ -33,7 +34,8 @@ class GetFunnel extends Widget
         $config->setClientSideComponent('FeinwerkDataExploration', 'FunnelPage');
 
         $idSite = Common::getRequestVar('idSite', 0, 'int');
-        if ($idSite < 1 || !AccessPolicy::canUse($idSite)) {
+        // off by default (FunnelSwitch): no page and so no menu entry
+        if (!FunnelSwitch::enabled() || $idSite < 1 || !AccessPolicy::canUse($idSite)) {
             $config->disable();
             return;
         }

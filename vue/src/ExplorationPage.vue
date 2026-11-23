@@ -30,12 +30,19 @@
             :current="currentSaved"
             :login="login"
             :can-copy="canCopy"
+            :can-manage="canManage"
             @open="openSaved"
+            @deleted="loadSavedList()"
           />
         </section>
         <section class="fwde-section">
           <h3 class="fwde-section__title">
             {{ translate('FeinwerkDataExploration_Dimensions') }}
+            <span class="fwde-section__count">
+              {{ translate(
+                'FeinwerkDataExploration_MetricsCount', state.dimensions.length, MAX_DIMENSIONS,
+              ) }}
+            </span>
           </h3>
           <DimensionPicker
             ref="dimensionPicker"
@@ -62,12 +69,40 @@
         </section>
         <section class="fwde-section">
           <h3 class="fwde-section__title">{{ translate('FeinwerkDataExploration_Filters') }}</h3>
-          <FilterEditor
-            :key="filterEditorKey"
+          <ul
+            v-if="filterLines.length"
+            class="fwde-filtersummary"
+          >
+            <li
+              v-for="(line, i) in filterLines"
+              :key="i"
+              class="fwde-filtersummary__item"
+            >{{ line }}</li>
+            <li
+              v-if="state.match === 'any' && filterLines.length > 1"
+              class="fwde-filtersummary__item fwde-filtersummary__match"
+            >{{ translate('FeinwerkDataExploration_FilterMatchAny') }}</li>
+          </ul>
+          <button
+            type="button"
+            class="fwde-button fwde-filters__edit"
+            aria-haspopup="dialog"
+            @click="filtersOpen = true"
+          >
+            <span
+              :class="filterLines.length ? 'icon-edit' : 'icon-add'"
+              aria-hidden="true"
+            />
+            {{ translate(filterLines.length
+              ? 'FeinwerkDataExploration_EditFilters'
+              : 'FeinwerkDataExploration_AddFilter') }}
+          </button>
+          <FilterPanel
+            v-model:open="filtersOpen"
             :catalog="catalog"
             :state="state"
             :action-scope="actionScope"
-            @change="update({ filters: $event }, true)"
+            @apply="update($event)"
           />
         </section>
       </aside>
@@ -104,6 +139,23 @@
               @delete="deleteCurrent"
             />
           </header>
+          <div
+            v-if="chips"
+            class="fwde-card__chips"
+          >
+            <span class="fwde-chip fwde-chip--period">
+              <span
+                class="icon-calendar"
+                aria-hidden="true"
+              />{{ chips.period }}
+            </span>
+            <span class="fwde-chip fwde-chip--segment">
+              <span
+                class="icon-segment"
+                aria-hidden="true"
+              />{{ chips.segment }}
+            </span>
+          </div>
           <div class="fwde-card__body">
             <Alert
               v-if="showRawDataWarning"
@@ -166,8 +218,17 @@
             >{{ message }}</Alert>
             <div
               v-if="!loading && !error && ownRows && !ownRows.length"
-              class="pk-emptyDataTable"
-            >{{ translate('CoreHome_ThereIsNoDataForThisReport') }}</div>
+              class="pk-emptyDataTable fwde-empty"
+            >
+              <p class="fwde-empty__message">{{ translate(empty.message) }}</p>
+              <button
+                v-if="empty.editFilters"
+                type="button"
+                class="fwde-button fwde-empty__edit"
+                aria-haspopup="dialog"
+                @click="filtersOpen = true"
+              >{{ translate('FeinwerkDataExploration_EditFilters') }}</button>
+            </div>
             <p
               v-if="comparing && compareHint && !error && ownRows && ownRows.length
                 && view !== 'table'"
@@ -200,6 +261,9 @@
               :trend-loading="trendLoading"
               :max-lines="maxTrendLines"
               :compare-columns="chartCompareColumns"
+              :donut-reason="donutReason"
+              :others-value="donutOthers"
+              :others-note="donutOthersNote"
               :class="{ 'fwde-main__stale': loading }"
               @metric="update({ chartMetric: $event })"
               @chart-type="update({ chartType: $event })"
@@ -228,11 +292,15 @@
               :action-scope="actionScope"
               :currency-symbol="currencySymbol"
               :visits-log-enabled="visitsLogEnabled"
+              :cut="tableCut"
+              :others="others"
+              :others-state="othersState"
               :class="{ 'fwde-main__stale': loading }"
               @sort="sortBy"
               @row-filter="filterToRow"
               @row-breakdown="breakDownRow"
               @row-visits="showRowVisits"
+              @others-calculate="calculateOthers"
             />
             <FeedbackBar
               v-if="!error && rows"
@@ -271,7 +339,10 @@ import {
 } from './pageHints';
 import DimensionPicker from './DimensionPicker.vue';
 import MetricPicker from './MetricPicker.vue';
-import FilterEditor from './FilterEditor.vue';
+import FilterPanel from './FilterPanel.vue';
+import { filterSummary } from './filterSummary';
+import { viewChips } from './viewChips';
+import { emptyState } from './emptyState';
 import ResultTable from './ResultTable.vue';
 import CompareTable from './CompareTable.vue';
 import {
@@ -293,28 +364,31 @@ import {
 } from './saved';
 import ResultChart from './ResultChart.vue';
 import {
-  Catalog, ChartType, ChartView, ComparisonColumn, ExplorationState,
+  Catalog, ChartType, ChartView, ComparisonColumn, ExplorationState, OthersState,
 } from './types';
-import { parseState, toDefinition, toHashParams } from './state';
 import {
-  canChart, chartMetricFor, compareChartHint, effectiveView, resultTitle,
+  MAX_DIMENSIONS, NUMBER_OPERATORS, parseState, toDefinition, toHashParams,
+} from './state';
+import {
+  canChart, chartMetricFor, compareChartHint, donutBlocker, donutNeedsOthers, effectiveChartType,
+  effectiveView, othersAnswered, resultTitle,
 } from './chart';
 import {
-  canTrend, chartTypeFor, mergeTrendLines, needsOwnLine, trendColumns, trendIsCurrent, withOwnLine,
+  canTrend, mergeTrendLines, needsOwnLine, trendColumns, trendIsCurrent, withOwnLine,
 } from './trend';
-import { combinedSegment, filtersForRow } from './rows';
+import { combinedSegment, rowFilterState } from './rows';
 import { periodDays as daysOfPeriod } from './period';
 import { createRequestGuard } from './requestGuard';
 import { createRunQueue } from './runQueue';
 import {
   addSaved, deleteSaved, errorText, Goal, loadCatalog, loadGoals, loadPeriodVisits, loadSaved,
-  loadSuggestedPeriod, PeriodVisits, ResultRow, runComparison, runExploration, runTrend,
+  loadSuggestedPeriod, PeriodVisits, ResultRow, runComparison, runExploration, runOthers, runTrend,
   SavedExploration, SuggestedPeriod, TrendRow, updateSaved,
 } from './api';
 
 const HASH_KEYS = [
   'fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder', 'fwdeLimit', 'fwdeFilters',
-  'fwdeView', 'fwdeChart', 'fwdeChartType',
+  'fwdeView', 'fwdeChart', 'fwdeChartType', 'fwdeMatch',
   // Matomo's comparison of segments and periods (comparison design)
   'compareSegments', 'comparePeriods', 'compareDates',
 ];
@@ -334,6 +408,7 @@ interface PickerRef {
 }
 
 interface Data {
+  MAX_DIMENSIONS: number;
   saved: SavedExploration[];
   savedLoaded: boolean;
   saveBusy: boolean;
@@ -345,9 +420,8 @@ interface Data {
   loading: boolean;
   error: string;
   loadError: string;
-  filterEditorKey: number;
-  /** the filters the editor emitted last, as JSON */
-  editorFilters: string;
+  /** the filter panel is open (UI item 4) */
+  filtersOpen: boolean;
   /** the definition of the last request, as JSON: view and chart changes need no new request */
   lastDefinition: string;
   /** the period's visits and limits, null until known (or when they cannot be read) */
@@ -359,6 +433,11 @@ interface Data {
   runTimer: number;
   abortController: AbortController|null;
   guard: ReturnType<typeof createRequestGuard>;
+  /** the exact rest of the shown table ("Others", on demand), null until calculated */
+  others: Record<string, number|null>|null;
+  othersState: OthersState;
+  /** a new run or a newer "Calculate" drops the answer of an older one */
+  othersGuard: ReturnType<typeof createRequestGuard>;
   queue: ReturnType<typeof createRunQueue>;
   unmounted: boolean;
   /** by comparison column index: why that column could not be computed */
@@ -383,7 +462,7 @@ export default defineComponent({
     Alert,
     DimensionPicker,
     MetricPicker,
-    FilterEditor,
+    FilterPanel,
     ResultTable,
     CompareTable,
     ResultChart,
@@ -401,6 +480,8 @@ export default defineComponent({
     /** at least write access to the site: may share saved explorations */
     canShare: { type: Boolean, default: false },
     canCopy: { type: Boolean, default: false },
+    /** admin access to the website: manage its shared explorations */
+    canManage: { type: Boolean, default: false },
     promo: {
       type: Object as PropType<PromoVariables|null>,
       default: null,
@@ -425,6 +506,7 @@ export default defineComponent({
   },
   data(): Data {
     return {
+      MAX_DIMENSIONS,
       saved: [],
       savedLoaded: false,
       saveBusy: false,
@@ -436,8 +518,7 @@ export default defineComponent({
       loading: false,
       error: '',
       loadError: '',
-      filterEditorKey: 1,
-      editorFilters: '',
+      filtersOpen: false,
       lastDefinition: '',
       periodVisits: null,
       elapsedMs: null,
@@ -445,6 +526,9 @@ export default defineComponent({
       runTimer: 0,
       abortController: null,
       guard: createRequestGuard(),
+      others: null,
+      othersState: 'idle',
+      othersGuard: createRequestGuard(),
       queue: createRunQueue(),
       unmounted: false,
       columnErrors: {},
@@ -485,6 +569,15 @@ export default defineComponent({
     }
   },
   computed: {
+    /** the table was cut: the row limit is reached or a number filter removed rows */
+    tableCut(): boolean {
+      if (!this.state || !this.rows) {
+        return false;
+      }
+      const shown = this.rows.filter((row) => !row.fwde_total).length;
+      return shown >= this.state.limit
+        || this.state.filters.some((filter) => NUMBER_OPERATORS.includes(filter.operator));
+    },
     hashState(): string {
       const hash = MatomoUrl.hashParsed.value;
       return HASH_KEYS.map((key) => String(hash[key] ?? '')).join('|');
@@ -516,6 +609,25 @@ export default defineComponent({
       return catalog.dimensions.some((d) => state.dimensions.includes(d.id) && d.scope === 'action')
         || catalog.metrics.some((m) => state.metrics.includes(m.id) && m.scope === 'action');
     },
+    /** an empty result says what to do: with filters set, edit them (UI review 2026-11-23) */
+    empty(): { message: string, editFilters: boolean } {
+      return emptyState(this.state ? this.state.filters.length : 0);
+    },
+    /** period and segment of the result (UI item 5); none while comparing */
+    chips(): { period: string, segment: string } | null {
+      return viewChips(
+        ComparisonsStoreInstance.getSegmentComparisons(),
+        ComparisonsStoreInstance.getPeriodComparisons(),
+        translate('General_Unknown'),
+      );
+    },
+    /** the applied filters, one line each, for the left column (UI item 4) */
+    filterLines(): string[] {
+      if (!this.state || !this.catalog) {
+        return [];
+      }
+      return filterSummary(this.state, this.catalog, this.actionScope, translate);
+    },
     view(): ChartView {
       const rowCount = this.ownRows ? this.ownRows.length : 0;
       return this.state ? effectiveView(this.state, rowCount) : 'table';
@@ -524,11 +636,49 @@ export default defineComponent({
       return this.state ? canChart(this.ownRows ? this.ownRows.length : 0, this.state) : false;
     },
     chartType(): ChartType {
-      return this.state ? chartTypeFor(this.state, this.ownRows ? this.ownRows.length : 0) : 'bar';
+      return this.state
+        ? effectiveChartType(this.state, this.ownRows ? this.ownRows.length : 0, this.donutReason)
+        : 'bar';
     },
-    /** "Bars | Trend": a trend is possible and there are two rows or more (one row: the trend) */
+    /**
+     * "Bars | Trend | Donut": two rows or more where a trend is possible; with a time dimension the
+     * chart is already a line over time (one row: its trend)
+     */
     showTypeSwitch(): boolean {
       return !!this.state && canTrend(this.state) && !!this.ownRows && this.ownRows.length >= 2;
+    },
+    /** why the donut cannot show the chart metric (a lang key), null when it can (2026-11-20) */
+    donutReason(): string|null {
+      return this.state && this.catalog
+        ? donutBlocker(this.state, this.catalog, this.chartMetric, this.comparing)
+        : 'FeinwerkDataExploration_DonutNeedsCount';
+    },
+    /** the donut of a cut table needs the exact rest: asked automatically while the donut shows */
+    donutNeedsOthers(): boolean {
+      return donutNeedsOthers({
+        chartType: this.chartType,
+        view: this.view,
+        cut: this.tableCut,
+        othersState: this.othersState,
+        loading: this.loading,
+      });
+    },
+    /** the exact rest of the chart metric for the donut, null until calculated */
+    donutOthers(): number|null {
+      if (!this.tableCut || !this.others || this.othersState !== 'done') {
+        return null;
+      }
+      const value = this.others[this.chartMetric];
+      return typeof value === 'number' ? value : null;
+    },
+    /** why the donut's "Others" lacks the cut rows, '' when it is complete */
+    donutOthersNote(): string {
+      if (!this.tableCut || this.othersState === 'done') {
+        return '';
+      }
+      return this.othersState === 'failed'
+        ? 'FeinwerkDataExploration_OthersFailed'
+        : 'FeinwerkDataExploration_OthersLoading';
     },
     showsTrend(): boolean {
       return !this.error && !!this.ownRows && this.ownRows.length > 0 && this.view !== 'table'
@@ -610,6 +760,11 @@ export default defineComponent({
     },
   },
   watch: {
+    donutNeedsOthers(needed: boolean) {
+      if (needed) {
+        this.calculateOthers();
+      }
+    },
     hashState() {
       // back/forward or a pasted link changed the exploration parameters
       this.readState();
@@ -628,13 +783,6 @@ export default defineComponent({
       }
       const limits = { defaultRows: this.defaultRows, maxRows: this.maxRows };
       const state = parseState(MatomoUrl.parsed.value, this.catalog, limits);
-      // rebuild the editor only for filters that changed elsewhere (link, back button, a removed
-      // dimension); after its own input it keeps its rows and the focus
-      const filters = JSON.stringify(state.filters);
-      if (filters !== this.editorFilters) {
-        this.editorFilters = filters;
-        this.filterEditorKey += 1;
-      }
       this.state = state;
       // "Explore this row" from a report: open the second-dimension picker once
       if (MatomoUrl.parsed.value.fwdeBreakdown === '1') {
@@ -662,11 +810,8 @@ export default defineComponent({
         }
       }
     },
-    /**
-     * @param fromEditor the filter editor's own change: it keeps its rows and focus, every other
-     *                   filter change rebuilds it
-     */
-    update(change: Partial<ExplorationState>, fromEditor = false) {
+    /** a change of the exploration: validated, then into the URL hash (which runs it) */
+    update(change: Partial<ExplorationState>) {
       if (!this.state || !this.catalog) {
         return;
       }
@@ -674,9 +819,6 @@ export default defineComponent({
       const limits = { defaultRows: this.defaultRows, maxRows: this.maxRows };
       // re-validate: e.g. a removed dimension makes filters and the sort column on it invalid
       const valid = parseState(toHashParams(next), this.catalog, limits);
-      if (change.filters && fromEditor) {
-        this.editorFilters = JSON.stringify(valid.filters);
-      }
       MatomoUrl.updateHash({
         ...MatomoUrl.hashParsed.value, ...toHashParams(valid), fwdeBreakdown: '',
       });
@@ -767,7 +909,7 @@ export default defineComponent({
     },
     filterToRow(row: ResultRow) {
       if (this.state) {
-        this.update({ filters: filtersForRow(this.state, row) });
+        this.update(rowFilterState(this.state, row));
       }
     },
     breakDownRow(row: ResultRow) {
@@ -913,11 +1055,32 @@ export default defineComponent({
     compareExportUrl(format: 'CSV'|'TSV'): string {
       return this.state ? exportUrl(this.state, format, this.comparison.columns) : '';
     },
+    /** the exact rest of the shown table, asked by "Calculate" (design 2026-11-20: on demand) */
+    calculateOthers() {
+      if (!this.state) {
+        return;
+      }
+      const id = this.othersGuard.start();
+      this.othersState = 'loading';
+      runOthers(this.state).then((others) => {
+        if (this.othersGuard.isLatest(id)) {
+          ({ others: this.others, othersState: this.othersState } = othersAnswered(others));
+        }
+      }).catch(() => {
+        if (this.othersGuard.isLatest(id)) {
+          this.othersState = 'failed';
+        }
+      });
+    },
     start() {
       if (!this.state || this.unmounted) {
         this.queue.finish();
         return;
       }
+      // a new table: an earlier rest no longer belongs to it, and a pending one is dropped
+      this.othersGuard.start();
+      this.others = null;
+      this.othersState = 'idle';
       const abortController = new AbortController();
       this.abortController = abortController;
       const id = this.guard.start();

@@ -174,12 +174,17 @@
         </tbody>
       </table>
     </div>
+    <p
+      v-if="overcountKey"
+      class="fwde-table__overcount"
+    >{{ translate(overcountKey) }}</p>
     <p class="fwde-table__footer">
       {{ translate(rowCountKey(dataRows.length), formatNumber(dataRows.length)) }}
-      <span v-if="dataRows.length >= state.limit">
-        {{ translate('FeinwerkDataExploration_LimitReached') }}
-      </span>
     </p>
+    <p
+      v-if="dataRows.length >= state.limit"
+      class="fwde-table__limit"
+    >{{ translate('FeinwerkDataExploration_LimitReached') }}</p>
   </div>
 </template>
 
@@ -200,6 +205,7 @@ import {
   changeKey, SHARE_METRICS, shareKey, valueKey,
 } from './comparison';
 import { barMaximum, cellBarWidth, headAndTail } from './cellBars';
+import { overcountUnit } from './additivity';
 
 /** colours of the column dots: the plugin's series; Matomo's comparison colour wins */
 const SERIES_COLOURS = 10;
@@ -230,6 +236,16 @@ export default defineComponent({
   },
   emits: ['sort', 'row-filter', 'row-breakdown', 'row-visits'],
   computed: {
+    /** why the rows can add up to more than the total (design 2026-11-20), '' when they add up */
+    overcountKey(): string {
+      const unit = overcountUnit(this.state, this.catalog);
+      if (!unit) {
+        return '';
+      }
+      return unit === 'visitor'
+        ? 'FeinwerkDataExploration_OvercountHintVisitor'
+        : 'FeinwerkDataExploration_OvercountHintVisit';
+    },
     dimensionColumns(): HeaderColumn[] {
       const name = (id: string) => this.catalog.dimensions.find((d) => d.id === id)?.name || id;
       return this.state.dimensions.map((id, i) => ({

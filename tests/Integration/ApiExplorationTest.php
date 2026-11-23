@@ -204,6 +204,58 @@ class ApiExplorationTest extends IntegrationTestCase
         $this->assertSame([4], API::getInstance()->getExploration(1, 'day', '2026-03-27', $region)->getColumn('nb_visits'));
     }
 
+    /** "is not", "starts with" and "ends with" (2026-11-20), on a raw dimension and on a coded one (resolved labels) */
+    public function testIsNotStartsWithAndEndsWith(): void
+    {
+        $labels = function (string $dimension, string $operator, string $value): array {
+            $definition = '{"dimensions": ["' . $dimension . '"], "metrics": ["nb_visits"], "sort": "label", "sortOrder": "asc", '
+                . '"filters": [{"target": "label", "operator": "' . $operator . '", "value": "' . $value . '"}]}';
+            return API::getInstance()->getExploration(1, 'day', '2026-03-27', $definition)->getColumn('label');
+        };
+
+        $this->assertSame(['example.com/page0', 'example.com/page1'], $labels('pageUrl', 'notEquals', 'example.com/other'));
+        $this->assertSame(['example.com/page0', 'example.com/page1'], $labels('pageUrl', 'startsWith', 'example.com/page'));
+        $this->assertSame(['example.com/other'], $labels('pageUrl', 'endsWith', 'other'));
+        $this->assertSame([], $labels('pageUrl', 'startsWith', 'page'));
+        $this->assertSame(['Firefox', 'Safari'], $labels('browser', 'notEquals', 'chrome'));
+        $this->assertSame(['Firefox'], $labels('browser', 'startsWith', 'fire'));
+        $this->assertSame(['Safari'], $labels('browser', 'endsWith', 'ARI'));
+    }
+
+    /** "Match any" (2026-11-20): two values of one dimension; a value or a number on a coded dimension */
+    public function testMatchAny(): void
+    {
+        $explore = function (string $filters): array {
+            $definition = '{"dimensions": ["browser"], "metrics": ["nb_visits"], "sort": "label", "sortOrder": "asc", "match": "any", '
+                . '"filters": [' . $filters . ']}';
+            $table = API::getInstance()->getExploration(1, 'day', '2026-03-27', $definition);
+            return array_combine($table->getColumn('label'), $table->getColumn('nb_visits'));
+        };
+        $all = array_combine(
+            API::getInstance()->getExploration(1, 'day', '2026-03-27', self::BROWSER_VISITS)->getColumn('label'),
+            API::getInstance()->getExploration(1, 'day', '2026-03-27', self::BROWSER_VISITS)->getColumn('nb_visits')
+        );
+
+        $this->assertSame(['Chrome', 'Safari'], array_keys($explore(
+            '{"target": "label", "operator": "equals", "value": "chrome"}, {"target": "label", "operator": "equals", "value": "safari"}'
+        )));
+        $byNumber = array_keys(array_filter($all, fn ($visits) => $visits > 1));
+        $expected = array_values(array_unique(array_merge(['Firefox'], $byNumber)));
+        sort($expected);
+        $this->assertLessThan(count($all), count($expected), 'the fixture must leave a row out');
+        $this->assertSame($expected, array_keys($explore(
+            '{"target": "label", "operator": "equals", "value": "firefox"}, {"target": "nb_visits", "operator": "gt", "value": 1}'
+        )));
+
+        // "is not Opera" excludes nothing on a day without Opera: every row qualifies, with or without a number filter
+        $this->assertSame(array_keys($all), array_keys($explore(
+            '{"target": "label", "operator": "equals", "value": "chrome"}, {"target": "label", "operator": "notEquals", "value": "Opera"}'
+        )));
+        $this->assertSame(array_keys($all), array_keys($explore(
+            '{"target": "nb_visits", "operator": "gt", "value": 1}, {"target": "label", "operator": "notEquals", "value": "Opera"}'
+        )));
+    }
+
     public function testViewUserIsAllowed(): void
     {
         FakeAccess::clearAccess(false, [], [1], 'viewer');

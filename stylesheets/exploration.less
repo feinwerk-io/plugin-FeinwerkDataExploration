@@ -272,7 +272,10 @@
 // Form controls and buttons
 
 .fwde-select,
-.fwde-input {
+.fwde-input,
+// Matomo's own input rules beat a single class: the value field was 30 px next to 34 px selects (UI review 2026-11-23)
+.fwde-page input.fwde-input {
+  box-sizing: border-box;
   width: 100%;
   height: 34px;
   padding: 6px 8px;
@@ -364,6 +367,96 @@
   [class^="icon-"] {
     font-size: 12px;
   }
+}
+
+// "Match all | Match any" above the filters (2026-11-20)
+.fwde-filters__match {
+  margin-bottom: 8px;
+}
+
+// managing the website's shared explorations (2026-11-20)
+.fwde-saved__manage {
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: @theme-color-link;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.fwde-manage {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.fwde-manage__table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 4px 6px 4px 0;
+    border-bottom: 1px solid @theme-color-border;
+    text-align: left;
+    vertical-align: top;
+  }
+}
+
+.fwde-manage__name {
+  display: block;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.fwde-manage__kind,
+.fwde-manage__empty {
+  color: @theme-color-text-light;
+}
+
+.fwde-manage__actions {
+  text-align: right;
+  white-space: nowrap;
+
+  .fwde-manage__confirm {
+    display: block;
+    margin-bottom: 4px;
+    white-space: normal;
+  }
+}
+
+.fwde-manage__error {
+  margin: 4px 0 0;
+  color: #c62828;
+
+  .inDarkMode({
+    color: #ef9a9a;
+  });
+}
+
+// the exact rest of a cut table ("Others", on demand, 2026-11-20): after the rows, tinted like the total row
+.fwde-table .fwde-table__others td {
+  border-top: 1px solid var(--fwde-cell-line);
+  background-color: var(--fwde-total) !important;
+  font-style: italic;
+}
+
+.fwde-table .fwde-table__others-action {
+  text-align: right;
+}
+
+.fwde-table__others-failed {
+  margin-right: 8px;
+  color: @theme-color-text-light;
+}
+
+
+// why the rows of a table can add up to more than its total (2026-11-20)
+.fwde-table__overcount {
+  margin: 8px 0 0;
+  color: @theme-color-text-light;
+  font-size: 12px;
 }
 
 .fwde-filters__add {
@@ -464,22 +557,12 @@
   font-style: italic;
 }
 
-.fwde-page .fwde-savedialog__panel {
-  position: absolute;
-  top: ~"calc(100% + 4px)";
-  right: 0;
-  z-index: 20;
+// the save dialog in the side panel (UI item 2): the form in its body, the buttons in its footer
+.fwde-savedialog__form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 340px;
-  max-width: ~"calc(100vw - 32px)";
-  padding: 14px;
-  border: 1px solid @theme-color-border-alternative;
-  border-radius: 4px;
-  background: @theme-color-widget-background;
-  box-shadow: 0 4px 12px var(--fwde-shadow);
-  text-align: left;
+  gap: 12px;
+  max-width: 560px;
 }
 
 .fwde-savedialog__note {
@@ -518,7 +601,8 @@
   }
 }
 
-.fwde-page .fwde-savedialog__panel .btn {
+// the page's side panels (saving, managing, filters): buttons in sentence case like the rest of the page
+.fwde-page.fwde-sidepanel .btn {
   text-transform: none;
 }
 
@@ -659,7 +743,9 @@
   min-width: 0;
   overflow: hidden;
   white-space: normal;
-  overflow-wrap: anywhere;
+  // any character may end the one shown line, so it runs up to the kept end; with overflow-wrap: anywhere it ended at
+  // the last hyphen, dot or slash and left a gap ("outdoor-…   ple/warenkorb/", Peter, 2026-11-20)
+  word-break: break-all;
 }
 
 .fwde-ellipsis__tail {
@@ -735,58 +821,6 @@
   font-size: 13px;
 }
 
-// View switch: table, chart, both
-
-.fwde-switch {
-  display: inline-flex;
-  border: 1px solid @theme-color-border-alternative;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.fwde-switch__button {
-  height: 32px;
-  padding: 0 12px;
-  border: 0;
-  border-left: 1px solid @theme-color-border-alternative;
-  background: @theme-color-background-base;
-  color: @theme-color-text;
-  font-family: inherit;
-  font-size: 14px;
-  cursor: pointer;
-
-  &:first-child {
-    border-left: 0;
-  }
-
-  &:hover:not(:disabled) {
-    background: @theme-color-background-lowContrast;
-  }
-
-  // Materialize colours a focused button teal (after a click); the switch keeps its own colours
-  &:focus {
-    background: @theme-color-background-base;
-  }
-
-  &:focus-visible {
-    outline: 2px solid @theme-color-focus-ring;
-    outline-offset: -2px;
-  }
-
-  &:disabled {
-    color: @theme-color-text-lighter;
-    cursor: not-allowed;
-  }
-}
-
-.fwde-switch__button--active,
-.fwde-switch__button--active:focus,
-.fwde-switch__button--active:hover:not(:disabled) {
-  background: var(--fwde-selected);
-  color: @theme-color-text;
-  font-weight: bold;
-}
-
 // Chart: own SVG, colours from the theme; series colours with a dark variant
 
 // The series colours of Matomo's own graphs (also for the comparison table's column dots) (its palette @graph-series0-color to -7 and the first two shades,
@@ -847,7 +881,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  justify-content: space-between;
+  // the switch stays next to the metric when a note appears (UI review 2026-11-23: it jumped 345 px)
+  justify-content: flex-start;
   gap: 8px 16px;
   margin-bottom: 8px;
 }
@@ -862,7 +897,7 @@
 }
 
 .fwde-chart__note {
-  margin: 0;
+  margin: 0 0 0 auto;
   color: @theme-color-text-light;
   font-size: 13px;
 }
@@ -993,6 +1028,69 @@
 .fwde-chart__series(8);
 .fwde-chart__series(9);
 .fwde-chart__series(10);
+
+// the donut (design 2026-11-20): ring and legend side by side, under each other on narrow screens
+.fwde-chart__donut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 32px;
+  padding: 8px 0;
+}
+
+.fwde-chart__donut-svg {
+  flex: 0 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+.fwde-chart__slice {
+  fill: currentColor;
+  stroke: @theme-color-background-base;
+  stroke-width: 1px;
+}
+
+.fwde-chart__donut-total {
+  fill: @theme-color-text;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.fwde-chart__donut-legend {
+  flex: 1 1 260px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 0;
+    font-size: 13px;
+  }
+}
+
+.fwde-chart__donut-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fwde-chart__donut-value,
+.fwde-chart__donut-share {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.fwde-chart__donut-share {
+  min-width: 4em;
+  color: @theme-color-text-light;
+  text-align: right;
+}
 
 // a button that reads like a link inside an alert
 .fwde-alert-link {
@@ -1413,4 +1511,87 @@
 .fwde-feedback__thumb:focus:not(:hover),
 .fwde-menu__item:focus:not(:hover):not(:focus-visible) {
   background-color: transparent;
+}
+
+// Filters (UI item 4): the applied filters as a summary in the left column, the editor in the side panel
+.fwde-filtersummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.fwde-page .fwde-filtersummary__item {
+  max-width: 100%;
+  padding: 2px 8px;
+  border: 1px solid @theme-color-border;
+  border-radius: 12px;
+  background: @theme-color-background-base;
+  color: @theme-color-text;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  list-style: none;
+}
+
+.fwde-filtersummary__match {
+  font-weight: 600;
+}
+
+.fwde-filterpanel__form {
+  max-width: 720px;
+}
+
+// Period and segment of the result next to its title (UI item 5): quiet chips, none while comparing
+// a slim line directly under the result's header (next to the title it would be squeezed by the toolbar)
+.fwde-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 16px 0;
+}
+
+.fwde-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 1px 9px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: @theme-color-background-lowContrast;
+  color: @theme-color-text-light;
+  font-size: 12px;
+  line-height: 1.6;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  [class^="icon-"] {
+    font-size: 12px;
+  }
+}
+
+// UI review 2026-11-23: "Calculate" as the plugin's secondary button (the link colour on the row tint was below 4.5:1),
+// the limit hint on its own line, the metric under the donut's total, an empty result that says what to do
+.fwde-page .fwde-table__others-calculate {
+  padding: 2px 10px;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.fwde-table__limit {
+  margin: 2px 0 0;
+  color: @theme-color-text-light;
+  font-size: 13px;
+}
+
+.fwde-chart__donut-metric {
+  fill: @theme-color-text-light;
+  font-size: 12px;
+}
+
+.fwde-empty__message {
+  margin: 0 0 10px;
 }

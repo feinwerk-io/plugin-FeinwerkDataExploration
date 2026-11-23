@@ -99,3 +99,99 @@ describe('result table', () => {
     expect(first[3].classes()).not.toContain('fwde-cellbar');
   });
 });
+
+describe('overcount hint', () => {
+  const mountWith = (dims: string, metrics: string) => mount(ResultTable, {
+    props: {
+      rows: [{ label: 'a', nb_visits: 1, nb_pageviews: 2 }],
+      state: parseState({ fwdeDims: dims, fwdeMetrics: metrics }, CATALOG, LIMITS),
+      catalog: CATALOG,
+      actionScope: true,
+      currencySymbol: '$',
+    },
+  });
+
+  it('says why the rows can add up to more than the total', () => {
+    const hint = mountWith('pageUrl', 'nb_visits').find('.fwde-table__overcount');
+    expect(hint.text()).toBe('FeinwerkDataExploration_OvercountHintVisit');
+  });
+
+  it('stays away when every unit falls into one row', () => {
+    expect(mountWith('pageUrl', 'nb_pageviews').find('.fwde-table__overcount').exists()).toBe(false);
+  });
+});
+
+describe('Others row (exact rest, on demand)', () => {
+  const cutState = parseState({
+    fwdeDims: 'browser', fwdeMetrics: 'nb_visits,bounce_rate', fwdeFilters: 'nb_visits~gt~1',
+  }, CATALOG, LIMITS);
+  const twoRows = [
+    { label: 'Chrome', nb_visits: 80, bounce_rate: 0.4 },
+    { label: 'Firefox', nb_visits: 20, bounce_rate: 0.6 },
+  ];
+  const mountOthers = (props: Record<string, unknown>) => mount(ResultTable, {
+    props: {
+      rows: twoRows, state: cutState, catalog: CATALOG, actionScope: false, currencySymbol: '$', ...props,
+    },
+  });
+  const othersRow = (wrapper: ReturnType<typeof mountOthers>) => wrapper.find('tr.fwde-table__others');
+
+  it('"Calculate" is the plugin\'s secondary button (readable on the row\'s tint, UI review 2026-11-23)', () => {
+    const row = othersRow(mountOthers({ cut: true, othersState: 'idle', others: null }));
+    expect(row.find('button.fwde-table__others-calculate').classes()).toContain('fwde-button');
+  });
+
+  it('the row count and the limit hint are two lines, not one run-on sentence', () => {
+    const wrapper = mountOthers({
+      cut: true, othersState: 'idle', others: null, state: { ...cutState, limit: 2 },
+    });
+    expect(wrapper.find('.fwde-table__footer').text()).toBe('FeinwerkDataExploration_RowCount 2');
+    expect(wrapper.find('p.fwde-table__limit').text()).toBe('FeinwerkDataExploration_LimitReached');
+  });
+
+  it('offers "Calculate" below a cut table that adds up', () => {
+    const wrapper = mountOthers({ cut: true, othersState: 'idle', others: null });
+    const row = othersRow(wrapper);
+    expect(row.exists()).toBe(true);
+    expect(wrapper.findAll('tbody tr').at(-1)?.classes()).toContain('fwde-table__others');
+    expect(row.find('.fwde-table__dimension').text()).toBe('General_Others');
+    const button = row.find('button.fwde-table__others-calculate');
+    expect(button.text()).toBe('FeinwerkDataExploration_OthersCalculate');
+    expect(row.find('.fwde-table__menu').text()).toBe('');
+    button.trigger('click');
+    expect(wrapper.emitted('others-calculate')).toHaveLength(1);
+  });
+
+  it('shows no Others row when the server found no rest', () => {
+    expect(othersRow(mountOthers({ cut: true, othersState: 'done', others: null })).exists()).toBe(false);
+  });
+
+  it('leaves a rate or average of an empty rest empty instead of showing 0', () => {
+    const row = othersRow(mountOthers({ cut: true, othersState: 'done', others: { nb_visits: 0, bounce_rate: null } }));
+    expect(row.findAll('td.fwde-table__metric').map((td) => td.text())).toEqual(['0', '']);
+  });
+
+  it('shows the values once calculated, without bars', () => {
+    const row = othersRow(mountOthers({ cut: true, othersState: 'done', others: { nb_visits: 1234, bounce_rate: 0.25 } }));
+    const cells = row.findAll('td.fwde-table__metric');
+    expect(cells.map((td) => td.text())).toEqual(['1234', '25 %']);
+    expect(row.find('.fwde-cellbar').exists()).toBe(false);
+    expect(row.find('button').exists()).toBe(false);
+  });
+
+  it('says when the rest could not be calculated, and offers it again', () => {
+    const row = othersRow(mountOthers({ cut: true, othersState: 'failed', others: null }));
+    expect(row.text()).toContain('FeinwerkDataExploration_OthersFailed');
+    expect(row.find('button.fwde-table__others-calculate').exists()).toBe(true);
+  });
+
+  it('is missing when nothing was cut or the rows overcount', () => {
+    expect(othersRow(mountOthers({ cut: false, othersState: 'idle', others: null })).exists()).toBe(false);
+    const overcounting = parseState({
+      fwdeDims: 'pageUrl', fwdeMetrics: 'nb_visits', fwdeFilters: 'nb_visits~gt~1',
+    }, CATALOG, LIMITS);
+    expect(othersRow(mountOthers({
+      state: overcounting, cut: true, othersState: 'idle', others: null,
+    })).exists()).toBe(false);
+  });
+});

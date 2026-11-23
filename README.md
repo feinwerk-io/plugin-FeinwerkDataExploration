@@ -21,10 +21,6 @@ Feinwerk Data Exploration answers them directly from the raw data of your websit
 - **Visit, goal and action metrics:** visits, unique visitors, actions, bounce rate, average visit duration, actions
   per visit, maximum actions in one visit, conversions (all goals or one goal), conversion rate, revenue, pageviews,
   unique pageviews, events, sum and average of event values, downloads, outlinks and site searches.
-- **Funnel:** describe two or three steps (a page URL or title, an event, a site search, a download, an outlink, a
-  goal or any goal) and see how many visits reached each step in this order, with the share of step 1, the share of
-  the previous step and the drop-offs, as bars and as a table. No setup in advance: the funnel is counted from the raw
-  data of the period, for every period and segment.
 - **Compare segments:** click the compare icon next to a saved segment, and the table shows one column per segment
   for every metric, with a total row and each count's share of its column; the bar chart shows one bar per segment.
 - **Compare periods:** choose "Compare to" in the date picker, for example this month against the last one: one
@@ -33,11 +29,17 @@ Feinwerk Data Exploration answers them directly from the raw data of your websit
 - **Trend:** switch the chart from "Bars" to "Trend" and the first 5 rows of the table become lines over the days of
   the period (over the hours for a single day). While comparing, the trend shows one line per comparison column, a
   compared period dashed and lined up day by day.
+- **Donut:** a third chart type for counts and sums shows the largest rows and "Others" as shares of the whole, with the
+  total in the middle.
+- **Honest totals:** below a table whose rows were cut, "Others" calculates the exact rest on request, rates included.
+  Where one visit counts in several rows (for example visits per page URL), a hint says why the rows can add up to
+  more than the total.
 - **Save and share:** save an exploration with its segment, for yourself or (with write access) for everyone who may
   use explorations on the website, open it again from the list at the top of the page, and copy it to your other
-  websites (Matomo 5.14 or newer).
-- **Filters:** every Matomo segment, plus simple row filters: a dimension contains, equals or does not contain a
-  text; a metric is greater or less than a number.
+  websites (Matomo 5.14 or newer). Administrators of a website manage its shared explorations and can delete them.
+- **Filters:** every Matomo segment, plus simple row filters: a dimension contains, does not contain, is, is not,
+  starts with or ends with a text; a metric is greater or less than a number. Rows meet all filters or any of them.
+  The filters are edited in a panel at the side and run once with "Apply"; the left column lists the applied ones.
 - **Open from your reports:** "Open in exploration" under the standard reports (channels, referrers, keywords,
   continents, countries, devices, browsers and their versions, page URLs, events, campaigns and more) opens the exploration with that report's dimension, period and segment, and "Explore
   this row" on a report row opens it on that row's visits, ready to break them down by a second dimension.
@@ -48,7 +50,7 @@ Feinwerk Data Exploration answers them directly from the raw data of your websit
 - **Export and share:** export as CSV or TSV, or copy the link: the exploration is part of the URL.
 - **Safe for your Matomo:** limits per exploration, a size check before every query and your read replica if you
   have one; details in the FAQ.
-- **Light and dark mode, English and German.**
+- **Light and dark mode; English, German, French, Spanish and Italian.**
 
 **Get started:** open *Explorations › Free-form table* in the reporting menu, or click *Open in exploration* under a
 report.
@@ -100,12 +102,13 @@ have no raw data of their own, so explorations are not offered there.
    a standard report. On a report row, the flask icon **Explore this row** opens the visits of that row.
 2. Choose the dimensions and metrics on the left; the table updates on every change.
 3. Use the period selector and the segment editor of Matomo as usual (at most 31 days).
-4. Add row filters, sort by a column, choose the number of rows, and switch between table, chart or both. The menu
-   at the end of each row filters to it, breaks it down or shows its visits.
+4. Add row filters (**Add filter** opens a panel at the side, **Apply** runs them), sort by a column, choose the
+   number of rows, and switch between table, chart or both. The menu at the end of each row filters to it, breaks it
+   down or shows its visits. The result's title is followed by the period and the segment it covers.
 5. Export the table as CSV or TSV, or copy the link to share the exploration with colleagues who can see the site.
-6. Click **Save** at the top of the result to keep the exploration: for yourself only, or, with write access to the
-   website, for everyone who may use explorations on it. Saved explorations open from the list at the top of the left
-   column.
+6. Click **Save** at the top of the result to keep the exploration (a panel opens at the side): for yourself only,
+   or, with write access to the website, for everyone who may use explorations on it. Saved explorations open from the
+   list at the top of the left column.
 
 **Comparing:** on **Explorations → Free-form table**, compare a saved segment with the compare icon in the segment
 list, or a period with "Compare to" in the date picker. The table then shows, for each metric, one column for your own
@@ -122,14 +125,6 @@ filters, become lines over the days of the period, or over the hours when the pe
 website's timezone as the dimensions "Date" and "Hour" count them. A table with a single row shows its trend right
 away. A table with "Date", "Hour" or "Weekday" as a dimension already has a time axis and shows lines over it. The
 choice is part of the link and of saved explorations.
-
-**Funnel:** open **Explorations → Funnel**. Each step is a condition (page URL or title contains, is or starts with
-a text; event category, action or name, site search keyword, download or outlink URL contains or is a text; a goal of
-the website; any goal), up to three steps. A visit counts on a step when it reached all steps up to it in this order;
-other actions in between are allowed, one action counts for one step only, and a goal step may be reached by the
-conversion of the previous step's page (for example the thank-you page). Every visit starts with step 1. Texts are
-compared without case, and page URLs may be typed with or without "https://" and "www.". Funnels are saved, shared,
-exported and linked like free-form tables.
 
 **Settings** (super users, **Administration → System → General settings → Feinwerk Data Exploration**): the longest
 period (up to 31 days), the row limit, the query time limit, the largest number of visits per exploration, whether to
@@ -158,7 +153,7 @@ your Matomo Marketplace (super users) or on plugins.matomo.org (other administra
 switched off, super users get no tip on it.
 
 The same users also see a recommendation for a paid Feinwerk plugin this Matomo does not have yet, below the result of
-**Explorations → Free-form table** and **Explorations → Funnel**: one plugin at a time and a different one first each day; while it shows, the tip
+**Explorations → Free-form table**: one plugin at a time and a different one first each day; while it shows, the tip
 line under the result gives way to it. "×" hides a recommendation for 30 days and the next one shows. With a connected
 Feinwerk Marketplace Connector 5.5.0 or later the recommendation uses the connector's current list, and for super users
 "Learn more" opens the plugin on its Feinwerk Plugins screen, with price and picture. Everyone else gets the plugin's
@@ -174,6 +169,24 @@ promotions = 0
 ```
 
 `promotions = 0` in the `[FeinwerkMarketplaceConnector]` section switches them off for all Feinwerk plugins.
+
+## Installing the Feinwerk Connector
+
+The free Feinwerk Connector installs, updates and licenses Feinwerk plugins inside Matomo. The easiest way to get it is
+the Matomo Marketplace. While it is not active, super users also find a section "Feinwerk Plugins" in Matomo's
+Administration with the entry "Install Feinwerk Connector" ("Activate Feinwerk Connector" when its files are already
+there). One click installs it from the Matomo Marketplace and activates it; as with every plugin install, Matomo first
+asks for your password. Where Matomo cannot install from its Marketplace (Marketplace, internet features, plugin
+administration or automatic updates switched off), the page explains the manual way instead. In Matomo for WordPress
+the connector is installed as a WordPress plugin through Matomo Analytics, Marketplace. The connector needs PHP 8.1.
+Nothing is downloaded before you click. To hide the entry, add to `config/config.ini.php`:
+
+```ini
+[FeinwerkDataExploration]
+connector_installer = 0
+```
+
+The same line in the section `[FeinwerkMarketplaceConnector]` hides it for all Feinwerk plugins.
 
 ## Privacy features
 

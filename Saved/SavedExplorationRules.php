@@ -23,6 +23,8 @@ final class SavedExplorationRules
         'fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder', 'fwdeLimit', 'fwdeFilters', 'fwdeView', 'fwdeChart',
         // the chart type (trend design 3)
         'fwdeChartType',
+        // "match all" or "any" of the filters (2026-11-20)
+        'fwdeMatch',
         // a funnel (spec 3): its kind and steps; a state without fwdeKind is a free-form table
         'fwdeKind', 'fwdeSteps',
     ];

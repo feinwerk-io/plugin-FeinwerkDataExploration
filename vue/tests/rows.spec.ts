@@ -2,10 +2,49 @@
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
-import { canFilterTo, combinedSegment, filtersForRow } from '../src/rows';
+import {
+  canFilterTo, combinedSegment, filtersForRow, rowFilterState,
+} from '../src/rows';
 import { MAX_FILTER_TEXT, parseState } from '../src/state';
 import { CATALOG, LIMITS } from './fixtures';
 import { ResultRow } from '../src/api';
+
+describe('rowFilterState', () => {
+  const filters = 'label~contains~fire;nb_visits~gt~2';
+  it('appends the row to the filters with "match all", as before', () => {
+    const state = parseState({ fwdeDims: 'browser', fwdeMetrics: 'nb_visits', fwdeFilters: filters }, CATALOG, LIMITS);
+    expect(rowFilterState(state, { label: 'Firefox', nb_visits: 3 })).toEqual({
+      filters: filtersForRow(state, { label: 'Firefox', nb_visits: 3 }),
+      match: 'all',
+    });
+  });
+
+  it('starts from the row alone with "match any", where adding a filter would widen the table', () => {
+    const state = parseState({
+      fwdeDims: 'browser,country', fwdeMetrics: 'nb_visits', fwdeFilters: filters, fwdeMatch: 'any',
+    }, CATALOG, LIMITS);
+    expect(rowFilterState(state, { label: 'Firefox', secondary_label: 'Germany', nb_visits: 3 })).toEqual({
+      filters: [
+        { target: 'label', operator: 'equals', value: 'Firefox' },
+        { target: 'secondary_label', operator: 'equals', value: 'Germany' },
+      ],
+      match: 'all',
+    });
+  });
+
+  it('keeps a single filter with a "match any" left over from removed filters (the switch shows from two on)', () => {
+    const state = parseState({
+      fwdeDims: 'browser', fwdeMetrics: 'nb_visits', fwdeFilters: 'nb_visits~gt~2', fwdeMatch: 'any',
+    }, CATALOG, LIMITS);
+    expect(rowFilterState(state, { label: 'Firefox', nb_visits: 3 })).toEqual({
+      filters: [
+        { target: 'nb_visits', operator: 'gt', value: '2' },
+        { target: 'label', operator: 'equals', value: 'Firefox' },
+      ],
+      match: 'all',
+    });
+  });
+});
 
 describe('filtersForRow', () => {
   it('filters the dimension (and the second one) to the values of the row', () => {

@@ -20,6 +20,6 @@ describe('toolbar of a page without table state (funnel)', () => {
     const ready = mount(ExplorationToolbar, { props: { exportUrlFor: () => 'https://example.org/x' } });
     expect(ready.find('.fwde-menu').exists()).toBe(true);
     expect(ready.find('.fwde-toolbar__copy').exists()).toBe(true);
-    expect(ready.find('.fwde-switch').exists()).toBe(false);
+    expect(ready.find('.fwde-segmented').exists()).toBe(false);
   });
 });

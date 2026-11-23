@@ -77,6 +77,11 @@ export interface SavedExploration {
   shared: boolean;
   owner: string;
   canEdit: boolean;
+  /** the owner, super users, and admins of the website for a shared one (design 2026-11-20) */
+  canDelete: boolean;
+  kind: 'table'|'funnel';
+  /** last change, UTC (YYYY-MM-DD HH:MM:SS) */
+  updated: string;
   /** the page's state parameters (fwdeDims, fwdeMetrics, ...) */
   state: Record<string, string>;
   segment: string;
@@ -151,6 +156,18 @@ export function runExploration(
     { definition: JSON.stringify(toDefinition(state)) },
     { ...OPTIONS, abortController },
   );
+}
+
+/**
+ * The exact rest of the cut table ("Others", design 2026-11-20), asked on demand: null when nothing
+ * was cut. Period, date and segment from the URL as for runExploration.
+ */
+export function runOthers(state: ExplorationState): Promise<Record<string, number|null>|null> {
+  return AjaxHelper.post<{ others: Record<string, number|null>|null }>(
+    { method: 'FeinwerkDataExploration.getOthers', format: 'json' },
+    { definition: JSON.stringify(toDefinition(state)) },
+    OPTIONS,
+  ).then((result) => (result && result.others ? result.others : null));
 }
 
 /**

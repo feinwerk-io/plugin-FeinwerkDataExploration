@@ -1,5 +1,33 @@
 # Changelog
 
+## 5.4.0
+
+- The plugin now also speaks French, Spanish and Italian, besides English and German.
+- New: while the free Feinwerk Connector is not active, super users find "Feinwerk Plugins" > "Install Feinwerk
+  Connector" in Matomo's Administration. One click installs it from the Matomo Marketplace and activates it, after
+  Matomo's password check; where Matomo cannot install from its Marketplace, the page explains the manual way. Hidden
+  with `connector_installer = 0`.
+- The tip about the Feinwerk Connector no longer shows where Matomo's Marketplace offers only a download (automatic
+  updates switched off or several servers).
+- Filters open in a panel at the side and run once with "Apply"; the left column shows the applied filters in short.
+- A result that the filters emptied says so and offers "Edit filters"; the empty list of shared explorations says how
+  one gets there.
+- Saving and managing shared explorations open in the same panel, with more room and the buttons always in view.
+- The switches for the view, the chart type and "Match all / any" look and work alike: one Tab stop, the arrow keys
+  choose.
+- The result's title is followed by the period and the segment the numbers cover.
+- The funnel page is no longer included; saved funnels are kept.
+- Row filters "is not", "starts with" and "ends with", and a switch whether a row must meet all filters or any of them.
+- Below a table whose rows were cut, "Others" calculates the exact rest of every metric on request, rates included.
+- Where one visit can count in several rows, for example visits per page URL, a hint below the table says why the rows
+  can add up to more than the total.
+- A donut chart for counts and sums: the largest rows and "Others" as shares of the whole, with the total and the
+  metric in the middle.
+- The lists of dimensions and metrics work with the keyboard (arrow keys, Enter, Escape), and the dimensions show how
+  many of two are chosen.
+- Administrators of a website manage its shared explorations and can delete them; private explorations stay private.
+- Long values such as page URLs, shortened in the middle in a narrow table, no longer show a gap before their kept end.
+
 ## 5.3.0
 
 - Below the result of the free-form table and of the funnel, administrators see one paid Feinwerk plugin at a time

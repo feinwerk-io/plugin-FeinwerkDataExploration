@@ -68,21 +68,61 @@ final class Explorer
     }
 
     /**
+     * The exact rest of a cut table ("Others", design 2026-11-20, asked on demand): every metric of the definition
+     * over everything the table covers but its shown rows; null when nothing was cut (all rows shown and no number
+     * filter). Refused for a table whose rows overcount (Additivity): its rest would not be exact.
+     *
+     * @return array<string, int|float|null>|null by metric id
+     */
+    public function others(int $idSite, string $period, string $date, ExplorationDefinition $definition, string $segment): ?array
+    {
+        if (Additivity::overcountUnit($definition, $this->dimensions, $this->metrics, $idSite) !== null) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorOthersNotAddingUp');
+        }
+        $window = ExplorationWindow::for($idSite, $period, $date, $this->limits);
+        $dimensions = array_map(fn (string $id) => $this->dimensions->get($idSite, $id), $definition->dimensionIds);
+        $slot = new LazySlot($this->limits);
+        try {
+            $rows = $this->fetchRows($idSite, $window, $definition, $dimensions, $segment, $slot);
+            $numberFilter = array_filter($definition->filters, fn (array $filter) => in_array($filter['operator'], ExplorationDefinition::NUMBER_OPERATORS, true));
+            if (count($rows) < $definition->limit && $numberFilter === []) {
+                return null;
+            }
+            $twoDimensions = count($dimensions) === 2;
+            $shown = array_map(static fn (array $row): array => self::rowKeys($row, $twoDimensions), $rows);
+            $rest = $this->fetchRows($idSite, $window, $definition, $dimensions, $segment, $slot, null, false, null, $shown)[0] ?? [];
+        } finally {
+            $slot->release();
+        }
+
+        $values = [];
+        foreach ($definition->metricIds as $metricId) {
+            $values[$metricId] = self::metricValue($metricId, $rest[$metricId] ?? null);
+        }
+        return $values;
+    }
+
+    /**
      * The raw rows of a definition in a window and segment, cached: the own rows, the rows of a comparison column
      * (restricted to $onlyKeys) or the totals (one row). With $time (the "Date" or "Hour" dimension) the same per time
      * unit (trend): $onlyKeys by fwde_row and fwde_t, or ($onlyKeys null) the totals by fwde_t. The slot is taken only
      * when a query has to run.
      *
+     * With $exceptKeys the rest of the table without those rows ("Others", one row).
+     *
      * @param list<array{0: ?string, 1: ?string}>|null $onlyKeys
+     * @param list<array{0: ?string, 1: ?string}>|null $exceptKeys
      */
-    public function fetchRows(int $idSite, ExplorationWindow $window, ExplorationDefinition $definition, array $dimensions, string $segment, LazySlot $slot, ?array $onlyKeys = null, bool $totals = false, ?DimensionDefinition $time = null): array
+    public function fetchRows(int $idSite, ExplorationWindow $window, ExplorationDefinition $definition, array $dimensions, string $segment, LazySlot $slot, ?array $onlyKeys = null, bool $totals = false, ?DimensionDefinition $time = null, ?array $exceptKeys = null): array
     {
         $context = new QueryContext($definition->scope($this->dimensions, $this->metrics, $idSite), $window->timezone, $window->startUtc, $window->endUtc);
         $segmentObject = new Segment($segment, [$idSite], $window->start, $window->end);
 
         $cache = new ResultCache();
         $version = self::pluginVersion();
-        if ($time !== null) {
+        if ($exceptKeys !== null) {
+            $cacheKey = $cache->othersKey($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $exceptKeys, $version);
+        } elseif ($time !== null) {
             $cacheKey = $cache->trendKey($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $onlyKeys, $time->id, $version);
         } elseif ($totals) {
             $cacheKey = $cache->totalsKey($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $version);
@@ -107,7 +147,9 @@ final class Explorer
             $this->metrics
         );
         $resolvedFilters = $this->resolveLabelFilters($definition, $dimensions, $idSite, $context, $runner, $window->cacheTtl());
-        if ($time !== null) {
+        if ($exceptKeys !== null) {
+            $query = $builder->buildOthers($definition, $dimensions, $idSite, $context, $resolvedFilters, $exceptKeys);
+        } elseif ($time !== null) {
             $query = $builder->buildTrend($definition, $dimensions, $idSite, $context, $resolvedFilters, $time, $onlyKeys);
         } else {
             $query = $totals

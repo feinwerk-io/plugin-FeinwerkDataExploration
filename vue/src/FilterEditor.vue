@@ -5,6 +5,14 @@
 
 <template>
   <div class="fwde-filters">
+    <SegmentedSwitch
+      v-if="rows.length > 1"
+      class="fwde-filters__match"
+      :options="matchOptions"
+      :model-value="state.match"
+      :label="translate('FeinwerkDataExploration_FilterMatch')"
+      @update:model-value="$emit('match', $event)"
+    />
     <div
       v-for="(row, index) in rows"
       :key="row.id"
@@ -49,6 +57,7 @@
         <input
           class="browser-default fwde-input"
           :type="isNumberTarget(row.target) ? 'number' : 'text'"
+          :step="isNumberTarget(row.target) ? 'any' : undefined"
           :maxlength="MAX_FILTER_TEXT"
           :value="row.value"
           @input="setValue(index, $event)"
@@ -87,8 +96,10 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import { translate } from 'CoreHome';
+import SegmentedSwitch from './SegmentedSwitch.vue';
+import { filterTargets, OPERATOR_KEYS } from './filterSummary';
 import {
-  Catalog, ExplorationState, FilterOperator, RowFilter,
+  Catalog, ExplorationState, FilterMatch, FilterOperator, RowFilter,
 } from './types';
 import {
   isValidFilter, MAX_FILTERS, MAX_FILTER_TEXT, NUMBER_OPERATORS, RATE_METRICS, TEXT_OPERATORS,
@@ -97,14 +108,6 @@ import {
 export interface Row extends RowFilter {
   id: number;
 }
-
-const OPERATOR_KEYS: Record<string, string> = {
-  contains: 'FeinwerkDataExploration_OperatorContains',
-  equals: 'FeinwerkDataExploration_OperatorEquals',
-  notContains: 'FeinwerkDataExploration_OperatorNotContains',
-  gt: 'FeinwerkDataExploration_OperatorGt',
-  lt: 'FeinwerkDataExploration_OperatorLt',
-};
 
 const DEBOUNCE_MS = 600;
 let lastRowId = 0;
@@ -115,12 +118,15 @@ function nextRowId(): number {
 }
 
 export default defineComponent({
+  components: { SegmentedSwitch },
   props: {
     catalog: { type: Object as PropType<Catalog>, required: true },
     state: { type: Object as PropType<ExplorationState>, required: true },
     actionScope: { type: Boolean, required: true },
+    /** without filters, start with one empty row to fill (the filter panel) */
+    startWithRow: { type: Boolean, default: false },
   },
-  emits: ['change'],
+  emits: ['change', 'match'],
   data() {
     return {
       rows: [] as Row[],
@@ -132,25 +138,22 @@ export default defineComponent({
   },
   created() {
     this.rows = this.state.filters.map((f) => ({ ...f, id: nextRowId() }));
+    if (this.startWithRow && !this.rows.length) {
+      this.add();
+    }
   },
   beforeUnmount() {
     window.clearTimeout(this.timer);
   },
   computed: {
+    matchOptions(): { value: FilterMatch, label: string }[] {
+      return [
+        { value: 'all', label: translate('FeinwerkDataExploration_FilterMatchAll') },
+        { value: 'any', label: translate('FeinwerkDataExploration_FilterMatchAny') },
+      ];
+    },
     targets(): { key: string, label: string }[] {
-      const name = (id: string) => this.catalog.dimensions.find((d) => d.id === id)?.name || id;
-      const targets = this.state.dimensions.map((id, i) => ({
-        key: i === 0 ? 'label' : 'secondary_label',
-        label: name(id),
-      }));
-      this.state.metrics.forEach((id) => {
-        const metric = this.catalog.metrics.find((m) => m.id === id);
-        const label = metric && this.actionScope && metric.nameInActionScope
-          ? metric.nameInActionScope
-          : metric?.name || id;
-        targets.push({ key: id, label });
-      });
-      return targets;
+      return filterTargets(this.state, this.catalog, this.actionScope);
     },
   },
   methods: {
@@ -179,6 +182,19 @@ export default defineComponent({
     remove(index: number) {
       this.rows.splice(index, 1);
       this.emitNow();
+      // the focus stays in the editor (the removed button took it along): the next row, the one
+      // before, or "Add filter"
+      this.$nextTick(() => {
+        const root = this.$el as HTMLElement;
+        const rows = root.querySelectorAll<HTMLElement>('.fwde-filters__row');
+        const row = rows[Math.min(index, rows.length - 1)];
+        const target = row
+          ? row.querySelector<HTMLElement>('select')
+          : root.querySelector<HTMLElement>('.fwde-filters__add');
+        if (target) {
+          target.focus();
+        }
+      });
     },
     setTarget(index: number, event: Event) {
       const row = this.rows[index];
@@ -197,6 +213,10 @@ export default defineComponent({
       this.rows[index].value = (event.target as HTMLInputElement).value;
       window.clearTimeout(this.timer);
       this.timer = window.setTimeout(() => this.emitNow(), DEBOUNCE_MS);
+    },
+    /** hands over what is typed now, without waiting for the typing pause (the panel's Apply) */
+    flush() {
+      this.emitNow();
     },
     emitNow() {
       window.clearTimeout(this.timer);

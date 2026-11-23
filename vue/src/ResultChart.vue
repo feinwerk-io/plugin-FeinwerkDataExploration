@@ -25,24 +25,14 @@
           >{{ option.name }}</option>
         </select>
       </label>
-      <div
+      <SegmentedSwitch
         v-if="showTypeSwitch"
-        class="fwde-switch fwde-chart__type"
-        role="group"
-        :aria-label="translate('FeinwerkDataExploration_ChartType')"
-      >
-        <button
-          v-for="option in typeOptions"
-          :key="option.type"
-          type="button"
-          :class="{
-            'fwde-switch__button': true,
-            'fwde-switch__button--active': chartType === option.type,
-          }"
-          :aria-pressed="chartType === option.type ? 'true' : 'false'"
-          @click="$emit('chart-type', option.type)"
-        >{{ option.label }}</button>
-      </div>
+        class="fwde-chart__type"
+        :options="typeSwitch"
+        :model-value="chartType"
+        :label="translate('FeinwerkDataExploration_ChartType')"
+        @update:model-value="$emit('chart-type', $event)"
+      />
       <p
         v-if="note"
         class="fwde-chart__note"
@@ -53,6 +43,54 @@
       :loading="true"
       :loading-message="translate('FeinwerkDataExploration_LoadingTrend')"
     />
+    <div
+      v-else-if="chartType === 'donut'"
+      class="fwde-chart__donut"
+    >
+      <svg
+        class="fwde-chart__donut-svg"
+        viewBox="0 0 200 200"
+        width="200"
+        height="200"
+        role="img"
+        :aria-label="donutLabel"
+      >
+        <path
+          v-for="(slice, index) in donut.slices"
+          :key="index"
+          :class="['fwde-chart__slice', `fwde-chart__series-${(index % SERIES_COLOURS) + 1}`]"
+          :d="donutPath(index)"
+        ><title>{{ sliceTitle(slice) }}</title></path>
+        <text
+          class="fwde-chart__donut-total"
+          x="100"
+          y="93"
+          text-anchor="middle"
+          dominant-baseline="central"
+        >{{ format(donut.total) }}</text>
+        <text
+          class="fwde-chart__donut-metric"
+          x="100"
+          y="118"
+          text-anchor="middle"
+          dominant-baseline="central"
+        >{{ metricName }}</text>
+      </svg>
+      <ul class="fwde-chart__donut-legend">
+        <li
+          v-for="(slice, index) in donut.slices"
+          :key="index"
+        >
+          <span
+            :class="['fwde-chart__swatch', `fwde-chart__series-${(index % SERIES_COLOURS) + 1}`]"
+            aria-hidden="true"
+          />
+          <span class="fwde-chart__donut-name">{{ sliceName(slice) }}</span>
+          <span class="fwde-chart__donut-value">{{ format(slice.value) }}</span>
+          <span class="fwde-chart__donut-share">{{ sharePercent(slice.share) }}</span>
+        </li>
+      </ul>
+    </div>
     <div
       v-else-if="chartType !== 'trend' || model.series.length"
       class="fwde-chart__plot"
@@ -296,12 +334,13 @@ import {
 import { ResultRow, TrendRow } from './api';
 import { compareTimeModel, trendModel } from './trend';
 import { columnLabel } from './comparison';
+import SegmentedSwitch from './SegmentedSwitch.vue';
 import {
   formatDay, formatDuration, formatHour, formatMetric, Formatters,
 } from './format';
 import {
-  axisLabelStep, ChartModel, chartModel, ChartPoint, ChartSeries, compareBarModel, linePath,
-  TIME_DIMENSIONS, truncateLabel,
+  axisLabelStep, canTrend, ChartModel, chartModel, ChartPoint, ChartSeries, compareBarModel,
+  donutArc, DonutModel, donutModel, DonutSlice, linePath, TIME_DIMENSIONS, truncateLabel,
 } from './chart';
 
 const TOP = 8;
@@ -328,7 +367,7 @@ export interface MetricOption {
 }
 
 export default defineComponent({
-  components: { ActivityIndicator },
+  components: { ActivityIndicator, SegmentedSwitch },
   props: {
     rows: { type: Array as PropType<ResultRow[]>, required: true },
     state: { type: Object as PropType<ExplorationState>, required: true },
@@ -348,6 +387,12 @@ export default defineComponent({
     maxLines: { type: Number, default: 5 },
     /** comparison columns: one line per column (time dimension) or one bar per column and row */
     compareColumns: { type: Array as PropType<ComparisonColumn[]>, default: () => [] },
+    /** why the donut cannot show the chart metric (a lang key), null when it can (donutBlocker) */
+    donutReason: { type: String as PropType<string|null>, default: null },
+    /** the exact rest of a cut table for the chart metric ("Others"), null when not calculated */
+    othersValue: { type: Number as PropType<number|null>, default: null },
+    /** lang key: why the donut's "Others" lacks the cut rows (loading, failed); '' when complete */
+    othersNote: { type: String, default: '' },
   },
   emits: ['metric', 'chart-type'],
   data() {
@@ -438,11 +483,39 @@ export default defineComponent({
       const count = this.model.series.length;
       return count > 1 ? count * GROUP_BAR_HEIGHT + GROUP_GAP : BAR_HEIGHT;
     },
-    typeOptions(): { type: ChartType, label: string }[] {
-      return [
-        { type: 'bar', label: translate('FeinwerkDataExploration_ChartTypeBars') },
-        { type: 'trend', label: translate('FeinwerkDataExploration_ChartTypeTrend') },
+    /** the donut disabled with its reason as tooltip */
+    typeSwitch(): { value: string, label: string, disabled: boolean, title?: string }[] {
+      return this.typeOptions.map((option) => ({
+        value: option.type,
+        label: option.label,
+        disabled: option.reason !== null,
+        title: option.reason ? translate(option.reason) : undefined,
+      }));
+    },
+    typeOptions(): { type: ChartType, label: string, reason: string|null }[] {
+      const options: { type: ChartType, label: string, reason: string|null }[] = [
+        { type: 'bar', label: translate('FeinwerkDataExploration_ChartTypeBars'), reason: null },
       ];
+      if (canTrend(this.state)) {
+        options.push({
+          type: 'trend', label: translate('FeinwerkDataExploration_ChartTypeTrend'), reason: null,
+        });
+      }
+      options.push({
+        type: 'donut',
+        label: translate('FeinwerkDataExploration_ChartTypeDonut'),
+        reason: this.donutReason,
+      });
+      return options;
+    },
+    /** the donut of the chart metric (design 2026-11-20): the largest rows and "Others" */
+    donut(): DonutModel {
+      return donutModel(this.rows, this.metric, this.othersValue, 9);
+    },
+    donutLabel(): string {
+      const option = this.metricOptions.find((o) => o.id === this.metric);
+      const name = translate('FeinwerkDataExploration_ChartTypeDonut');
+      return option ? `${name}: ${option.name}` : name;
     },
     metricOptions(): MetricOption[] {
       return this.state.metrics.map((id) => {
@@ -515,6 +588,9 @@ export default defineComponent({
       return axisLabelStep(categories.length, plotWidth, labelWidth, this.axisKind);
     },
     note(): string {
+      if (this.chartType === 'donut') {
+        return this.othersNote ? translate(this.othersNote) : '';
+      }
       if (this.chartType === 'trend') {
         return this.model.omittedRows > 0
           ? translate(
@@ -608,6 +684,20 @@ export default defineComponent({
     },
     onMetric(event: Event) {
       this.$emit('metric', (event.target as HTMLSelectElement).value);
+    },
+    donutPath(index: number): string {
+      const before = this.donut.slices.slice(0, index).reduce((sum, slice) => sum + slice.share, 0);
+      return donutArc(before, this.donut.slices[index].share, 90, 56, 100);
+    },
+    sliceName(slice: DonutSlice): string {
+      return slice.others ? translate(slice.label) : slice.label;
+    },
+    sharePercent(share: number): string {
+      return NumberFormatter.formatPercent(Math.round(share * 1000) / 10);
+    },
+    sliceTitle(slice: DonutSlice): string {
+      const share = this.sharePercent(slice.share);
+      return `${this.sliceName(slice)}: ${this.format(slice.value)} (${share})`;
     },
     format(value: number|null): string {
       return value === null ? '' : formatMetric(this.metric, value, this.formatters);

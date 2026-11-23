@@ -3,9 +3,12 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 import {
-  Catalog, ChartType, ChartView, ComparisonColumn, ExplorationState,
+  Catalog, ChartType, ChartView, ComparisonColumn, ExplorationState, OthersState,
 } from './types';
-import { changeKey, columnLabel, valueKey } from './comparison';
+import {
+  changeKey, columnLabel, SHARE_METRICS, valueKey,
+} from './comparison';
+import { addsUp } from './additivity';
 import { ResultRow } from './api';
 import { NUMBER_OPERATORS } from './state';
 
@@ -487,4 +490,138 @@ export function truncateLabel(label: string, maxChars: number): string {
   const keep = Math.max(0, maxChars - 1);
   const tail = Math.floor(keep / 2);
   return `${label.slice(0, keep - tail)}…${tail > 0 ? label.slice(-tail) : ''}`;
+}
+
+/** A slice of the donut (design 2026-11-20); "Others" carries Matomo's key as its label. */
+export interface DonutSlice {
+  label: string;
+  value: number;
+  share: number;
+  others?: boolean;
+}
+
+export interface DonutModel {
+  slices: DonutSlice[];
+  total: number;
+}
+
+export const DONUT_OTHERS_LABEL = 'General_Others';
+
+/**
+ * The donut of one count or sum: the largest rows (at most maxSlices) and "Others" for the rest
+ * of the shown rows plus the exact rest of a cut table (others, null when not calculated).
+ */
+export function donutModel(
+  rows: ResultRow[],
+  metric: string,
+  others: number|null,
+  maxSlices = 9,
+): DonutModel {
+  const values = rows
+    .map((row) => ({ label: rowLabel(row), value: Number(row[metric]) || 0 }))
+    .filter((entry) => entry.value > 0)
+    .sort((a, b) => b.value - a.value);
+  const top = values.slice(0, maxSlices);
+  const rest = values.slice(maxSlices).reduce((sum, entry) => sum + entry.value, 0)
+    + (others !== null && others > 0 ? others : 0);
+  const parts = rest > 0
+    ? [...top, { label: DONUT_OTHERS_LABEL, value: rest, others: true }]
+    : top;
+  const total = parts.reduce((sum, entry) => sum + entry.value, 0);
+  return {
+    slices: parts.map((entry) => ({ ...entry, share: total > 0 ? entry.value / total : 0 })),
+    total,
+  };
+}
+
+/**
+ * Why the donut cannot show the chart metric (a lang key), null when it can: only counts and
+ * sums, only rows that add up to the total, not while comparing.
+ */
+export function donutBlocker(
+  state: ExplorationState,
+  catalog: Catalog,
+  metric: string,
+  comparing: boolean,
+): string|null {
+  if (comparing) {
+    return 'FeinwerkDataExploration_DonutNotWhileComparing';
+  }
+  if (!SHARE_METRICS.includes(metric)) {
+    return 'FeinwerkDataExploration_DonutNeedsCount';
+  }
+  if (!addsUp(state, catalog)) {
+    return 'FeinwerkDataExploration_DonutNeedsSum';
+  }
+  return null;
+}
+
+/**
+ * The chart that shows: the chosen donut while it qualifies (donutReason null) and there are two
+ * rows or more, else the trend or the bars as chartTypeFor decides.
+ */
+export function effectiveChartType(
+  state: ExplorationState,
+  rowCount: number,
+  donutReason: string|null,
+): ChartType {
+  // a time dimension draws a line over time and offers no switch, so no donut there either
+  if (state.chartType === 'donut' && rowCount >= 2 && donutReason === null && canTrend(state)) {
+    return 'donut';
+  }
+  if (!canTrend(state)) {
+    return 'bar';
+  }
+  return rowCount === 1 || state.chartType === 'trend' ? 'trend' : 'bar';
+}
+
+/**
+ * The SVG path of one ring segment from startShare to startShare + share of the circle (0 at the
+ * top, clockwise); a share of the whole circle as two half rings.
+ */
+export function donutArc(
+  startShare: number,
+  share: number,
+  outer: number,
+  inner: number,
+  centre: number,
+): string {
+  if (share >= 0.9999) {
+    return `${donutArc(0, 0.5, outer, inner, centre)} ${donutArc(0.5, 0.5, outer, inner, centre)}`;
+  }
+  const point = (radius: number, at: number) => {
+    const angle = at * 2 * Math.PI - Math.PI / 2;
+    const x = centre + radius * Math.cos(angle);
+    const y = centre + radius * Math.sin(angle);
+    return `${Math.round(x * 100) / 100} ${Math.round(y * 100) / 100}`;
+  };
+  const end = startShare + share;
+  const large = share > 0.5 ? 1 : 0;
+  return `M ${point(outer, startShare)} A ${outer} ${outer} 0 ${large} 1 ${point(outer, end)} `
+    + `L ${point(inner, end)} A ${inner} ${inner} 0 ${large} 0 ${point(inner, startShare)} Z`;
+}
+
+/**
+ * Whether the page asks for the exact rest because of the donut (design 2026-11-20, on demand):
+ * only while a donut of a cut table is on screen (not in the table view) and nothing runs.
+ */
+export function donutNeedsOthers(page: {
+  chartType: ChartType,
+  view: ChartView,
+  cut: boolean,
+  othersState: OthersState,
+  loading: boolean,
+}): boolean {
+  return page.chartType === 'donut' && page.view !== 'table' && page.cut
+    && page.othersState === 'idle' && !page.loading;
+}
+
+/**
+ * The page's rest after the server answered: final either way. "No rest" (the server found the
+ * table not cut) is an answer too, so the donut never asks again for the same table.
+ */
+export function othersAnswered(
+  answer: Record<string, number|null>|null,
+): { others: Record<string, number|null>|null, othersState: OthersState } {
+  return { others: answer, othersState: 'done' };
 }

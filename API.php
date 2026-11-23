@@ -17,6 +17,7 @@ use Piwik\Plugins\FeinwerkDataExploration\Definition\ComparisonList;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\ExplorationDefinition;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\FunnelDefinition;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\FunnelExplorer;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\FunnelSwitch;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\SiteGoals;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\Explorer;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\AccessPolicy;
@@ -87,6 +88,31 @@ class API extends \Piwik\Plugin\API
     }
 
     /**
+     * The exact rest of a cut table ("Others"), computed on demand: every metric of the definition over everything the
+     * table covers but its shown rows. `others` is null when nothing was cut. Refused (HTTP 400) for a table whose rows
+     * can add up to more than the total, since its rest would not be exact.
+     *
+     * @param int $idSite one website
+     * @param string $period as for getExploration()
+     * @param string $date as for getExploration()
+     * @param string $definition JSON as for getExploration()
+     * @param string $segment a Matomo segment definition: only its visits count
+     * @return array{others: array<string, int|float|null>|null} by metric id
+     * @unsanitized the definition is JSON and the segment is parsed by Matomo's Segment class
+     */
+    public function getOthers(int $idSite, string $period, string $date, string $definition, string $segment = ''): array
+    {
+        self::checkAccess($idSite);
+
+        $dimensions = new DimensionCatalog();
+        $metrics = new MetricCatalog();
+        $limits = (new LimitsProvider())->get();
+        $parsed = ExplorationDefinition::fromJson($definition, $idSite, $dimensions, $metrics, $limits);
+
+        return ['others' => (new Explorer($dimensions, $metrics, $limits))->others($idSite, trim($period), trim($date), $parsed, trim($segment))];
+    }
+
+    /**
      * The trend of an exploration: the first rows of the table (as getExploration() returns them for the same
      * parameters) per day of the period, or per hour for a period of one day; with comparisons the total of the own
      * view (line 0) and of each comparison (line 1, 2, ...) per day or hour of its own period. Days and hours are
@@ -121,6 +147,9 @@ class API extends \Piwik\Plugin\API
 
     /**
      * A funnel straight from the raw data of one site: how many visits reached each step, in this order (other actions
+     *
+     * Off by default: the method answers "Funnels are not available in this version." (HTTP 400) unless
+     * `[FeinwerkDataExploration] funnel = 1` is set in config.ini.php.
      * in between are allowed, one action counts for one step only, a goal step may be met by the conversion of the
      * previous step's action, entry only through step 1).
      *
@@ -144,6 +173,7 @@ class API extends \Piwik\Plugin\API
     public function getFunnel(int $idSite, string $period, string $date, string $definition, string $segment = '', int $readableColumns = 0): DataTable
     {
         self::checkAccess($idSite);
+        FunnelSwitch::check();
 
         $limits = (new LimitsProvider())->get();
         $parsed = FunnelDefinition::fromJson($definition, SiteGoals::names($idSite), $limits);
@@ -247,22 +277,38 @@ class API extends \Piwik\Plugin\API
      * The saved explorations the current user may open on the site: their own and those shared by others.
      *
      * @param int $idSite
-     * @return array list of explorations with id, name, shared, owner, canEdit, state (the page's parameters) and segment
+     * @return array list of explorations with id, name, shared, owner, canEdit, canDelete (also site admins for shared
+     *               ones), kind (table or funnel), updated (UTC), state (the page's parameters) and segment
      */
     public function getSavedExplorations(int $idSite): array
     {
         self::checkAccess($idSite);
 
         $login = Piwik::getCurrentUserLogin();
+        $rows = (new SavedExplorationStore())->listVisible($idSite, $login);
+        if (!FunnelSwitch::enabled()) {
+            // funnels off: saved funnels stay stored and come back with the switch
+            $rows = array_values(array_filter($rows, static fn (array $row): bool => !self::isFunnel($row['state'])));
+        }
         return array_map(fn (array $row) => [
             'id' => $row['idsaved'],
             'name' => $row['name'],
             'shared' => $row['shared'],
             'owner' => $row['login'],
             'canEdit' => self::canEdit($row),
+            // site admins may delete the website's shared explorations (design 2026-11-20)
+            'canDelete' => self::canDelete($row, $idSite),
+            'kind' => self::isFunnel($row['state']) ? 'funnel' : 'table',
+            'updated' => $row['ts_updated'],
             'state' => $row['state'],
             'segment' => $row['segment'],
-        ], (new SavedExplorationStore())->listVisible($idSite, $login));
+        ], $rows);
+    }
+
+    /** @param array<string, string> $state */
+    private static function isFunnel(array $state): bool
+    {
+        return ($state['fwdeKind'] ?? '') === SavedExplorationRules::KIND_FUNNEL;
     }
 
     /**
@@ -284,6 +330,9 @@ class API extends \Piwik\Plugin\API
         self::checkShare($idSite, $shared);
         $name = SavedExplorationRules::name($name);
         $parsed = SavedExplorationRules::state($state);
+        if (self::isFunnel($parsed)) {
+            FunnelSwitch::check();
+        }
         $segmentDefinition = trim($segmentDefinition);
         self::checkSegment($segmentDefinition, $idSite);
 
@@ -314,6 +363,9 @@ class API extends \Piwik\Plugin\API
 
         $name = SavedExplorationRules::name($name);
         $parsed = SavedExplorationRules::state($state);
+        if (self::isFunnel($parsed)) {
+            FunnelSwitch::check();
+        }
         $segmentDefinition = trim($segmentDefinition);
         self::checkSegment($segmentDefinition, $idSite);
         (new SavedExplorationStore())->update($idSaved, $name, $parsed, $segmentDefinition, $shared === 1);
@@ -328,7 +380,10 @@ class API extends \Piwik\Plugin\API
     public function deleteSavedExploration(int $idSite, int $idSaved): void
     {
         self::checkAccess($idSite);
-        self::editable($idSite, $idSaved);
+        $row = self::visible($idSite, $idSaved);
+        if (!self::canDelete($row, $idSite)) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedNotYours', [], 403);
+        }
         (new SavedExplorationStore())->delete($idSaved);
     }
 
@@ -391,6 +446,9 @@ class API extends \Piwik\Plugin\API
     {
         self::checkAccess($idSite);
         $row = self::visible($idSite, $idSaved);
+        if (self::isFunnel($row['state'])) {
+            FunnelSwitch::check();
+        }
         return (new SavedExplorationCopier())->copy($row, $idDestinationSites, Piwik::getCurrentUserLogin());
     }
 
@@ -419,6 +477,12 @@ class API extends \Piwik\Plugin\API
     private static function canEdit(array $row): bool
     {
         return Piwik::hasUserSuperUserAccess() || $row['login'] === Piwik::getCurrentUserLogin();
+    }
+
+    /** The owner and super users, and admins of the website for a shared exploration (design 2026-11-20). */
+    private static function canDelete(array $row, int $idSite): bool
+    {
+        return self::canEdit($row) || ($row['shared'] && Piwik::isUserHasAdminAccess($idSite));
     }
 
     private static function checkShare(int $idSite, int $shared): void

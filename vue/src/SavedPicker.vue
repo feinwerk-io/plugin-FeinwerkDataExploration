@@ -57,13 +57,37 @@
         />
       </div>
     </div>
+    <button
+      v-if="canManage"
+      type="button"
+      class="fwde-saved__manage"
+      aria-haspopup="dialog"
+      :aria-expanded="managing ? 'true' : 'false'"
+      @click="managing = true"
+    >{{ translate('FeinwerkDataExploration_ManageShared') }}</button>
+    <SidePanel
+      v-if="canManage"
+      :open="managing"
+      :title="translate('FeinwerkDataExploration_ManageShared')"
+      :close-label="translate('General_Close')"
+      scope-class="fwde-page fwde-managepanel"
+      @update:open="managing = $event"
+    >
+      <ManageSavedDialog
+        :saved="saved"
+        :remove="removeSaved"
+        @deleted="$emit('deleted', $event)"
+      />
+    </SidePanel>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import * as CoreHome from 'CoreHome';
-import { SavedExploration } from './api';
+import { deleteSaved, errorText, SavedExploration } from './api';
+import ManageSavedDialog from './ManageSavedDialog.vue';
+import SidePanel from './SidePanel.vue';
 import {
   CopySupport, copySupport, groupSaved, savedKind,
 } from './saved';
@@ -71,14 +95,20 @@ import {
 const { translate } = CoreHome;
 
 export default defineComponent({
+  components: { ManageSavedDialog, SidePanel },
   props: {
     saved: { type: Array as PropType<SavedExploration[]>, required: true },
     current: { type: Object as PropType<SavedExploration|null>, default: null },
     login: { type: String, required: true },
     /** write access on some website: Matomo's copy dialog lists only those */
     canCopy: { type: Boolean, default: false },
+    /** admin access to the website: manage its shared explorations (design 2026-11-20) */
+    canManage: { type: Boolean, default: false },
   },
-  emits: ['open'],
+  emits: ['open', 'deleted'],
+  data() {
+    return { managing: false };
+  },
   computed: {
     groups(): { mine: SavedExploration[], shared: SavedExploration[] } {
       return groupSaved(this.saved, this.login);
@@ -95,6 +125,12 @@ export default defineComponent({
     },
   },
   methods: {
+    /** the manage dialog's delete, with Matomo's error text as the message */
+    removeSaved(id: number): Promise<unknown> {
+      return deleteSaved(id).catch((e) => {
+        throw new Error(errorText(e));
+      });
+    },
     translate,
     ownedBy(saved: SavedExploration): string {
       return translate('FeinwerkDataExploration_SavedBy', this.displayName(saved), saved.owner);

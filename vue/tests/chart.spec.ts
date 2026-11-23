@@ -4,7 +4,7 @@
  */
 import {
   axisLabelStep, canChart, chartMetricFor, chartModel, compareBarModel, compareChartHint, effectiveView, linePath,
-  niceScale, resultTitle, truncateLabel,
+  niceScale, resultTitle, truncateLabel, donutBlocker, donutModel, donutNeedsOthers, effectiveChartType, othersAnswered,
 } from '../src/chart';
 import { ResultRow } from '../src/api';
 import { ComparisonColumn } from '../src/types';
@@ -370,3 +370,80 @@ describe('compareChartHint', () => {
     expect(compareChartHint(state({ fwdeDims: 'browser' }), 'trend', 3)).toBe('FeinwerkDataExploration_CompareTrendHint');
   });
 });
+
+describe('donut (design 2026-11-20)', () => {
+  const rows = (n: number): ResultRow[] => Array.from({ length: n }, (_, i) => ({
+    label: `row ${i + 1}`, nb_visits: (n - i) * 10,
+  }));
+
+  it('shows the top 9 rows by the metric and puts the rest into "Others"', () => {
+    const model = donutModel(rows(12), 'nb_visits', null, 9);
+    expect(model.slices.map((s) => s.label)).toEqual([
+      'row 1', 'row 2', 'row 3', 'row 4', 'row 5', 'row 6', 'row 7', 'row 8', 'row 9', 'General_Others',
+    ]);
+    expect(model.slices[9].value).toBe(30 + 20 + 10);
+    expect(model.total).toBe(780);
+    expect(model.slices.reduce((sum, s) => sum + s.share, 0)).toBeCloseTo(1, 10);
+  });
+
+  it('adds the exact rest of a cut table to "Others"', () => {
+    const model = donutModel(rows(3), 'nb_visits', 40, 9);
+    expect(model.slices.map((s) => [s.label, s.value])).toEqual([
+      ['row 1', 30], ['row 2', 20], ['row 3', 10], ['General_Others', 40],
+    ]);
+    expect(model.total).toBe(100);
+  });
+
+  it('names two dimensions "first · second" and leaves out empty values', () => {
+    const model = donutModel([
+      { label: 'Chrome', secondary_label: 'Desktop', nb_visits: 5 },
+      { label: 'Safari', secondary_label: 'Mobile', nb_visits: 0 },
+    ], 'nb_visits', null, 9);
+    expect(model.slices.map((s) => s.label)).toEqual(['Chrome · Desktop']);
+  });
+
+  it('says why a donut is not possible', () => {
+    const counts = parseState({ fwdeDims: 'browser', fwdeMetrics: 'nb_visits,bounce_rate' }, CATALOG, LIMITS);
+    expect(donutBlocker(counts, CATALOG, 'nb_visits', false)).toBeNull();
+    expect(donutBlocker(counts, CATALOG, 'bounce_rate', false)).toBe('FeinwerkDataExploration_DonutNeedsCount');
+    expect(donutBlocker(counts, CATALOG, 'nb_visits', true)).toBe('FeinwerkDataExploration_DonutNotWhileComparing');
+    const overcounting = parseState({ fwdeDims: 'pageUrl', fwdeMetrics: 'nb_visits' }, CATALOG, LIMITS);
+    expect(donutBlocker(overcounting, CATALOG, 'nb_visits', false)).toBe('FeinwerkDataExploration_DonutNeedsSum');
+  });
+
+  it('falls back to bars when a saved donut no longer qualifies', () => {
+    const donut = parseState({ fwdeDims: 'browser', fwdeMetrics: 'nb_visits', fwdeChartType: 'donut' }, CATALOG, LIMITS);
+    expect(donut.chartType).toBe('donut');
+    expect(effectiveChartType(donut, 5, null)).toBe('donut');
+    expect(effectiveChartType(donut, 5, 'FeinwerkDataExploration_DonutNeedsCount')).toBe('bar');
+    expect(effectiveChartType(donut, 1, null)).toBe('trend');
+  });
+
+  it('never stays a donut on a time dimension, whose chart is a line without a switch', () => {
+    const byDate = parseState({ fwdeDims: 'date', fwdeMetrics: 'nb_visits', fwdeChartType: 'donut' }, CATALOG, LIMITS);
+    expect(byDate.chartType).toBe('donut');
+    expect(effectiveChartType(byDate, 5, null)).toBe('bar');
+  });
+});
+
+describe('donutNeedsOthers', () => {
+  const asked = {
+    chartType: 'donut' as const, view: 'both' as const, cut: true, othersState: 'idle' as const, loading: false,
+  };
+  it('asks for the rest only while a donut of a cut table is on screen and nothing runs', () => {
+    expect(donutNeedsOthers(asked)).toBe(true);
+    expect(donutNeedsOthers({ ...asked, view: 'chart' })).toBe(true);
+    expect(donutNeedsOthers({ ...asked, view: 'table' })).toBe(false);
+    expect(donutNeedsOthers({ ...asked, chartType: 'bar' })).toBe(false);
+    expect(donutNeedsOthers({ ...asked, cut: false })).toBe(false);
+    expect(donutNeedsOthers({ ...asked, othersState: 'loading' })).toBe(false);
+    expect(donutNeedsOthers({ ...asked, loading: true })).toBe(false);
+  });
+
+  it('asks once: "no rest" from the server is an answer too, so no second request follows', () => {
+    expect(othersAnswered(null)).toEqual({ others: null, othersState: 'done' });
+    expect(donutNeedsOthers({ ...asked, othersState: othersAnswered(null).othersState })).toBe(false);
+    expect(othersAnswered({ nb_visits: 5 })).toEqual({ others: { nb_visits: 5 }, othersState: 'done' });
+  });
+});
+

@@ -4,7 +4,10 @@
 -->
 
 <template>
-  <div class="fwde-list">
+  <div
+    class="fwde-list"
+    @keydown="onKeydown"
+  >
     <SearchInput
       v-model="query"
       :placeholder="searchLabel"
@@ -36,6 +39,7 @@
                 :name="inputName"
                 :checked="selected.includes(item.key)"
                 :disabled="isDisabled(item)"
+                :data-key="item.key"
                 @change="$emit('toggle', item.key)"
               />
               <span class="fwde-list__label">{{ item.label }}</span>
@@ -79,7 +83,7 @@ export default defineComponent({
     multiple: { type: Boolean, default: false },
     searchLabel: { type: String, required: true },
   },
-  emits: ['toggle'],
+  emits: ['toggle', 'close'],
   data() {
     instances += 1;
     return { query: '', inputName: `fwde-list-${instances}` };
@@ -112,6 +116,57 @@ export default defineComponent({
     translate,
     isDisabled(item: ListItem): boolean {
       return item.reason !== null && !this.selected.includes(item.key);
+    },
+    /**
+     * Keyboard (design 2026-11-20): the arrow keys move the focus over the items that can be
+     * chosen (and from the first one back to the search), Enter chooses the focused item or, in
+     * the search, the first match, Escape asks the picker to close. Native radios would select
+     * on the arrow keys, so those are handled here.
+     */
+    onKeydown(event: KeyboardEvent) {
+      const root = this.$el as HTMLElement;
+      const inputs = Array.from(
+        root.querySelectorAll<HTMLInputElement>('input.fwde-list__input:not(:disabled)'),
+      );
+      const search = root.querySelector<HTMLInputElement>('input:not(.fwde-list__input)');
+      const focused = document.activeElement as HTMLInputElement|null;
+      const index = focused ? inputs.indexOf(focused) : -1;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.$emit('close');
+      } else if (event.key === 'ArrowDown' && inputs.length) {
+        event.preventDefault();
+        this.focusInput(inputs[index < 0 ? 0 : Math.min(index + 1, inputs.length - 1)]);
+      } else if (event.key === 'ArrowUp' && (index >= 0 || inputs.length)) {
+        event.preventDefault();
+        if (index <= 0) {
+          if (search) {
+            search.focus();
+          }
+        } else {
+          this.focusInput(inputs[index - 1]);
+        }
+      } else if (event.key === 'Enter') {
+        let target: HTMLInputElement|null = null;
+        if (index >= 0) {
+          target = inputs[index];
+        } else if (focused === search) {
+          // from the search Enter adds: the first match not chosen yet (a focused item toggles,
+          // like Space)
+          target = inputs.find((input) => !input.checked) || null;
+        }
+        const itemKey = target ? target.getAttribute('data-key') : null;
+        if (itemKey) {
+          event.preventDefault();
+          this.$emit('toggle', itemKey);
+        }
+      }
+    },
+    focusInput(input: HTMLInputElement) {
+      input.focus();
+      if (typeof input.scrollIntoView === 'function') {
+        input.scrollIntoView({ block: 'nearest' });
+      }
     },
   },
 });

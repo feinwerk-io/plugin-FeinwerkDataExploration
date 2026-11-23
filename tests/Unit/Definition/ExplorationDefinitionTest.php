@@ -140,7 +140,7 @@ class ExplorationDefinitionTest extends TestCase
         $b = $this->parse('{"sortOrder": "asc", "limit": 50, "metrics": ["nb_visits"], "dimensions": ["browser"]}');
 
         $this->assertSame($a->normalized(), $b->normalized());
-        $this->assertSame(['dimensions', 'metrics', 'idGoal', 'sort', 'sortOrder', 'limit', 'filters'], array_keys($a->normalized()));
+        $this->assertSame(['dimensions', 'metrics', 'idGoal', 'sort', 'sortOrder', 'limit', 'filters', 'match'], array_keys($a->normalized()));
     }
 
     public function testFiltersParsed(): void
@@ -155,6 +155,28 @@ class ExplorationDefinitionTest extends TestCase
         ], $definition->filters);
         $this->assertSame($definition->filters, $definition->normalized()['filters']);
         $this->assertSame([], $this->parse('{"dimensions": ["browser"], "metrics": ["nb_visits"]}')->filters);
+    }
+
+    public function testIsNotStartsWithAndEndsWithParsed(): void
+    {
+        $definition = $this->parse('{"dimensions": ["pageUrl"], "metrics": ["nb_visits"], "filters": ['
+            . '{"target": "label", "operator": "notEquals", "value": "/"},'
+            . '{"target": "label", "operator": "startsWith", "value": "/blog"},'
+            . '{"target": "label", "operator": "endsWith", "value": ".pdf"}]}');
+
+        $this->assertSame(['notEquals', 'startsWith', 'endsWith'], array_column($definition->filters, 'operator'));
+        $this->assertRejected('{"dimensions": ["browser"], "metrics": ["nb_visits"], "filters": [{"target": "nb_visits", "operator": "endsWith", "value": "1"}]}',
+            'FeinwerkDataExploration_ErrorFilter', [1]);
+    }
+
+    public function testMatchParsedWithAllAsDefault(): void
+    {
+        $this->assertSame('all', $this->parse('{"dimensions": ["browser"], "metrics": ["nb_visits"]}')->match);
+        $any = $this->parse('{"dimensions": ["browser"], "metrics": ["nb_visits"], "match": "any"}');
+        $this->assertSame('any', $any->match);
+        $this->assertSame('any', $any->normalized()['match']);
+        $this->assertRejected('{"dimensions": ["browser"], "metrics": ["nb_visits"], "match": "some"}',
+            'FeinwerkDataExploration_ErrorInvalidDefinition', []);
     }
 
     public function testTextOperatorNeedsLabelTarget(): void

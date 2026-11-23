@@ -10,6 +10,12 @@ import { copySupport } from '../src/saved';
 // `import * as CoreHome` on the same object, so the tests can add and remove exports.
 jest.mock('CoreHome', () => ({ __esModule: true, translate: (key: string) => key }), { virtual: true });
 const core = jest.requireMock('CoreHome') as Record<string, unknown>;
+// the list's delete call (manage dialog) comes from api.ts; mocked, so Jest does not type-check api.ts against the
+// small CoreHome mock
+jest.mock('../src/api', () => ({
+  deleteSaved: jest.fn(() => Promise.resolve({})),
+  errorText: (e: unknown) => String(e),
+}));
 
 const saved = [{
   id: 7, name: 'Browsers', shared: false, owner: 'anna', canEdit: true, state: {}, segment: '',
@@ -68,5 +74,38 @@ describe('copy to other websites (Matomo 5.14+)', () => {
 
   it('copy action is absent without write access on any website', () => {
     expect(picker(false).find('.fwde-saved__copy').exists()).toBe(false);
+  });
+});
+
+describe('managing shared explorations in the side panel (UI item 3)', () => {
+  afterEach(() => {
+    while (document.body.firstChild) {
+      document.body.removeChild(document.body.firstChild);
+    }
+    document.documentElement.classList.remove('fwde-sidepanel-open');
+  });
+
+  it('the manage link opens the panel with the shared explorations', async () => {
+    const shared = [{
+      id: 9, name: 'Team view', shared: true, owner: 'ben', canEdit: false, canDelete: true, kind: 'table',
+      updated: '2026-11-20 10:00:00', state: {}, segment: '',
+    }];
+    const wrapper = mount(SavedPicker, {
+      props: {
+        saved: shared, current: null, login: 'anna', canCopy: false, canManage: true,
+      },
+      attachTo: document.body,
+    });
+    expect(document.querySelector('section.fwde-sidepanel')).toBeNull();
+    await wrapper.find('.fwde-saved__manage').trigger('click');
+    await wrapper.vm.$nextTick();
+    const panel = document.querySelector('section.fwde-sidepanel') as HTMLElement;
+    expect(panel.querySelector('h2')?.textContent).toBe('FeinwerkDataExploration_ManageShared');
+    expect(panel.querySelector('.fwde-manage .fwde-manage__name')?.textContent).toBe('Team view');
+    expect(wrapper.find('.fwde-saved .fwde-manage').exists()).toBe(false);
+    (panel.querySelector('.fwde-sidepanel__close') as HTMLElement).click();
+    await wrapper.vm.$nextTick();
+    expect(document.querySelector('section.fwde-sidepanel')).toBeNull();
+    wrapper.unmount();
   });
 });

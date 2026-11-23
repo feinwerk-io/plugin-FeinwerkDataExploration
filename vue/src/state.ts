@@ -10,15 +10,19 @@ export const DEFAULT_DIMENSIONS = ['channelType'];
 export const DEFAULT_METRICS = ['nb_visits', 'bounce_rate', 'nb_conversions'];
 export const LIMIT_OPTIONS = [10, 25, 50, 100, 250, 500, 1000];
 export const MAX_METRICS = 5;
+/** dimensions of the free plugin (ExplorationDefinition::MAX_DIMENSIONS) */
+export const MAX_DIMENSIONS = 2;
 export const MAX_FILTERS = 5;
 /** Long enough for a stored URL ("filter to this value" in the row menu). */
 export const MAX_FILTER_TEXT = 1000;
-export const TEXT_OPERATORS: FilterOperator[] = ['contains', 'equals', 'notContains'];
+export const TEXT_OPERATORS: FilterOperator[] = [
+  'contains', 'equals', 'notContains', 'notEquals', 'startsWith', 'endsWith',
+];
 export const NUMBER_OPERATORS: FilterOperator[] = ['gt', 'lt'];
 /** Shown in percent, sent to the API as fractions. */
 export const RATE_METRICS = ['bounce_rate', 'conversion_rate'];
 export const VIEWS: ChartView[] = ['table', 'chart', 'both'];
-export const CHART_TYPES: ChartType[] = ['bar', 'trend'];
+export const CHART_TYPES: ChartType[] = ['bar', 'trend', 'donut'];
 
 export interface Limits {
   defaultRows: number;
@@ -116,7 +120,7 @@ export function parseState(
   const dimensionIds = catalog.dimensions.map((d) => d.id);
   const metricIds = catalog.metrics.map((m) => m.id);
 
-  let dimensions = knownIds(hash.fwdeDims, dimensionIds, 2);
+  let dimensions = knownIds(hash.fwdeDims, dimensionIds, MAX_DIMENSIONS);
   if (!dimensions.length) {
     dimensions = knownIds(DEFAULT_DIMENSIONS.join(','), dimensionIds, 2);
     if (!dimensions.length && dimensionIds.length) {
@@ -147,6 +151,7 @@ export function parseState(
     chartType: CHART_TYPES.includes(hash.fwdeChartType as ChartType)
       ? hash.fwdeChartType as ChartType
       : null,
+    match: hash.fwdeMatch === 'any' ? 'any' : 'all',
   };
 }
 
@@ -168,6 +173,7 @@ export function toHashParams(state: ExplorationState): Record<string, string> {
     fwdeView: state.view || '',
     fwdeChart: state.chartMetric || '',
     fwdeChartType: state.chartType || '',
+    fwdeMatch: state.match === 'any' ? 'any' : '',
   };
 }
 
@@ -189,6 +195,9 @@ export function toDefinition(state: ExplorationState): Record<string, unknown> {
       return { target: f.target, operator: f.operator, value };
     }),
   };
+  if (state.match === 'any') {
+    definition.match = 'any';
+  }
   if (state.idGoal !== null) {
     definition.idGoal = state.idGoal;
   }

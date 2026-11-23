@@ -30,6 +30,8 @@ use Piwik\Tests\Framework\TestCase\IntegrationTestCase;
  */
 class ApiCopySavedExplorationTest extends IntegrationTestCase
 {
+    use FunnelsSwitch;
+
     private const STATE = '{"fwdeDims":"browser","fwdeMetrics":"nb_visits"}';
 
     public function provideContainerConfig()
@@ -48,6 +50,12 @@ class ApiCopySavedExplorationTest extends IntegrationTestCase
         $goals->addGoal(1, 'Order', 'url', 'thanks', 'contains');      // id 1 on site 1
         $goals->addGoal(2, 'Newsletter', 'url', 'subscribed', 'contains'); // id 1 on site 2
         $goals->addGoal(2, 'Order', 'url', 'thanks', 'contains');      // id 2 on site 2
+    }
+
+    public function tearDown(): void
+    {
+        self::funnels(false);
+        parent::tearDown();
     }
 
     public function testCopiesToEachDestination(): void
@@ -251,6 +259,7 @@ class ApiCopySavedExplorationTest extends IntegrationTestCase
     /** Spec 9a: goal steps of a saved funnel are mapped by the goal's name like the table's goal. */
     public function testFunnelGoalStepsAreMappedByName(): void
     {
+        self::funnels(true);
         $this->as('anna', [1, 2, 3]);
         $state = '{"fwdeKind":"funnel","fwdeSteps":"pageUrl~contains~%2Fa;goal~~1;anyGoal~~"}';
         $id = $this->api()->addSavedExploration(1, 'Orders funnel', $state)['id'];

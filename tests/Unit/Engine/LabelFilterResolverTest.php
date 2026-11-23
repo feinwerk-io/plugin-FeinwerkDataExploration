@@ -49,6 +49,24 @@ class LabelFilterResolverTest extends TestCase
         $this->assertSame(['values' => ['1'], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'notContains', 'mon', 1));
     }
 
+    public function testStartsWithAndEndsWithMatchTheLabelsEdges(): void
+    {
+        $resolver = new LabelFilterResolver(fn () => ['1', '2', '3', '7']);
+
+        $this->assertSame(['values' => ['1'], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'startsWith', 'MON', 1));
+        $this->assertSame(['values' => ['3'], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'endsWith', 'nesday', 1));
+        $this->assertSame(['values' => [], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'startsWith', 'day', 1));
+    }
+
+    public function testNotEqualsResolvesTheEqualValues(): void
+    {
+        $resolver = new LabelFilterResolver(fn () => ['1', '2']);
+
+        // the query builder negates; "is not" resolves like "equals"
+        $this->assertSame(['values' => ['2'], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'notEquals', 'tuesday', 1));
+        $this->assertSame(['values' => [], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'notEquals', 'day', 1));
+    }
+
     public function testStaticDomainNeedsNoQuery(): void
     {
         $resolver = new LabelFilterResolver(function () {

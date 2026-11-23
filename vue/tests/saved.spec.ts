@@ -16,6 +16,9 @@ const saved = (id: number, owner: string, shared = false): SavedExploration => (
   shared,
   owner,
   canEdit: owner === 'anna',
+  canDelete: owner === 'anna',
+  kind: 'table',
+  updated: '2026-11-19 08:30:00',
   state: { fwdeDims: 'browser', fwdeMetrics: 'nb_visits', fwdeView: 'chart' },
   segment: id === 2 ? 'browserCode==FF' : '',
 });

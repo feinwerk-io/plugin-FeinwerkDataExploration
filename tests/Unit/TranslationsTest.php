@@ -10,6 +10,7 @@
 namespace Piwik\Plugins\FeinwerkDataExploration\tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use Piwik\Plugins\FeinwerkDataExploration\FeinwerkDataExploration;
 
 /**
  * The lang files: same keys in German and English, every key the code uses exists, customer text rules.
@@ -58,7 +59,7 @@ class TranslationsTest extends TestCase
             if (!preg_match('/\.(php|twig|vue|ts)$/', $path) || preg_match('~/(vendor|node_modules|tests|\.git|dist|\.superpowers)/~', $path)) {
                 continue;
             }
-            preg_match_all('/FeinwerkDataExploration_([A-Z][A-Za-z_]*)/', (string) file_get_contents($path), $matches);
+            preg_match_all('/FeinwerkDataExploration_([A-Z][A-Za-z0-9_]*)/', (string) file_get_contents($path), $matches);
             foreach ($matches[1] as $key) {
                 if (!in_array($key, self::DYNAMIC_PREFIXES, true)) {
                     $this->assertArrayHasKey($key, $keys, "$path uses FeinwerkDataExploration_$key");
@@ -67,6 +68,30 @@ class TranslationsTest extends TestCase
             }
         }
         $this->assertGreaterThan(20, $checked);
+    }
+
+    /**
+     * Matomo's own keys the Vue code shows must be registered for the page (getClientSideTranslationKeys), or a page
+     * without the plugin that happens to register them shows the raw key ("General_Others" came only with Transitions).
+     */
+    public function testMatomoKeysOfTheVueCodeAreRegistered(): void
+    {
+        $registered = FeinwerkDataExploration::clientCoreKeys();
+        $used = [];
+        foreach (glob(dirname(__DIR__, 2) . '/vue/src/*.{vue,ts}', GLOB_BRACE) as $path) {
+            preg_match_all("/'((?:General|CoreHome|Intl)_[A-Za-z_]+)'/", (string) file_get_contents($path), $matches);
+            foreach ($matches[1] as $key) {
+                $used[$key] = basename($path);
+            }
+        }
+        $this->assertGreaterThan(3, count($used));
+        foreach ($used as $key => $file) {
+            // a key that ends in "_" is a prefix the code completes (the weekday names)
+            $found = substr($key, -1) === '_'
+                ? array_filter($registered, fn (string $k) => strpos($k, $key) === 0) !== []
+                : in_array($key, $registered, true);
+            $this->assertTrue($found, $file . ' uses ' . $key);
+        }
     }
 
     /**

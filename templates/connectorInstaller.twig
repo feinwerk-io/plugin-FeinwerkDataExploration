@@ -1,0 +1,65 @@
+{# Feinwerk kit: the Feinwerk Connector installer page (ConnectorInstaller/ConnectorInstaller.php, Controller::
+   connectorInstaller and connectorInstallerRun). Super users only. installerState: install (one button: Matomo's own
+   Marketplace installer, then activate), activate (one button), console (files there, plugin administration off: the
+   command), manual, php, wordpress (instructions, no button).
+   installerError: Matomo's reason after a failed click (raw only where Matomo marks it as HTML). Matomo's own card and
+   button classes, so light and dark follow Matomo. #}
+{% extends 'admin.twig' %}
+
+{% set title %}{{ 'FeinwerkDataExploration_ConnectorInstallerTitle'|translate }}{% endset %}
+
+{% block content %}
+<div class="card fwci">
+    <div class="card-content">
+        <h2 class="card-title">{{ title }}</h2>
+        <p>{{ 'FeinwerkDataExploration_ConnectorInstallerIntro'|translate }}</p>
+
+        {% if installerError %}
+            <div class="alert alert-danger fwci__error">
+                {% if installerError.html %}{{ installerError.message|raw }}{% else %}{{ installerError.message }}{% endif %}
+            </div>
+        {% endif %}
+
+        {% if installerState == 'install' or installerState == 'activate' %}
+            {% if installerState == 'install' %}
+                <p>{{ 'FeinwerkDataExploration_ConnectorInstallerInstallText'|translate }}</p>
+            {% else %}
+                <p>{{ 'FeinwerkDataExploration_ConnectorInstallerActivateText'|translate }}</p>
+            {% endif %}
+            <p>
+                <a class="btn fwci__run" href="{{ linkTo({'module': 'FeinwerkDataExploration', 'action': 'connectorInstallerRun', 'nonce': installerNonce}) }}">
+                    {{ (installerState == 'install' ? 'FeinwerkDataExploration_ConnectorInstallerButton' : 'FeinwerkDataExploration_ConnectorInstallerButtonActivate')|translate }}
+                </a>
+            </p>
+            <p class="fwci__note">{{ 'FeinwerkDataExploration_ConnectorInstallerPasswordNote'|translate }}</p>
+        {% elseif installerState == 'console' %}
+            <p>{{ 'FeinwerkDataExploration_ConnectorInstallerConsole'|translate }}</p>
+            <pre class="fwci__command"><code>{{ installerConsoleCommand }}</code></pre>
+        {% elseif installerState == 'wordpress' %}
+            <p>{{ 'FeinwerkDataExploration_ConnectorInstallerWordPress'|translate }}</p>
+            {% if installerWordPressUrl %}
+                <p><a class="btn" href="{{ installerWordPressUrl }}">{{ 'FeinwerkDataExploration_ConnectorInstallerWordPressLink'|translate }}</a></p>
+            {% endif %}
+        {% elseif installerState == 'php' %}
+            <p>{{ 'FeinwerkDataExploration_ConnectorInstallerPhp'|translate(installerPhpFloor) }}</p>
+        {% elseif installerState == 'manual' %}
+            <p>{{ 'FeinwerkDataExploration_ConnectorInstallerManual'|translate }}</p>
+            {# Matomo resets list styles: the numbers back, no colours #}
+            <ol class="fwci__steps" style="list-style: decimal; margin: 0 0 12px; padding-left: 1.5em;">
+                <li style="list-style: decimal; margin-bottom: 4px;">{{ 'FeinwerkDataExploration_ConnectorInstallerManualStep1'|translate }}
+                    <a href="{{ installerLinks.marketplace }}" target="_blank" rel="noopener">plugins.matomo.org</a>,
+                    <a href="{{ installerLinks.download }}" target="_blank" rel="noopener">plugins.feinwerk.io</a></li>
+                <li style="list-style: decimal; margin-bottom: 4px;">{{ 'FeinwerkDataExploration_ConnectorInstallerManualStep2'|translate }}</li>
+                {% if installerPluginsAdmin %}
+                <li style="list-style: decimal; margin-bottom: 4px;">{{ 'FeinwerkDataExploration_ConnectorInstallerManualStep3'|translate }}</li>
+                {% else %}
+                <li style="list-style: decimal; margin-bottom: 4px;">{{ 'FeinwerkDataExploration_ConnectorInstallerManualStep3Console'|translate }}
+                    <code>{{ installerConsoleCommand }}</code></li>
+                {% endif %}
+            </ol>
+        {% else %}
+            <p><a class="btn" href="{{ installerConnectorUrl }}">{{ 'FeinwerkDataExploration_ConnectorInstallerOpen'|translate }}</a></p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

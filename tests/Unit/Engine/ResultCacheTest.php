@@ -75,6 +75,18 @@ class ResultCacheTest extends TestCase
         $this->assertCount(4, array_unique($variants));
     }
 
+    /** A rest belongs to the rows the table showed: a table that moved a row across the cut gets its own rest */
+    public function testOthersKeyFollowsTheShownRows(): void
+    {
+        $cache = new ResultCache();
+        $definition = $this->definition('["nb_visits"]');
+        $first = $cache->othersKey(1, self::START, self::END, '', $definition, [['Chrome', null], ['Firefox', null]], '1.0.0');
+
+        $this->assertSame($first, $cache->othersKey(1, self::START, self::END, '', $definition, [['Chrome', null], ['Firefox', null]], '1.0.0'));
+        $this->assertNotSame($first, $cache->othersKey(1, self::START, self::END, '', $definition, [['Chrome', null], ['Safari', null]], '1.0.0'));
+        $this->assertNotSame($first, $cache->key(1, self::START, self::END, '', $definition, '1.0.0'));
+    }
+
     public function testTtlTodayIsFiveMinutes(): void
     {
         $this->assertSame(300, (new ResultCache())->ttl(true));

@@ -40,7 +40,7 @@ export interface Catalog {
   metrics: MetricInfo[];
 }
 
-export type FilterOperator = 'contains'|'equals'|'notContains'|'gt'|'lt';
+export type FilterOperator = 'contains'|'equals'|'notContains'|'notEquals'|'startsWith'|'endsWith'|'gt'|'lt';
 
 export interface RowFilter {
   /** 'label', 'secondary_label' or a selected metric id */
@@ -53,7 +53,13 @@ export interface RowFilter {
 export type ChartView = 'table'|'chart'|'both';
 
 /** Bars of the rows, or the trend of the first rows over the days or hours. */
-export type ChartType = 'bar'|'trend';
+export type ChartType = 'bar'|'trend'|'donut';
+
+/** The exact rest of a cut table ("Others", on demand): not asked, running, failed, calculated. */
+export type OthersState = 'idle'|'loading'|'failed'|'done';
+
+/** How the filters combine: "all" with AND, "any" with OR (2026-11-20). */
+export type FilterMatch = 'all'|'any';
 
 export interface ExplorationState {
   dimensions: string[];
@@ -68,6 +74,8 @@ export interface ExplorationState {
   chartMetric: string|null;
   /** bars or the trend (trend design 3), null: bars */
   chartType: ChartType|null;
+  /** "all" joins the filters with AND, "any" with OR (2026-11-20) */
+  match: FilterMatch;
 }
 
 /** Kinds of funnel steps (FunnelStep::TYPES in PHP). */

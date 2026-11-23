@@ -26,6 +26,8 @@ use Piwik\Widget\WidgetsList;
  */
 class WidgetTest extends IntegrationTestCase
 {
+    use FunnelsSwitch;
+
     protected static function configureFixture($fixture)
     {
         parent::configureFixture($fixture);
@@ -50,7 +52,22 @@ class WidgetTest extends IntegrationTestCase
     public function tearDown(): void
     {
         unset($_GET['idSite']);
+        self::funnels(false);
         parent::tearDown();
+    }
+
+    /** Off by default (Peter, 2026-11-21): no funnel page and no menu entry until funnel = 1 */
+    public function testFunnelPageOnlyWithTheSwitch(): void
+    {
+        $pages = fn () => array_column(\Piwik\Plugins\API\API::getInstance()->getReportPagesMetadata(1), 'uniqueId');
+
+        $this->assertNull($this->widget('getFunnel'));
+        $this->assertNotContains('FeinwerkDataExploration_Explorations.FeinwerkDataExploration_Funnel', $pages());
+        $this->assertContains('FeinwerkDataExploration_Explorations.FeinwerkDataExploration_FreeFormTable', $pages());
+
+        self::funnels(true);
+        $this->assertNotNull($this->widget('getFunnel'));
+        $this->assertContains('FeinwerkDataExploration_Explorations.FeinwerkDataExploration_Funnel', $pages());
     }
 
     public function testWidgetIsListedWithClientComponent(): void
@@ -99,6 +116,7 @@ class WidgetTest extends IntegrationTestCase
 
     public function testFunnelWidgetIsListedWithClientComponent(): void
     {
+        self::funnels(true);
         FakeAccess::clearAccess(false, [], [1], 'viewer');
 
         $widget = $this->widget('getFunnel');
@@ -109,12 +127,15 @@ class WidgetTest extends IntegrationTestCase
         $this->assertSame(['plugin' => 'FeinwerkDataExploration', 'name' => 'FunnelPage'], $widget->getClientSideComponent());
         $props = $widget->getClientSideProps();
         $this->assertSame(
-            ['idSite', 'maxDays', 'rawDataFrom', 'canShare', 'canCopy', 'feedback', 'premium', 'promo', 'maxSteps'],
+            ['idSite', 'maxDays', 'rawDataFrom', 'canShare', 'canCopy', 'canManage', 'feedback', 'premium', 'promo', 'maxSteps'],
             array_keys($props)
         );
         $this->assertSame(1, $props['idSite']);
         $this->assertSame(3, $props['maxSteps']);
         $this->assertFalse($props['canShare']);
+        $this->assertFalse($props['canManage'], 'a view user does not manage shared explorations');
+        FakeAccess::clearAccess(false, [1], [1], 'admin1');
+        $this->assertTrue($this->widget('getFunnel')->getClientSideProps()['canManage'], 'a site admin does');
         $this->assertTrue($widget->isWide());
         $this->assertFalse($widget->isWidgetizeable());
 
@@ -128,6 +149,7 @@ class WidgetTest extends IntegrationTestCase
 
     public function testFunnelWidgetHiddenForRefusedUsers(): void
     {
+        self::funnels(true);
         FakeAccess::clearAccess(false, [], [1], 'anonymous');
         $this->assertNull($this->widget('getFunnel'), 'anonymous users never see explorations');
 
@@ -151,6 +173,7 @@ class WidgetTest extends IntegrationTestCase
      */
     public function testBothPagesShowTheBannerInPlaceOfTheTipLine(): void
     {
+        self::funnels(true);
         FakeAccess::clearAccess(true, [], [], 'superUserLogin');
         FakeAccess::$superUser = true;
         foreach (['getExploration', 'getFunnel'] as $action) {

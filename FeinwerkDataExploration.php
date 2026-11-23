@@ -96,6 +96,7 @@ class FeinwerkDataExploration extends \Piwik\Plugin
         $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/promo.css';
         $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/feinwerklogo.css';
         $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/premium.css';
+        $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/fwde-ui.css';
     }
 
     /**
@@ -107,15 +108,31 @@ class FeinwerkDataExploration extends \Piwik\Plugin
         foreach (array_keys($data['FeinwerkDataExploration'] ?? []) as $key) {
             $translationKeys[] = 'FeinwerkDataExploration_' . $key;
         }
-        array_push($translationKeys, 'General_Unknown', 'CoreHome_ThereIsNoDataForThisReport', 'General_Export', 'General_Search');
-        array_push($translationKeys, 'General_Save', 'General_Cancel', 'General_Delete');
-        // the funnel table names its visits column as Matomo does
-        $translationKeys[] = 'General_ColumnNbVisits';
-        // the comparison table's total row
-        $translationKeys[] = 'General_Total';
+        array_push($translationKeys, ...self::clientCoreKeys());
+    }
+
+    /**
+     * Matomo's own keys the Vue app shows, registered here so the page never depends on another plugin registering them
+     * (TranslationsTest checks the Vue code against this list).
+     *
+     * @return string[]
+     */
+    public static function clientCoreKeys(): array
+    {
+        $keys = [
+            'General_Unknown', 'CoreHome_ThereIsNoDataForThisReport', 'General_Export', 'General_Search',
+            'General_Save', 'General_Cancel', 'General_Delete', 'General_Name', 'General_LoadingData',
+            // the side panel's close button and the filter panel's Apply
+            'General_Close', 'General_Apply',
+            // the funnel table names its visits column as Matomo does
+            'General_ColumnNbVisits',
+            // the comparison table's total row, the rest of a cut table and the donut's last slice
+            'General_Total', 'General_Others',
+        ];
         // the chart orders weekdays by Matomo's own names
         for ($day = 1; $day <= 7; $day++) {
-            $translationKeys[] = 'Intl_Day_Long_StandAlone_' . $day;
+            $keys[] = 'Intl_Day_Long_StandAlone_' . $day;
         }
+        return $keys;
     }
 }

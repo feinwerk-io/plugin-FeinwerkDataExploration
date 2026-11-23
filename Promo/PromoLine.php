@@ -344,19 +344,35 @@ final class PromoLine
     }
 
     /**
-     * Whether this Matomo lets a super user install from its Marketplace: Marketplace on, internet features on, plugin
-     * administration on (all three exist at Matomo 5.0). False on any doubt.
+     * Whether this Matomo lets a super user install from its Marketplace (kit PFR 0bbee14): Marketplace on, internet
+     * features on, plugin administration on and automatic updates possible (all four exist at Matomo 5.0). False on any
+     * doubt.
      */
     public static function marketplaceUsable(): bool
     {
         try {
-            return class_exists('Piwik\\Plugins\\Marketplace\\Marketplace')
-                && \Piwik\Plugins\Marketplace\Marketplace::isMarketplaceEnabled()
-                && \Piwik\SettingsPiwik::isInternetEnabled()
-                && \Piwik\Plugins\CorePluginsAdmin\CorePluginsAdmin::isPluginsAdminEnabled();
+            return self::marketplaceUsableBy([
+                'marketplace' => class_exists('Piwik\\Plugins\\Marketplace\\Marketplace')
+                    && \Piwik\Plugins\Marketplace\Marketplace::isMarketplaceEnabled(),
+                'internet' => \Piwik\SettingsPiwik::isInternetEnabled(),
+                'pluginsAdmin' => \Piwik\Plugins\CorePluginsAdmin\CorePluginsAdmin::isPluginsAdminEnabled(),
+                'autoUpdate' => \Piwik\SettingsPiwik::isAutoUpdatePossible(),
+            ]);
         } catch (\Throwable $e) {
             return false;
         }
+    }
+
+    /**
+     * Matomo's own rule for its one-click Install button (else it offers a ZIP download): Marketplace, internet
+     * features, plugin administration and automatic updates possible (`SettingsPiwik::isAutoUpdatePossible()`: not
+     * `enable_auto_update = 0`, not `multi_server_environment`). The same four as ConnectorInstaller::decide(). Pure.
+     *
+     * @param array{marketplace: bool, internet: bool, pluginsAdmin: bool, autoUpdate: bool} $switches
+     */
+    public static function marketplaceUsableBy(array $switches): bool
+    {
+        return $switches['marketplace'] && $switches['internet'] && $switches['pluginsAdmin'] && $switches['autoUpdate'];
     }
 
     /** Landing page in the user's language (German or English) with the campaign parameters for Feinwerk's Matomo. */

@@ -34,6 +34,8 @@ use Piwik\Tests\Framework\TestCase\IntegrationTestCase;
  */
 class ApiFunnelTest extends IntegrationTestCase
 {
+    use FunnelsSwitch;
+
     /** @var FunnelFixture */
     public static $fixture = null;
 
@@ -54,6 +56,26 @@ class ApiFunnelTest extends IntegrationTestCase
         Fixture::loadAllTranslations();
         FakeAccess::$superUser = true;
         Cache::getLazyCache()->flushAll(); // results and resolved steps are cached across tests of one PHP process
+        self::funnels(true);
+    }
+
+    public function tearDown(): void
+    {
+        self::funnels(false);
+        parent::tearDown();
+    }
+
+    /** Off by default (Peter, 2026-11-21): no funnel through the API either */
+    public function testRefusedWhileFunnelsAreOff(): void
+    {
+        self::funnels(false);
+        try {
+            $this->rows([self::page('contains', '/products'), self::page('contains', '/cart')]);
+            $this->fail('funnels are off');
+        } catch (ExplorationException $e) {
+            $this->assertSame('FeinwerkDataExploration_ErrorFunnelOff', $e->getTranslationKey());
+            $this->assertSame(400, $e->getCode());
+        }
     }
 
     public function testCountsVisitsPerStepInOrder(): void

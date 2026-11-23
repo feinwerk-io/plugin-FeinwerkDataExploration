@@ -14,7 +14,7 @@ export type SavedKind = 'table'|'funnel';
 const KIND_KEYS: Record<SavedKind, string[]> = {
   table: [
     'fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder', 'fwdeLimit', 'fwdeFilters',
-    'fwdeView', 'fwdeChart', 'fwdeChartType',
+    'fwdeView', 'fwdeChart', 'fwdeChartType', 'fwdeMatch',
   ],
   funnel: ['fwdeSteps'],
 };

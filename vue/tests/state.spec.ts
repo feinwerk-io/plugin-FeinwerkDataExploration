@@ -35,6 +35,7 @@ describe('parseState', () => {
       view: 'chart' as const,
       chartMetric: 'nb_pageviews',
       chartType: 'trend' as const,
+      match: 'any' as const,
     };
     expect(parseState(toHashParams(state), CATALOG, LIMITS)).toEqual(state);
   });
@@ -64,6 +65,32 @@ describe('parseState', () => {
     expect(state.sort).toBe('nb_visits');
     expect(state.sortOrder).toBe('desc');
     expect(state.idGoal).toBeNull();
+  });
+
+  it('keeps the filters is not, starts with and ends with', () => {
+    const state = parseState({
+      fwdeDims: 'pageUrl',
+      fwdeMetrics: 'nb_pageviews',
+      fwdeFilters: 'label~notEquals~%2F;label~startsWith~%2Fblog;label~endsWith~.pdf;nb_pageviews~endsWith~1',
+    }, CATALOG, LIMITS);
+    expect(state.filters).toEqual([
+      { target: 'label', operator: 'notEquals', value: '/' },
+      { target: 'label', operator: 'startsWith', value: '/blog' },
+      { target: 'label', operator: 'endsWith', value: '.pdf' },
+    ]);
+    expect(toHashParams(state).fwdeFilters).toBe('label~notEquals~%2F;label~startsWith~%2Fblog;label~endsWith~.pdf');
+  });
+
+  it('reads "match any" and writes it only then; old links mean "all"', () => {
+    const base = { fwdeDims: 'browser', fwdeMetrics: 'nb_visits' };
+    expect(parseState(base, CATALOG, LIMITS).match).toBe('all');
+    expect(parseState({ ...base, fwdeMatch: 'bogus' }, CATALOG, LIMITS).match).toBe('all');
+    const any = parseState({ ...base, fwdeMatch: 'any' }, CATALOG, LIMITS);
+    expect(any.match).toBe('any');
+    expect(toHashParams(any).fwdeMatch).toBe('any');
+    expect(toHashParams(parseState(base, CATALOG, LIMITS)).fwdeMatch).toBe('');
+    expect(toDefinition(any).match).toBe('any');
+    expect(toDefinition(parseState(base, CATALOG, LIMITS)).match).toBeUndefined();
   });
 
   it('keeps a limit up to maxRows only', () => {
@@ -121,6 +148,7 @@ describe('toHashParams', () => {
       fwdeView: '',
       fwdeChart: '',
       fwdeChartType: '',
+      fwdeMatch: '',
     });
   });
 

@@ -16,6 +16,7 @@
           : 'FeinwerkDataExploration_SecondDimension') }}
       </div>
       <button
+        :ref="`current${slot}`"
         type="button"
         class="fwde-picker__current"
         :aria-expanded="openSlot === slot ? 'true' : 'false'"
@@ -42,6 +43,7 @@
           :selected="dimensions[slot] ? [dimensions[slot]] : []"
           :search-label="translate('FeinwerkDataExploration_SearchDimensions')"
           @toggle="choose(slot, $event)"
+          @close="close(slot)"
         />
       </div>
     </div>
@@ -81,6 +83,17 @@ export default defineComponent({
     },
   },
   methods: {
+    /** Escape in the list: close it and give the focus back to its button */
+    close(slot: number) {
+      this.openSlot = null;
+      this.$nextTick(() => {
+        const button = this.$refs[`current${slot}`] as HTMLElement|HTMLElement[]|undefined;
+        const element = Array.isArray(button) ? button[0] : button;
+        if (element) {
+          element.focus();
+        }
+      });
+    },
     translate,
     currentName(slot: number): string {
       const id = this.dimensions[slot];

@@ -335,3 +335,44 @@ describe('ResultChart, grouped bars while comparing', () => {
     expect(plain.find('.fwde-chart__legend').exists()).toBe(false);
   });
 });
+
+describe('donut chart (design 2026-11-20)', () => {
+  const donutState = parseState({ fwdeDims: 'browser', fwdeMetrics: 'nb_visits', fwdeChartType: 'donut' }, CATALOG, LIMITS);
+
+  it('names the metric under the total in the middle (UI review 2026-11-23)', () => {
+    const wrapper = chart({ state: donutState, chartType: 'donut' });
+    expect(wrapper.find('.fwde-chart__donut-metric').text()).toBe('Visits');
+  });
+
+  it('draws one arc per slice, the total in the middle and a legend with value and share', () => {
+    const wrapper = chart({ state: donutState, chartType: 'donut' });
+    expect(wrapper.findAll('path.fwde-chart__slice')).toHaveLength(10);
+    expect(wrapper.find('.fwde-chart__donut-total').text()).toBe('78');
+    const legend = wrapper.findAll('.fwde-chart__donut-legend li');
+    expect(legend).toHaveLength(10);
+    expect(legend[0].text()).toContain('Browser 0');
+    expect(legend[0].text()).toContain('12');
+    expect(legend[9].text()).toContain('General_Others');
+    expect(wrapper.find('.fwde-chart__bar').exists()).toBe(false);
+  });
+
+  it('adds the exact rest of a cut table, and says while it is missing', () => {
+    const loaded = chart({ state: donutState, chartType: 'donut', othersValue: 22 });
+    expect(loaded.find('.fwde-chart__donut-total').text()).toBe('100');
+    const missing = chart({ state: donutState, chartType: 'donut', othersNote: 'FeinwerkDataExploration_OthersFailed' });
+    expect(missing.find('.fwde-chart__note').text()).toBe('FeinwerkDataExploration_OthersFailed');
+  });
+
+  it('offers the donut in the type switch, disabled with its reason', () => {
+    const bars = chart({ state: donutState, chartType: 'bar', donutReason: 'FeinwerkDataExploration_DonutNeedsCount' });
+    const button = bars.findAll('.fwde-segmented__option').find((b) => b.text() === 'FeinwerkDataExploration_ChartTypeDonut');
+    expect(button?.attributes('disabled')).toBeDefined();
+    expect(button?.attributes('title')).toBe('FeinwerkDataExploration_DonutNeedsCount');
+    const allowed = chart({ state: donutState, chartType: 'bar', donutReason: null });
+    const enabled = allowed.findAll('.fwde-segmented__option').find((b) => b.text() === 'FeinwerkDataExploration_ChartTypeDonut');
+    expect(enabled?.attributes('disabled')).toBeUndefined();
+    enabled?.trigger('click');
+    expect(allowed.emitted('chart-type')?.[0]).toEqual(['donut']);
+  });
+});
+

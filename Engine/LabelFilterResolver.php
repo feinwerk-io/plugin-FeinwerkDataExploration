@@ -34,8 +34,8 @@ final class LabelFilterResolver
     }
 
     /**
-     * @param string $operator contains, equals or notContains; for notContains the positive matches are returned
-     *                         (the query builder negates them)
+     * @param string $operator a text operator; for notContains and notEquals the positive matches (of contains and
+     *                         equals) are returned, the query builder negates them
      * @return array{values: list<string>, includeNull: bool}
      */
     public function resolve(DimensionDefinition $dimension, string $operator, string $value, int $idSite): array
@@ -49,9 +49,7 @@ final class LabelFilterResolver
         foreach ($domain as $raw) {
             $raw = $raw === null ? null : (string) $raw;
             $label = $dimension->formatLabel($raw, $idSite);
-            $matches = $operator === 'equals'
-                ? mb_strtolower($label) === mb_strtolower($value)
-                : mb_stripos($label, $value) !== false;
+            $matches = self::matches(mb_strtolower($label), mb_strtolower($value), $operator);
             if (!$matches) {
                 continue;
             }
@@ -63,5 +61,21 @@ final class LabelFilterResolver
         }
 
         return ['values' => array_values(array_unique($values)), 'includeNull' => $includeNull];
+    }
+
+    /** Whether a (lowercased) label matches the (lowercased) filter text; negated operators match positively. */
+    private static function matches(string $label, string $value, string $operator): bool
+    {
+        switch ($operator) {
+            case 'equals':
+            case 'notEquals':
+                return $label === $value;
+            case 'startsWith':
+                return mb_substr($label, 0, mb_strlen($value)) === $value;
+            case 'endsWith':
+                return $value === '' || mb_substr($label, -mb_strlen($value)) === $value;
+            default:
+                return mb_strpos($label, $value) !== false;
+        }
     }
 }

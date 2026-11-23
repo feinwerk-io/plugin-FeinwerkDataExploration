@@ -27,6 +27,8 @@ use Piwik\Tests\Framework\TestCase\IntegrationTestCase;
  */
 class ApiSavedExplorationsTest extends IntegrationTestCase
 {
+    use FunnelsSwitch;
+
     private const STATE = '{"fwdeDims":"browser","fwdeMetrics":"nb_visits,bounce_rate"}';
 
     public function provideContainerConfig()
@@ -40,6 +42,12 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
         FakeAccess::$superUser = true;
         Fixture::createWebsite('2026-01-01 00:00:00');
         Fixture::createWebsite('2026-01-01 00:00:00');
+    }
+
+    public function tearDown(): void
+    {
+        self::funnels(false);
+        parent::tearDown();
     }
 
     public function testOwnAndSharedAreListedWithTheirRights(): void
@@ -81,6 +89,40 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
         $this->assertSame('Renamed by admin', (new SavedExplorationStore())->get($id)['name']);
         $this->api()->deleteSavedExploration(1, $id);
         $this->assertNull((new SavedExplorationStore())->get($id));
+    }
+
+    /**
+     * Site admins clean up the website's shared explorations (design 2026-11-20): they may delete them, never change
+     * them, and never reach a private one or one of another website.
+     */
+    public function testSiteAdminsDeleteSharedExplorationsOnly(): void
+    {
+        $this->as('bert', [1], [1]);
+        $shared = $this->api()->addSavedExploration(1, 'Bert for all', self::STATE, '', 1)['id'];
+        $private = $this->api()->addSavedExploration(1, 'Bert alone', self::STATE)['id'];
+        $other = $this->api()->addSavedExploration(1, 'Bert again', self::STATE, '', 1)['id'];
+
+        FakeAccess::clearAccess(false, [1], [1], 'carla');
+        $listed = array_column($this->api()->getSavedExplorations(1), null, 'name');
+        $this->assertSame(['Bert again', 'Bert for all'], array_keys($listed));
+        $this->assertTrue($listed['Bert for all']['canDelete']);
+        $this->assertFalse($listed['Bert for all']['canEdit']);
+        $this->assertSame('table', $listed['Bert for all']['kind']);
+        // PHPUnit 8.5 (Matomo 5 runner) lacks assertMatchesRegularExpression
+        $this->assertSame(1, preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $listed['Bert for all']['updated']));
+
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotYours', fn () => $this->api()->updateSavedExploration(1, $shared, 'Taken', self::STATE, '', 1), 403);
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotFound', fn () => $this->api()->deleteSavedExploration(1, $private), 404);
+        $this->api()->deleteSavedExploration(1, $shared);
+        $this->assertNull((new SavedExplorationStore())->get($shared));
+        $this->assertNotNull((new SavedExplorationStore())->get($private));
+
+        // an admin of website 2 only: neither through website 2 nor through website 1
+        FakeAccess::clearAccess(false, [2], [1, 2], 'dora');
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotFound', fn () => $this->api()->deleteSavedExploration(2, $other), 404);
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotYours', fn () => $this->api()->deleteSavedExploration(1, $other), 403);
+        $this->assertFalse(array_column($this->api()->getSavedExplorations(1), null, 'name')['Bert again']['canDelete']);
+        $this->assertNotNull((new SavedExplorationStore())->get($other));
     }
 
     public function testAnotherSitesExplorationIsNotFound(): void
@@ -216,6 +258,7 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
 
     public function testFunnelIsSavedAndListedWithItsKind(): void
     {
+        self::funnels(true);
         $this->as('anna', [1]);
         $state = '{"fwdeKind":"funnel","fwdeSteps":"pageUrl~contains~%2Fshop;anyGoal~~"}';
         $id = $this->api()->addSavedExploration(1, 'Shop funnel', $state, 'browserCode==FF')['id'];
@@ -225,6 +268,25 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
         $this->assertSame(['fwdeKind' => 'funnel', 'fwdeSteps' => 'pageUrl~contains~%2Fshop;anyGoal~~'], $listed['state']);
         $this->assertSame('browserCode==FF', $listed['segment']);
         $this->assertRefused('FeinwerkDataExploration_ErrorSavedState', fn () => $this->api()->addSavedExploration(1, 'Odd', '{"fwdeKind":"chart"}'));
+    }
+
+    /** While funnels are off (default since 2026-11-21) saved funnels stay stored but out of sight, and none is saved */
+    public function testSavedFunnelsAreHiddenAndKeptWhileFunnelsAreOff(): void
+    {
+        $this->as('anna', [1]);
+        $funnel = '{"fwdeKind":"funnel","fwdeSteps":"pageUrl~contains~%2Fshop;anyGoal~~"}';
+        self::funnels(true);
+        $idFunnel = $this->api()->addSavedExploration(1, 'Shop funnel', $funnel)['id'];
+        self::funnels(false);
+        $idTable = $this->api()->addSavedExploration(1, 'Browsers', self::STATE)['id'];
+
+        $this->assertSame([$idTable], array_column($this->api()->getSavedExplorations(1), 'id'));
+        $this->assertRefused('FeinwerkDataExploration_ErrorFunnelOff', fn () => $this->api()->addSavedExploration(1, 'Other funnel', $funnel));
+        $this->assertRefused('FeinwerkDataExploration_ErrorFunnelOff', fn () => $this->api()->updateSavedExploration(1, $idTable, 'Browsers', $funnel));
+        $this->assertRefused('FeinwerkDataExploration_ErrorFunnelOff', fn () => $this->api()->copySavedExploration(1, $idFunnel, [2]));
+
+        self::funnels(true);
+        $this->assertEqualsCanonicalizing([$idFunnel, $idTable], array_column($this->api()->getSavedExplorations(1), 'id'));
     }
 
     private function as(string $login, array $viewSites, array $writeSites = []): void

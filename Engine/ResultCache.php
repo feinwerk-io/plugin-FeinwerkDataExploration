@@ -35,6 +35,17 @@ final class ResultCache
         return 'fwde_' . sha1(json_encode(['totals', $pluginVersion, $idSite, $startUtc, $endUtc, $segment, $definition->normalized()]));
     }
 
+    /**
+     * The rest of a cut table ("Others", design 2026-11-20), keyed by the rows the table showed: a recomputed table that
+     * moved a row across the cut never pairs with an older rest.
+     *
+     * @param list<array{0: ?string, 1: ?string}> $shownKeys
+     */
+    public function othersKey(int $idSite, string $startUtc, string $endUtc, string $segment, ExplorationDefinition $definition, array $shownKeys, string $pluginVersion): string
+    {
+        return 'fwde_' . sha1(json_encode(['others', $pluginVersion, $idSite, $startUtc, $endUtc, $segment, $definition->normalized(), sha1(json_encode($shownKeys))]));
+    }
+
     /** The trend (trend design 5): the own rows by $onlyKeys, or the totals (null), per day or hour. */
     public function trendKey(int $idSite, string $startUtc, string $endUtc, string $segment, ExplorationDefinition $definition, ?array $onlyKeys, string $unit, string $pluginVersion): string
     {

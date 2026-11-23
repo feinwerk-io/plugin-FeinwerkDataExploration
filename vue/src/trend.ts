@@ -3,7 +3,8 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 import {
-  canTrend, ChartModel, ChartOptions, ChartSeries, compareKeys, INTEGER_METRICS, niceScale,
+  canTrend, ChartModel, ChartOptions, ChartSeries, compareKeys, effectiveChartType, INTEGER_METRICS,
+  niceScale,
   timeOrder,
 } from './chart';
 import { columnLabel, valueKey } from './comparison';
@@ -140,10 +141,8 @@ export function compareTimeModel(
 
 /** The trend for one row (bars of one row say nothing) and where chosen, bars otherwise. */
 export function chartTypeFor(state: ExplorationState, rowCount: number): ChartType {
-  if (!canTrend(state)) {
-    return 'bar';
-  }
-  return rowCount === 1 || state.chartType === 'trend' ? 'trend' : 'bar';
+  // never the donut here: the page asks effectiveChartType with the donut's reason
+  return effectiveChartType(state, rowCount, 'not-checked');
 }
 
 /**

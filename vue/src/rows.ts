@@ -2,7 +2,7 @@
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
-import { ExplorationState, RowFilter } from './types';
+import { ExplorationState, FilterMatch, RowFilter } from './types';
 import { ResultRow } from './api';
 import { MAX_FILTERS, MAX_FILTER_TEXT } from './state';
 
@@ -32,6 +32,22 @@ export function filtersForRow(state: ExplorationState, row: ResultRow): RowFilte
   const targets = added.map((f) => f.target);
   const kept = state.filters.filter((f) => !targets.includes(f.target));
   return [...kept, ...added].slice(-MAX_FILTERS);
+}
+
+/**
+ * The filters and match after "filter to this value" or "break down": with "match all" the row
+ * joins the filters (filtersForRow); with "match any" another filter would widen the table, so the
+ * row's own filters replace them and the match goes back to "all".
+ */
+export function rowFilterState(
+  state: ExplorationState,
+  row: ResultRow,
+): { filters: RowFilter[], match: FilterMatch } {
+  // one filter matches the same with "all" or "any" (the switch shows only from two on): keep it
+  if (state.match !== 'any' || state.filters.length < 2) {
+    return { filters: filtersForRow(state, row), match: 'all' };
+  }
+  return { filters: filtersForRow({ ...state, filters: [] }, row), match: 'all' };
 }
 
 /**

@@ -107,3 +107,19 @@ describe('comparison table', () => {
     expect(cells[1].text()).toContain('3');
   });
 });
+
+describe('overcount hint while comparing', () => {
+  it('shows below the comparison table too', () => {
+    const wrapper = mount(CompareTable, {
+      props: {
+        rows,
+        state: parseState({ fwdeDims: 'pageUrl', fwdeMetrics: 'nb_visits' }, CATALOG, LIMITS),
+        catalog: CATALOG,
+        columns,
+        actionScope: true,
+        currencySymbol: '$',
+      },
+    });
+    expect(wrapper.find('.fwde-table__overcount').text()).toBe('FeinwerkDataExploration_OvercountHintVisit');
+  });
+});

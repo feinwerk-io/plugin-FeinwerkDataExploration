@@ -311,6 +311,140 @@ class ExplorationQueryBuilderTest extends TestCase
         $this->assertSame([self::START, self::END, 1, 'Google', '%goo%'], $this->stageACalls[0][3]);
     }
 
+    public function testIsNotStartsWithAndEndsWithFilters(): void
+    {
+        $this->build('{"dimensions": ["browser", "referrerName"], "metrics": ["nb_visits"], "filters": ['
+            . '{"target": "secondary_label", "operator": "notEquals", "value": "Google"},'
+            . '{"target": "secondary_label", "operator": "startsWith", "value": "Bi_"},'
+            . '{"target": "secondary_label", "operator": "endsWith", "value": ".de"}]}');
+
+        $key = 'log_visit.referer_name';
+        $this->assertStringEndsWith(" AND (($key) IS NULL OR ($key) <> ?) AND ($key) LIKE ? AND ($key) LIKE ?", $this->stageACalls[0][2]);
+        $this->assertSame([self::START, self::END, 1, 'Google', 'Bi\\_%', '%.de'], $this->stageACalls[0][3]);
+    }
+
+    public function testResolvedIsNotStartsWithAndEndsWith(): void
+    {
+        $this->build('{"dimensions": ["browser"], "metrics": ["nb_visits"], "filters": ['
+            . '{"target": "label", "operator": "notEquals", "value": "chrome"},'
+            . '{"target": "label", "operator": "startsWith", "value": "chr"},'
+            . '{"target": "label", "operator": "endsWith", "value": "fox"}]}',
+            [0 => ['values' => ['CH'], 'includeNull' => false], 1 => ['values' => ['CH', 'CM'], 'includeNull' => false],
+                2 => ['values' => ['FF'], 'includeNull' => false]]);
+
+        $key = "NULLIF(NULLIF(log_visit.config_browser_name, ''), 'UNK')";
+        // "is not" negates like "does not contain"; "starts with" and "ends with" keep the matching values
+        $this->assertStringEndsWith(" AND (($key) IS NULL OR ($key) NOT IN (?)) AND (($key) IN (?, ?)) AND (($key) IN (?))",
+            $this->stageACalls[0][2]);
+    }
+
+    /** "Match any" (2026-11-20): text filters only, so they stay in stage A, joined with OR */
+    public function testMatchAnyJoinsTextFiltersWithOr(): void
+    {
+        $this->build('{"dimensions": ["browser", "referrerName"], "metrics": ["nb_visits"], "match": "any", "filters": ['
+            . '{"target": "secondary_label", "operator": "equals", "value": "Google"},'
+            . '{"target": "secondary_label", "operator": "contains", "value": "bing"}]}');
+
+        $this->assertStringEndsWith(' AND ((log_visit.referer_name) = ? OR (log_visit.referer_name) LIKE ?)', $this->stageACalls[0][2]);
+        $this->assertSame([self::START, self::END, 1, 'Google', '%bing%'], $this->stageACalls[0][3]);
+    }
+
+    /** "Match any" with a number filter: a row qualifies by its value or by its number, so all conditions go to HAVING */
+    public function testMatchAnyWithNumberFilterMovesTextFiltersToHaving(): void
+    {
+        $query = $this->build('{"dimensions": ["referrerName"], "metrics": ["nb_visits"], "match": "any", "filters": ['
+            . '{"target": "label", "operator": "contains", "value": "goo"},'
+            . '{"target": "nb_visits", "operator": "gt", "value": 5}]}');
+
+        $this->assertStringEndsWith(' AND log_visit.idsite = ?', $this->stageACalls[0][2]);
+        // the key inside an aggregate: MySQL (not MariaDB) may check a bare column of the merged derived table against
+        // a row of another group; within a group every key is equal, so MAX() is the group's key
+        $this->assertStringContainsString(' HAVING ((MAX(fwde_a.fwde_k1)) LIKE ? OR nb_visits > ?)', $query['sql']);
+        $this->assertSame(['%goo%', 5.0], array_slice($query['bind'], -2));
+    }
+
+    /** A filter that excludes nothing lets every row through, and the binds of the dropped OR group go with it */
+    public function testMatchAnyWithAFilterExcludingNothingLeavesNoBinds(): void
+    {
+        $this->build('{"dimensions": ["browser", "referrerName"], "metrics": ["nb_visits"], "match": "any", "filters": ['
+            . '{"target": "secondary_label", "operator": "contains", "value": "goo"},'
+            . '{"target": "label", "operator": "notEquals", "value": "Opera"}]}',
+            [1 => ['values' => [], 'includeNull' => false]]);
+
+        $this->assertStringEndsWith(' AND log_visit.idsite = ?', $this->stageACalls[0][2]);
+        $this->assertSame([self::START, self::END, 1], $this->stageACalls[0][3]);
+    }
+
+    public function testMatchAnyByNumberWithAFilterExcludingNothingLeavesNoBinds(): void
+    {
+        $query = $this->build('{"dimensions": ["browser"], "metrics": ["nb_visits"], "match": "any", "filters": ['
+            . '{"target": "nb_visits", "operator": "gt", "value": 5},'
+            . '{"target": "label", "operator": "notEquals", "value": "Opera"}]}',
+            [1 => ['values' => [], 'includeNull' => false]]);
+
+        $this->assertStringNotContainsString(' HAVING ', $query['sql']);
+        // stage A's three binds only: the number filter's 5 went with the dropped HAVING group
+        $this->assertSame([self::START, self::END, 1], $query['bind']);
+    }
+
+    public function testTotalsInMatchAnyWithNumberFilterKeepEveryRow(): void
+    {
+        $this->totals('{"dimensions": ["referrerName"], "metrics": ["nb_visits"], "match": "any", "filters": ['
+            . '{"target": "label", "operator": "contains", "value": "goo"},'
+            . '{"target": "nb_visits", "operator": "gt", "value": 5}]}');
+
+        $this->assertStringEndsWith(' AND log_visit.idsite = ?', $this->stageACalls[0][2]);
+    }
+
+    /** "Others" (2026-11-20): one row over everything but the shown key tuples, NULL keys compared null-safe */
+    public function testOthersExcludeTheShownKeysNullSafe(): void
+    {
+        [$definition, $dimensionDefinitions, $context, $builder] = $this->parts('{"dimensions": ["browser", "referrerName"], "metrics": ["nb_visits"]}');
+        $query = $builder->buildOthers($definition, $dimensionDefinitions, 1, $context, [], [['CH', 'Google'], ['FF', null]]);
+
+        // IN lists first (looked up quickly), the null-safe pairs only for the rows that pass them; IS NOT TRUE keeps a
+        // row whose test is unknown (a NULL key against an IN list without NULL)
+        $this->assertStringEndsWith(' WHERE (fwde_a.fwde_k1 IN (?, ?) AND (fwde_a.fwde_k2 IN (?) OR fwde_a.fwde_k2 IS NULL)'
+            . ' AND ((fwde_a.fwde_k1 <=> ? AND fwde_a.fwde_k2 <=> ?) OR (fwde_a.fwde_k1 <=> ? AND fwde_a.fwde_k2 <=> ?))) IS NOT TRUE', $query['sql']);
+        $this->assertSame(['CH', 'FF', 'Google', 'CH', 'Google', 'FF', null], array_slice($query['bind'], -7));
+        $this->assertStringNotContainsString('GROUP BY fwde_a', $query['sql']);
+        $this->assertStringContainsString(' AS fwde_k1', $this->stageACalls[0][0], 'stage A keeps the keys');
+        $this->assertStringContainsString(' AS fwde_k2', $this->stageACalls[0][0]);
+
+        $none = $builder->buildOthers($definition, $dimensionDefinitions, 1, $context, [], []);
+        $this->assertStringNotContainsString(' WHERE NOT', $none['sql']);
+    }
+
+    /** One dimension: the IN list alone is exact (the database compares with the collation it groups by) */
+    public function testOthersOfOneDimensionUseAnInListOnly(): void
+    {
+        [$definition, $dimensionDefinitions, $context, $builder] = $this->parts('{"dimensions": ["browser"], "metrics": ["nb_visits"]}');
+        $query = $builder->buildOthers($definition, $dimensionDefinitions, 1, $context, [], [['CH', null], [null, null], ['CH', null]]);
+
+        $this->assertStringEndsWith(' WHERE (fwde_a.fwde_k1 IN (?) OR fwde_a.fwde_k1 IS NULL) IS NOT TRUE', $query['sql']);
+        $this->assertSame('CH', end($query['bind']));
+        $this->assertStringNotContainsString('<=>', $query['sql']);
+    }
+
+    /** A NULL key of the rest is unknown against an IN list without NULL: it must count, not drop out */
+    public function testOthersKeepANullKeyThatIsNotShown(): void
+    {
+        [$definition, $dimensionDefinitions, $context, $builder] = $this->parts('{"dimensions": ["browser"], "metrics": ["nb_visits"]}');
+        $query = $builder->buildOthers($definition, $dimensionDefinitions, 1, $context, [], [['CH', null], ['FF', null]]);
+
+        $this->assertStringEndsWith(' WHERE (fwde_a.fwde_k1 IN (?, ?)) IS NOT TRUE', $query['sql']);
+    }
+
+    /** No shown rows (a number filter removed them all): the rest is everything, no empty condition */
+    public function testOthersWithoutShownRowsHaveNoCondition(): void
+    {
+        [$definition, $dimensionDefinitions, $context, $builder] = $this->parts('{"dimensions": ["browser", "referrerName"], "metrics": ["nb_visits"]}');
+        $query = $builder->buildOthers($definition, $dimensionDefinitions, 1, $context, [], []);
+
+        $this->assertStringNotContainsString('WHERE', substr($query['sql'], strrpos($query['sql'], ') AS fwde_a')));
+        $this->assertSame([self::START, self::END, 1], $query['bind']);
+    }
+
     public function testLikeWildcardsAreEscaped(): void
     {
         $this->build('{"dimensions": ["pageUrl"], "metrics": ["nb_pageviews"], '

@@ -26,7 +26,9 @@
             :current="currentSaved"
             :login="login"
             :can-copy="canCopy"
+            :can-manage="canManage"
             @open="openSaved"
+            @deleted="loadSavedList()"
           />
         </section>
         <section class="fwde-section">
@@ -246,6 +248,8 @@ export default defineComponent({
     rawDataFrom: { type: String, default: null },
     canShare: { type: Boolean, default: false },
     canCopy: { type: Boolean, default: false },
+    /** admin access to the website: manage its shared explorations */
+    canManage: { type: Boolean, default: false },
     promo: {
       type: Object as PropType<PromoVariables|null>,
       default: null,

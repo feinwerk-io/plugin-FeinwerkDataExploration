@@ -11,6 +11,7 @@ namespace Piwik\Plugins\FeinwerkDataExploration\Widgets;
 
 use Piwik\Common;
 use Piwik\Container\StaticContainer;
+use Piwik\Piwik;
 use Piwik\Plugin\Manager as PluginManager;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\AccessPolicy;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\Limits;
@@ -28,7 +29,7 @@ final class WidgetProps
     /**
      * Both pages show the premium banner below their result (Peter, 2026-11-17).
      *
-     * @return array{idSite: int, maxDays: int, rawDataFrom: ?string, canShare: bool, canCopy: bool, feedback: array, premium: ?array, promo: ?array}
+     * @return array{idSite: int, maxDays: int, rawDataFrom: ?string, canShare: bool, canCopy: bool, canManage: bool, feedback: array, premium: ?array, promo: ?array}
      */
     public static function common(int $idSite, Limits $limits): array
     {
@@ -38,6 +39,8 @@ final class WidgetProps
             'rawDataFrom' => RawDataRetention::earliestCompleteDay($idSite),
             'canShare' => AccessPolicy::canShare($idSite),
             'canCopy' => AccessPolicy::canCopy(),
+            // admins of the website manage its shared explorations (design 2026-11-20)
+            'canManage' => Piwik::isUserHasAdminAccess($idSite),
             'feedback' => PluginFeedback::clientProps(
                 StaticContainer::get(PluginFeedback::class)->isEnabled(),
                 (string) StaticContainer::get(Translator::class)->getCurrentLanguage(),
