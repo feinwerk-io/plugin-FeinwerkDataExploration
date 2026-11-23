@@ -5,14 +5,11 @@
 import { mount } from '@vue/test-utils';
 import ExplorationToolbar from '../src/ExplorationToolbar.vue';
 
-// Matomo 5 runs the specs with Jest; CoreHome is Matomo's UMD global, so the mock is virtual
-jest.mock('CoreHome', () => ({
+vi.mock('CoreHome', () => ({
   translate: (key: string) => key,
   Matomo: {},
   MatomoUrl: { parsed: { value: {} }, stringify: () => '' },
-}), { virtual: true });
-// Matomo 5's CoreHome declarations for Jest lack `Matomo` (the build has it): the export links are not under test here
-jest.mock('../src/exportLink', () => ({ exportUrl: () => '', funnelExportUrl: () => '' }));
+}));
 
 describe('toolbar of a page without table state (funnel)', () => {
   it('offers export only with an export link, i.e. once the funnel can run', () => {

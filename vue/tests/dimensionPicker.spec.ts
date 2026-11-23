@@ -7,8 +7,7 @@ import DimensionPicker from '../src/DimensionPicker.vue';
 import { parseState } from '../src/state';
 import { CATALOG, LIMITS } from './fixtures';
 
-// Matomo 5 runs the specs with Jest; CoreHome is Matomo's UMD global, so the mock is virtual
-jest.mock('CoreHome', () => ({
+vi.mock('CoreHome', () => ({
   translate: (key: string) => key,
   SearchInput: {
     name: 'SearchInput',
@@ -16,7 +15,7 @@ jest.mock('CoreHome', () => ({
     emits: ['update:modelValue'],
     template: '<input class="search-input" :value="modelValue" />',
   },
-}), { virtual: true });
+}));
 
 describe('dimension picker', () => {
   it('closes its list with Escape and gives the focus back to its button', async () => {

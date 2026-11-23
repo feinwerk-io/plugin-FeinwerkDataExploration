@@ -1,101 +1,57 @@
 # Changelog
 
-## 5.4.0
+## 6.0.0
 
-- The plugin now also speaks French, Spanish and Italian, besides English and German.
-- New: while the free Feinwerk Connector is not active, super users find "Feinwerk Plugins" > "Install Feinwerk
-  Connector" in Matomo's Administration. One click installs it from the Matomo Marketplace and activates it, after
-  Matomo's password check; where Matomo cannot install from its Marketplace, the page explains the manual way. Hidden
-  with `connector_installer = 0`.
-- The tip about the Feinwerk Connector no longer shows where Matomo's Marketplace offers only a download (automatic
-  updates switched off or several servers).
-- Filters open in a panel at the side and run once with "Apply"; the left column shows the applied filters in short.
-- A result that the filters emptied says so and offers "Edit filters"; the empty list of shared explorations says how
-  one gets there.
-- Saving and managing shared explorations open in the same panel, with more room and the buttons always in view.
-- The switches for the view, the chart type and "Match all / any" look and work alike: one Tab stop, the arrow keys
-  choose.
-- The result's title is followed by the period and the segment the numbers cover.
-- The funnel page is no longer included; saved funnels are kept.
-- Row filters "is not", "starts with" and "ends with", and a switch whether a row must meet all filters or any of them.
-- Below a table whose rows were cut, "Others" calculates the exact rest of every metric on request, rates included.
-- Where one visit can count in several rows, for example visits per page URL, a hint below the table says why the rows
-  can add up to more than the total.
-- A donut chart for counts and sums: the largest rows and "Others" as shares of the whole, with the total and the
-  metric in the middle.
-- The lists of dimensions and metrics work with the keyboard (arrow keys, Enter, Escape), and the dimensions show how
-  many of two are chosen.
-- Administrators of a website manage its shared explorations and can delete them; private explorations stay private.
-- Long values such as page URLs, shortened in the middle in a narrow table, no longer show a gap before their kept end.
+The first stable version for Matomo 6. Compared with the last beta before the new version numbers (1.0.0-beta.5):
 
-## 5.3.0
-
-- Below the result of the free-form table and of the funnel, administrators see one paid Feinwerk plugin at a time
-  that this Matomo does not have yet, in a borderless banner with a different plugin first each day. "×" hides it for
-  30 days and the next one shows; while the banner shows, the tip line under the result gives way to it.
-  `promotions = 0` switches both off.
-- Super users whose Matomo cannot install plugins from its Marketplace no longer get the tip on the Feinwerk
-  Marketplace Connector (it offered a download instead).
-
-## 5.2.0
-
-- Comparisons show up to 4 columns per metric (was 3), so one segment and one period fit together.
-- The table keeps both dimensions together on the left (a first dimension of short values is only as wide as they
-  are), a light line separates the metric columns and their bars, and numbers keep a small distance to the next
-  column.
-- While comparing segments or periods, the bar chart shows one bar per comparison column for each row, in the colours of
-  Matomo's comparison, with a legend, the value on each bar and a compared period's change in its tooltip.
-- A value just over 20 characters, such as "Referrer Name not defined", no longer shows a gap in the middle of its table
-  cell.
-
-## 5.1.0
-
+- Version numbers follow Matomo: 6.x for Matomo 6, 5.x for Matomo 5.
+- Comparisons: the free-form table compares segments and periods with Matomo's own comparison, one column per comparison
+  for every metric (up to 4 per metric, so one segment and one period fit together), with a total row, shares and the
+  change against your period. The bar chart shows one bar per comparison column in the colours of Matomo's comparison.
+- Trend: "Bars | Trend" turns the first 5 rows of the table into lines over the days of the period (the hours of a
+  single day); while comparing, one line per comparison column, a compared period dashed and lined up day by day.
+- Donut: a third chart type for counts and sums shows the largest rows and "Others" as shares of the whole, with the
+  total and the metric in the middle.
+- "Others": below a table whose rows were cut, "Others" calculates the exact rest of every metric on request, rates
+  included. Where one visit can count in several rows, for example visits per page URL, a hint below the table says
+  why the rows can add up to more than the total.
+- Filters: new row filters "is not", "starts with" and "ends with", and a switch whether a row must meet all filters or
+  any of them. Filters open in a panel at the side and run once with "Apply"; the left column shows the applied filters
+  in short. A result that the filters emptied says so and offers "Edit filters".
 - The table is easier to read: both dimensions side by side on the left and a line before the metrics, long values on
   one line shortened in the middle (the full text on hover), a bar behind every count and sum, and header rows that
-  stand apart, in light and dark mode. While comparing, each column shows the colour of its comparison with its
-  segment and period on two lines.
-- Saved explorations compare logins exactly: two users whose logins differ only in upper and lower case or in accents
-  never see each other's private explorations, and deleting one of them keeps the other's explorations.
-- The chart has a trend: "Bars | Trend" turns the first 5 rows of the table into lines over the days of the period
-  (the hours of a single day); while comparing, one line per comparison column, a compared period dashed and lined up
-  day by day. A table with a time dimension in second place (for example "Browser × Date") is now drawn as lines too.
-- The free-form table compares segments and periods with Matomo's own comparison: one column per comparison for every
-  metric, a total row, shares, and the change against your period; up to 3 columns per metric.
-- New page **Explorations → Funnel**: up to three steps (page, event, site search, download, outlink, goal or any goal),
-  counted per visit and in order from the raw data of the period, with bars, a table, export, saving and sharing.
-- Saved explorations can be copied to other websites (Matomo 5.14 and newer): a goal is matched by its name, and a
-  copy is shared only where you may share.
-- Below the result, administrators see a one-line tip on another Feinwerk offer, starting with the Feinwerk Plugins
-  logo (on narrow screens only its round mark); `promotions = 0` in the `[FeinwerkDataExploration]` section of
-  `config/config.ini.php` switches it off.
-- The feedback row below the result follows the compact footer of all Feinwerk plugins, with "Support" at its right end.
-- API requests that fail answer with an HTTP status: 400 for a request the plugin cannot answer (for example a period
-  longer than 31 days), 403 or 404 for a saved exploration you may not change or that does not exist, and 503 while
-  other explorations take all places or a query reached the time limit. The plugin's own page shows its messages as
-  before.
-- A copy of a saved exploration on another website uses that website's custom dimension or goal of the same name in
-  its segment too; without one, the website is skipped with a note.
-- Explorations with two dimensions, trends and funnels no longer write "Trying to add two strings" warnings to Matomo's
-  log for every request.
-
-## 5.0.1
-
-- The feedback question below the result now takes a single compact line.
-- A failing connection to Feinwerk while sending a feedback vote no longer shows an error in Matomo.
-
-## 5.0.0
-
+  stand apart, in light and dark mode. The period and the segment the numbers cover show below the result's title.
+- Saving and sharing: saving and managing shared explorations open in the panel at the side. Administrators of a
+  website manage its shared explorations and can delete them; private explorations stay private. Saved explorations
+  can be copied to other websites (a goal, custom dimension or segment is matched by name), and logins are compared
+  exactly, so users whose logins differ only in case or accents never see each other's private explorations.
+- The switches for the view, the chart type and "Match all / any" look and work alike: one Tab stop, the arrow keys
+  choose. The lists of dimensions and metrics work with the keyboard (arrow keys, Enter, Escape), and the dimensions
+  show how many of two are chosen.
 - Below the result you can tell us whether the exploration is helpful (thumbs up or down), and "Support" opens the
   Feinwerk contact form. Your Matomo server sends only the answer, the plugin and Matomo version, the browser family
-  and major version and the language of Matomo; `feedback = 0` in the `[FeinwerkDataExploration]` section of `config/config.ini.php`
-  switches the question off.
-- Version numbers now follow Matomo: version 5.0.0 follows 0.3.1 and is offered as an update as usual.
+  and major version and the language of Matomo; `feedback = 0` in the `[FeinwerkDataExploration]` section of
+  `config/config.ini.php` switches the question off.
+- Below the result, administrators see a one-line tip on another Feinwerk offer, or a borderless banner with one paid
+  Feinwerk plugin this Matomo does not have yet (a different one first each day; "×" hides it for 30 days).
+  `promotions = 0` switches both off. The tip on the Feinwerk Connector does not show where Matomo's Marketplace can
+  only offer a download.
+- While the free Feinwerk Connector is not active, super users find "Feinwerk Plugins" > "Install Feinwerk Connector"
+  in Matomo's Administration. One click installs it from the Matomo Marketplace and activates it, after Matomo's
+  password check; where Matomo cannot install from its Marketplace, the page explains the manual way. Hidden with
+  `connector_installer = 0`.
+- The plugin now also speaks French, Spanish and Italian, besides English and German.
+- API requests that fail answer with an HTTP status: 400 for a request the plugin cannot answer, 403 or 404 for a saved
+  exploration you may not change or that does not exist, and 503 while other explorations take all places or a query
+  reached the time limit. A period, date or segment with spaces around it is accepted.
+- The funnel page of the 6.0.0 betas is no longer included; saved funnels are kept.
+- Explorations no longer write "Trying to add two strings" warnings to Matomo's log.
 
-## 0.3.1
+## 1.0.0-beta.5
 
 - A result with a single row says "1 row" instead of "1 rows".
 
-## 0.3.0
+## 1.0.0-beta.4
 
 - Sharing an exploration with the website's users needs at least write access to the website. With view access you
   save explorations for yourself.
@@ -103,7 +59,7 @@
   keywords (each opens on the visits of its channel), continents, visits by visit number, device brands and models,
   and operating system and browser versions.
 
-## 0.2.0
+## 1.0.0-beta.3
 
 - Save explorations and open them again: for yourself only, or for everyone who may use explorations on the website.
   A saved exploration keeps its settings and segment, the period stays the one you have selected.
@@ -113,13 +69,13 @@
 - "None" in the choice of the second dimension is no longer written in capitals.
 - The settings use one term for the read replica, and the plugin is named "Feinwerk Data Exploration".
 
-## 0.1.1
+## 1.0.0-beta.2
 
 - Long values such as page URLs wrap in the result table instead of running into the next column.
 
-## 0.1.0
+## 1.0.0-beta.1
 
-First version for Matomo 5.12 and newer.
+First version for Matomo 6.
 
 - Free-form table on the raw data: one dimension, an optional secondary dimension and up to five metrics, sortable
   by every column, up to 1,000 rows.

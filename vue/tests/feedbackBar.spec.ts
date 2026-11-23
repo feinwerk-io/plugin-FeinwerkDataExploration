@@ -5,11 +5,10 @@
 import { mount } from '@vue/test-utils';
 import FeedbackBar from '../src/FeedbackBar.vue';
 
-// Matomo 5 runs the specs with Jest; CoreHome is Matomo's UMD global, so the mock is virtual
-jest.mock('CoreHome', () => ({
+vi.mock('CoreHome', () => ({
   AjaxHelper: { post: () => Promise.resolve({}) },
   translate: (key: string) => key,
-}), { virtual: true });
+}));
 
 const question = 'Is this exploration helpful? A long question that may end with an ellipsis';
 

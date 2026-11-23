@@ -12,7 +12,7 @@ namespace Piwik\Plugins\FeinwerkDataExploration\tests\Integration;
 use Piwik\Common;
 use Piwik\Db;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationStore;
-use Piwik\Plugins\FeinwerkDataExploration\Updates_0_2_0;
+use Piwik\Plugins\FeinwerkDataExploration\Updates_1_0_0_beta_3;
 use Piwik\Tests\Framework\TestCase\IntegrationTestCase;
 use Piwik\Updater;
 
@@ -151,8 +151,8 @@ class SavedExplorationStoreTest extends IntegrationTestCase
         $this->store->uninstall();
         $this->assertFalse($this->tableExists($table));
 
-        require_once __DIR__ . '/../../Updates/0.2.0.php';
-        $migration = new Updates_0_2_0();
+        require_once __DIR__ . '/../../Updates/1.0.0-beta.3.php';
+        $migration = new Updates_1_0_0_beta_3();
         $migration->doUpdate(new Updater());
         $migration->doUpdate(new Updater());
 

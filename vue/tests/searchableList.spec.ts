@@ -5,8 +5,7 @@
 import { mount } from '@vue/test-utils';
 import SearchableList from '../src/SearchableList.vue';
 
-// Matomo 5 runs the specs with Jest; CoreHome is Matomo's UMD global, so the mock is virtual
-jest.mock('CoreHome', () => ({
+vi.mock('CoreHome', () => ({
   translate: (key: string) => key,
   SearchInput: {
     name: 'SearchInput',
@@ -15,7 +14,7 @@ jest.mock('CoreHome', () => ({
     template: '<input class="search-input" :value="modelValue" '
       + '@input="$emit(\'update:modelValue\', $event.target.value)" />',
   },
-}), { virtual: true });
+}));
 
 // the list's items (ListItem in SearchableList.vue; Jest's .vue shim on Matomo 5 has no named types)
 const items = [

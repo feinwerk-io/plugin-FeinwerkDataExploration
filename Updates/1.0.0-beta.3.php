@@ -14,10 +14,10 @@ use Piwik\Updater;
 use Piwik\Updates as PiwikUpdates;
 
 /**
- * The table of saved explorations for installs from 0.1.x (new installs get it in install()). Written for the 5.x line;
- * the 6.x line has its own Updates/1.0.0-beta.3.php. Idempotent: the table is created only when it does not exist yet.
+ * The table of saved explorations for installs from before 1.0.0-beta.3 (new installs get it in install()).
+ * Idempotent: the table is created only when it does not exist yet.
  */
-class Updates_0_2_0 extends PiwikUpdates
+class Updates_1_0_0_beta_3 extends PiwikUpdates
 {
     public function doUpdate(Updater $updater)
     {

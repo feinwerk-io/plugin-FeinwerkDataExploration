@@ -6,16 +6,8 @@ import { mount } from '@vue/test-utils';
 import SavedPicker from '../src/SavedPicker.vue';
 import { copySupport } from '../src/saved';
 
-// Matomo 5 runs the specs with Jest; CoreHome is Matomo's UMD global, so the mock is virtual. __esModule keeps
-// `import * as CoreHome` on the same object, so the tests can add and remove exports.
-jest.mock('CoreHome', () => ({ __esModule: true, translate: (key: string) => key }), { virtual: true });
-const core = jest.requireMock('CoreHome') as Record<string, unknown>;
-// the list's delete call (manage dialog) comes from api.ts; mocked, so Jest does not type-check api.ts against the
-// small CoreHome mock
-jest.mock('../src/api', () => ({
-  deleteSaved: jest.fn(() => Promise.resolve({})),
-  errorText: (e: unknown) => String(e),
-}));
+const core = vi.hoisted(() => ({ translate: (key: string) => key } as Record<string, unknown>));
+vi.mock('CoreHome', () => core);
 
 const saved = [{
   id: 7, name: 'Browsers', shared: false, owner: 'anna', canEdit: true, state: {}, segment: '',

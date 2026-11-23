@@ -8,10 +8,9 @@ import FilterPanel from '../src/FilterPanel.vue';
 import { parseState } from '../src/state';
 import { CATALOG, LIMITS } from './fixtures';
 
-// Matomo 5 runs the specs with Jest; CoreHome is Matomo's UMD global, so the mock is virtual
-jest.mock('CoreHome', () => ({
+vi.mock('CoreHome', () => ({
   translate: (key: string) => key,
-}), { virtual: true });
+}));
 
 const mounted: Array<{ unmount: () => void }> = [];
 

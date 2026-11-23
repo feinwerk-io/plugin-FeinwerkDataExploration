@@ -19,11 +19,12 @@ node_modules/
 .phpunit.cache/
 .phpunit.result.cache
 
-# Vue build: ship umd.js, umd.min.js and umd.metadata.json (fw-release commits them for Matomo 5 lines)
+# Vue build: ship only the minified UMD build and its metadata
 vue/dist/demo.html
 vue/dist/*.common.js
 vue/dist/*.map
 vue/dist/*.development.*
+vue/dist/*.umd.js
 
 # Local tools
 .superpowers/

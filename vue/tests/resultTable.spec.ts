@@ -6,10 +6,8 @@ import { mount } from '@vue/test-utils';
 import ResultTable from '../src/ResultTable.vue';
 import { parseState } from '../src/state';
 import { CATALOG, LIMITS } from './fixtures';
-import { ResultRow } from '../src/api';
 
-// Matomo 5 runs the specs with Jest; CoreHome is Matomo's UMD global, so the mock is virtual
-jest.mock('CoreHome', () => ({
+vi.mock('CoreHome', () => ({
   translate: (key: string, ...params: string[]) => [key, ...params].join(' '),
   Matomo: { language: 'en' },
   NumberFormatter: {
@@ -17,10 +15,10 @@ jest.mock('CoreHome', () => ({
     formatPercent: (v: number) => `${v} %`,
     formatCurrency: (v: number) => `$${v}`,
   },
-}), { virtual: true });
+}));
 
 const state = parseState({ fwdeDims: 'browser,pageUrl', fwdeMetrics: 'nb_visits,bounce_rate' }, CATALOG, LIMITS);
-const rows: ResultRow[] = [
+const rows = [
   {
     label: 'Mobile Safari', secondary_label: 'outdoor-shop-demo.example/wandern/', nb_visits: 80, bounce_rate: 0.4,
   },

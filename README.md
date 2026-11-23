@@ -85,7 +85,7 @@ have no raw data of their own, so explorations are not offered there.
 
 ## Requirements
 
-- Matomo 5.12 or newer.
+- Matomo 6: version 6.x. Matomo 5 (5.12 or newer): version 5.x.
 - PHP 8.1 or newer.
 
 ## Installation
@@ -98,8 +98,8 @@ have no raw data of their own, so explorations are not offered there.
 
 ## Usage
 
-1. Open **Explorations → Free-form table** in the reporting menu, or click the flask icon **Open in exploration** under
-   a standard report. On a report row, the flask icon **Explore this row** opens the visits of that row.
+1. Open **Explorations → Free-form table** in the reporting menu, or click **Open in exploration** under a standard
+   report (Matomo 6: in the report's menu).
 2. Choose the dimensions and metrics on the left; the table updates on every change.
 3. Use the period selector and the segment editor of Matomo as usual (at most 31 days).
 4. Add row filters (**Add filter** opens a panel at the side, **Apply** runs them), sort by a column, choose the

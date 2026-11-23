@@ -6,10 +6,9 @@ import { mount } from '@vue/test-utils';
 import StepEditor from '../src/StepEditor.vue';
 import { FunnelStepState } from '../src/types';
 
-// Matomo 5 runs the specs with Jest; CoreHome is Matomo's UMD global, so the mock is virtual
-jest.mock('CoreHome', () => ({
+vi.mock('CoreHome', () => ({
   translate: (key: string, ...params: string[]) => [key, ...params].join(' '),
-}), { virtual: true });
+}));
 
 const page = (value: string): FunnelStepState => ({
   type: 'pageUrl', operator: 'contains', value, idGoal: null,
@@ -59,7 +58,7 @@ describe('step editor', () => {
   });
 
   it('typing emits once after a pause, not per key', async () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     try {
       const wrapper = editor([page('a'), page('')]);
       const input = wrapper.findAll('.fwde-step__value')[1];
@@ -68,12 +67,12 @@ describe('step editor', () => {
       await input.setValue('/cart');
       expect(wrapper.emitted('update')).toBeUndefined();
       expect((input.element as HTMLInputElement).value).toBe('/cart');
-      jest.advanceTimersByTime(600);
+      vi.advanceTimersByTime(600);
       const updates = wrapper.emitted('update') as FunnelStepState[][][];
       expect(updates).toHaveLength(1);
       expect(updates[0][0][1].value).toBe('/cart');
     } finally {
-      jest.useRealTimers();
+      vi.useRealTimers();
     }
   });
 

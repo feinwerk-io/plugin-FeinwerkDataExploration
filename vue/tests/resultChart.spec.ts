@@ -9,8 +9,7 @@ import { CATALOG, LIMITS } from './fixtures';
 import { ResultRow } from '../src/api';
 import { ComparisonColumn } from '../src/types';
 
-// Matomo 5 runs the specs with Jest; CoreHome is Matomo's UMD global, so the mock is virtual
-jest.mock('CoreHome', () => ({
+vi.mock('CoreHome', () => ({
   translate: (key: string, ...params: string[]) => [key, ...params].join(' '),
   ActivityIndicator: { name: 'ActivityIndicator', template: '<div class="loadingPiwik" />' },
   Matomo: { language: 'en' },
@@ -20,7 +19,7 @@ jest.mock('CoreHome', () => ({
     formatPercent: (v: number) => `${v} %`,
     formatCurrency: (v: number) => `$${v}`,
   },
-}), { virtual: true });
+}));
 
 const state = parseState({ fwdeDims: 'browser', fwdeMetrics: 'nb_visits', fwdeChartType: 'trend' }, CATALOG, LIMITS);
 const rows = Array.from({ length: 12 }, (_, i) => ({ label: `Browser ${i}`, nb_visits: 12 - i }));

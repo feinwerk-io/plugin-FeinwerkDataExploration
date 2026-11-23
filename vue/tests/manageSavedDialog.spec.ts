@@ -6,10 +6,9 @@ import { flushPromises, mount } from '@vue/test-utils';
 import ManageSavedDialog from '../src/ManageSavedDialog.vue';
 import { SavedExploration } from '../src/api';
 
-// Matomo 5 runs the specs with Jest; CoreHome is Matomo's UMD global, so the mock is virtual
-jest.mock('CoreHome', () => ({
+vi.mock('CoreHome', () => ({
   translate: (key: string, ...params: string[]) => [key, ...params].join(' '),
-}), { virtual: true });
+}));
 
 const saved = (fields: Partial<SavedExploration>): SavedExploration => ({
   id: 1,
@@ -26,7 +25,7 @@ const saved = (fields: Partial<SavedExploration>): SavedExploration => ({
 });
 
 describe('managing shared explorations (design 2026-11-20)', () => {
-  const remove = jest.fn((id: number) => Promise.resolve({ id }));
+  const remove = vi.fn((id: number) => Promise.resolve({ id }));
 
   it('lists only the shared explorations with owner, kind and last change', () => {
     const wrapper = mount(ManageSavedDialog, {
@@ -79,12 +78,12 @@ describe('managing shared explorations (design 2026-11-20)', () => {
   });
 
   it('shows why a delete failed', async () => {
-    const failing = jest.fn((id: number) => Promise.reject(new Error(`Not allowed ${id}`)));
+    const failing = vi.fn(() => Promise.reject(new Error('Not allowed')));
     const wrapper = mount(ManageSavedDialog, { props: { remove: failing, saved: [saved({ id: 8 })] } });
     await wrapper.find('button.fwde-manage__delete').trigger('click');
     await wrapper.find('button.fwde-manage__confirm-yes').trigger('click');
     await flushPromises();
-    expect(wrapper.find('.fwde-manage__error').text()).toBe('Not allowed 8');
+    expect(wrapper.find('.fwde-manage__error').text()).toBe('Not allowed');
     expect(wrapper.emitted('deleted')).toBeUndefined();
   });
 });

@@ -6,10 +6,9 @@ import { mount } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import SaveDialog from '../src/SaveDialog.vue';
 
-// Matomo 5 runs the specs with Jest; CoreHome is Matomo's UMD global, so the mock is virtual
-jest.mock('CoreHome', () => ({
+vi.mock('CoreHome', () => ({
   translate: (key: string) => key,
-}), { virtual: true });
+}));
 
 const mounted: Array<{ unmount: () => void }> = [];
 
