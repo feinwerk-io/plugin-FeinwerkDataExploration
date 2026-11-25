@@ -24,7 +24,8 @@ export function exportUrl(
     period: parsed.period,
     date: parsed.date,
     segment: parsed.segment || '',
-    definition: JSON.stringify(toDefinition(state)),
+    // with comparison columns the pivot is paused (the comparison wins)
+    definition: JSON.stringify(toDefinition(state, columns.length > 1)),
     readableColumns: 1,
     filter_limit: -1,
     language: Matomo.language,

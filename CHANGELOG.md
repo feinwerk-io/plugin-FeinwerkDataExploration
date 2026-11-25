@@ -1,5 +1,79 @@
 # Changelog
 
+## 6.1.0
+
+- KPI cards: save an exploration as a KPI card and put one number on your dashboard. Choose its metric, what it is
+  compared with (the average of the same weekday in the last four weeks, the same weekday a week before, the day, week
+  or month before, or nothing), a line of the last 7 or 30 days and the change in percent or as a number. Today counts
+  up to the current time, also on the days it is compared with. In e-mails the card is a report with its number.
+- A KPI card names the metric it counts unless its name already does. When saving, a new card takes the metric's
+  name until you type a name of your own.
+- Embedded with Widgetize, KPI cards and saved explorations show no feedback question and no link into Matomo.
+- For the API: getKpiCard returns a card's number, comparison and line; the card's settings are part of the saved
+  state (fwdeKind kpi, fwdeKpiMetric, fwdeKpiCompare, fwdeKpiLine, fwdeKpiChange).
+- Up to three dimensions: a third dimension next to the first two, also in filters, sorting, comparisons, the trend,
+  exports, links, saved explorations and reports. Break down offers the next dimension until three are chosen.
+- Columns (pivot): the top 3, 5 or 10 values of one more dimension become column groups, each with every metric,
+  followed by "Others" (where the rest adds up) and "Total". Weekday shows its seven days. The columns pause while
+  segments or periods are compared. The chart shows one bar per value, or one line per value over a single date, hour
+  or weekday dimension.
+- Saved explorations with three dimensions or with columns (pivot) are reports with up to four levels: each row opens
+  into the next dimension, the pivot's values last.
+- For the API: getExploration takes up to three dimensions and a pivot ({"dimension": id, "limit": 3, 5 or 10}); rows
+  then carry tertiary_label and the pivot columns {metric}__p{n} and {metric}__p_others, and a total row lists the
+  pivot's values.
+- Saved explorations are Matomo reports: as dashboard widgets, in Matomo's scheduled email reports and in Feinwerk
+  Email Reports Pro, and in the API. A private exploration is a report for you only, a shared one for everyone who
+  may use explorations on the website.
+- Show in menu: when saving, choose where an exploration gets its own menu entry (Visitors, Behaviour, Acquisition,
+  Ecommerce, Goals or Explorations). Administrators can change the place of shared explorations. Explorations saved
+  before are not in the menu until a place is chosen.
+- Matomo's menu shows a new, moved or deleted exploration at once. Deleting one says that it also disappears from the
+  menu, dashboards and email reports. KPI cards have no menu place.
+- A report with two dimensions shows the first one and opens each row into the second; under each report a link opens
+  it in the exploration.
+- For the API: getSavedReport returns a saved exploration's table; setSavedExplorationMenu changes its menu place.
+- Up to 10 metrics per exploration.
+- Each goal has its own metrics: conversions, conversion rate and revenue, side by side for as many goals as you
+  choose. The goal selector is gone: links and saved explorations with a goal chosen open with that goal's metrics.
+- On ecommerce websites: orders, order revenue, products sold, average order value, ecommerce conversion rate,
+  abandoned carts and their value.
+- New visit metrics: visits with a conversion, revenue per visit and total time on website.
+- The metric list shows each goal under its own heading and finds a goal's metrics by the goal's name.
+- Copying a saved exploration to another website takes each goal's metrics to the goal of the same name; ecommerce
+  metrics need a website with ecommerce.
+- For the API: getAvailableMetrics returns each metric's unit, aggregation, group and goal. idGoal now narrows only
+  the all-goals metrics (conversions, conversion rate, revenue).
+- Filters in groups: the conditions of a group match all or any of them, and the rows match all or any of the groups,
+  for example (A and B) or C. Up to 10 conditions in up to 5 groups. Links and saved explorations keep their filters.
+- New filter conditions: "does not start with", "does not end with", "matches regular expression", "at least" and
+  "at most".
+- For the API: the filters as filterGroups, documented in full; a filter error names the field and the allowed values.
+- Charts over days, hours or weekdays no longer break off where the table stops at its row limit: the chart takes every
+  row of the period, the table keeps its limit. Where a line has no value (a number filter, or a rate or an average
+  without visits), a short note says so.
+- Wide tables show a shadow on the side where more columns follow, so a number at the edge never looks complete. On
+  phones long values take less room, so the first metric shows next to two short dimensions.
+- Today's trend by the hour now ends at the website's current hour, also in timezones other than UTC.
+- The "Others" row keeps both dimensions side by side.
+- With two dimensions and few metrics, the second dimension sits right next to the first one again, also when the first
+  one has long values such as page URLs.
+- Filters: "Apply" no longer drops a filter that has no value yet. The panel stays open and says what is missing.
+- On phones, a filter's condition and value each take a full row, so the value field keeps its width in every
+  language.
+- "Copy link": where the browser does not allow copying, the link shows in a field to copy by hand.
+- Feinwerk recommendation below the result: "×" now hides the banner for 30 days. After that the next paid plugin
+  shows; the one you closed stays away for 90 days.
+- On Matomo 6, the recommendation of Feinwerk plugins now includes every paid plugin, since all of them have a release
+  for Matomo 6.
+- Feinwerk tips: on a narrow screen the tip line shows its sentence only when it fits whole, otherwise only the logo,
+  the link and "×". The button that hides a tip is larger, and the buttons that hide a tip or a recommendation keep
+  the keyboard focus on the page. Where the Feinwerk Connector installer is offered, the tip on the connector leads
+  super users there.
+- Feinwerk Connector installer: the button shows that Matomo is working, takes no second click and fits on phones. An
+  older connector that does not fit this Matomo is updated instead of activated. If Matomo asks for your password
+  first, the page asks for one more click instead of showing an error. The "Feinwerk Plugins" menu shows its icon.
+
 ## 6.0.0
 
 The first stable version for Matomo 6. Compared with the last beta before the new version numbers (1.0.0-beta.5):

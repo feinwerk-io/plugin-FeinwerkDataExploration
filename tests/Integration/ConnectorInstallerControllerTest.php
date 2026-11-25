@@ -56,6 +56,7 @@ class ConnectorInstallerControllerTest extends IntegrationTestCase
     public function tearDown(): void
     {
         $_GET = $this->get;
+        unset($_GET['retry'], $_GET['nonce']);
         Config::getInstance()->General = $this->general;
         Config::getInstance()->FeinwerkDataExploration = [];
         Config::getInstance()->FeinwerkMarketplaceConnector = [];
@@ -108,6 +109,57 @@ class ConnectorInstallerControllerTest extends IntegrationTestCase
         StaticContainer::getContainer()->set(PasswordVerifier::class, $verifier);
 
         self::assertSame('', (new Controller())->connectorInstallerRun());
+    }
+
+    /**
+     * Regression (Auth SAML, 2026-11-23): right after Matomo's password step the old nonce can fail Matomo's referrer
+     * check. Nothing is installed; the page comes back with a fresh button and a note instead of an error page.
+     */
+    public function test_a_stale_click_brings_the_page_back_with_a_fresh_button(): void
+    {
+        $state = ConnectorInstaller::decide(ConnectorInstaller::environment());
+        if ($state !== ConnectorInstaller::INSTALL && $state !== ConnectorInstaller::ACTIVATE) {
+            self::markTestSkipped('this Matomo offers no one-click install (state ' . $state . ')');
+        }
+        $verifier = $this->createMock(PasswordVerifier::class);
+        $verifier->method('requirePasswordVerifiedRecently')->willReturn(true);
+        StaticContainer::getContainer()->set(PasswordVerifier::class, $verifier);
+        $_GET['nonce'] = 'not-the-nonce';
+
+        $html = (new Controller())->connectorInstallerRun();
+
+        self::assertStringContainsString('fwci__again', $html);
+        self::assertStringContainsString('fwci__run', $html);
+        self::assertStringNotContainsString('alert-danger fwci__error', $html);
+    }
+
+    /** A second failure in a row has a lasting cause (proxy, trusted host, origin): Matomo's reason, no loop. */
+    public function test_a_second_stale_click_in_a_row_shows_matomos_reason(): void
+    {
+        $state = ConnectorInstaller::decide(ConnectorInstaller::environment());
+        if ($state !== ConnectorInstaller::INSTALL && $state !== ConnectorInstaller::ACTIVATE) {
+            self::markTestSkipped('this Matomo offers no one-click install (state ' . $state . ')');
+        }
+        $verifier = $this->createMock(PasswordVerifier::class);
+        $verifier->method('requirePasswordVerifiedRecently')->willReturn(true);
+        StaticContainer::getContainer()->set(PasswordVerifier::class, $verifier);
+        $_GET['nonce'] = 'not-the-nonce';
+        $_GET['retry'] = '1';
+
+        $html = (new Controller())->connectorInstallerRun();
+
+        self::assertStringContainsString('fwci__error', $html);
+        self::assertStringNotContainsString('fwci__again', $html);
+    }
+
+    public function test_the_page_names_its_language(): void
+    {
+        $this->assertOffered();
+
+        $html = (new Controller())->connectorInstaller();
+
+        // preg_match: PHPUnit 8.5 (5.x line) has no assertMatchesRegularExpression
+        self::assertSame(1, preg_match('/<html[^>]* lang="[a-z]{2}/', $html), 'html lang');
     }
 
     private function assertOffered(): void

@@ -76,7 +76,10 @@
       <ManageSavedDialog
         :saved="saved"
         :remove="removeSaved"
+        :place="placeSaved"
+        :menu-sections="menuSections"
         @deleted="$emit('deleted', $event)"
+        @placed="$emit('deleted', $event)"
       />
     </SidePanel>
   </div>
@@ -85,7 +88,9 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import * as CoreHome from 'CoreHome';
-import { deleteSaved, errorText, SavedExploration } from './api';
+import {
+  deleteSaved, errorText, MenuSection, SavedExploration, setSavedMenu,
+} from './api';
 import ManageSavedDialog from './ManageSavedDialog.vue';
 import SidePanel from './SidePanel.vue';
 import {
@@ -104,6 +109,8 @@ export default defineComponent({
     canCopy: { type: Boolean, default: false },
     /** admin access to the website: manage its shared explorations (design 2026-11-20) */
     canManage: { type: Boolean, default: false },
+    /** Matomo's sections a saved exploration can show in as a report (saved reports, 2026-11-24) */
+    menuSections: { type: Array as PropType<MenuSection[]>, default: () => [] },
   },
   emits: ['open', 'deleted'],
   data() {
@@ -131,15 +138,23 @@ export default defineComponent({
         throw new Error(errorText(e));
       });
     },
+    /** the manage dialog's menu place, with Matomo's error text as the message */
+    placeSaved(id: number, menu: string): Promise<unknown> {
+      return setSavedMenu(id, menu).catch((e) => {
+        throw new Error(errorText(e));
+      });
+    },
     translate,
     ownedBy(saved: SavedExploration): string {
       return translate('FeinwerkDataExploration_SavedBy', this.displayName(saved), saved.owner);
     },
-    /** funnels are named as such; tables by their name */
+    /** funnels and KPI cards are named as such; tables by their name */
     displayName(saved: SavedExploration): string {
-      return savedKind(saved) === 'funnel'
-        ? translate('FeinwerkDataExploration_SavedFunnel', saved.name)
-        : saved.name;
+      const kind = savedKind(saved);
+      if (kind === 'funnel') {
+        return translate('FeinwerkDataExploration_SavedFunnel', saved.name);
+      }
+      return kind === 'kpi' ? translate('FeinwerkDataExploration_SavedKpiCard', saved.name) : saved.name;
     },
     onChange(event: Event) {
       const id = (event.target as HTMLSelectElement).value;

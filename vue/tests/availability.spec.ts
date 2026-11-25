@@ -39,9 +39,15 @@ describe('metricReasons', () => {
     expect(reasons.nb_downloads).toBeNull();
   });
 
-  it('greys out further metrics once five are chosen', () => {
-    const reasons = metricReasons(state({
+  it('greys out further metrics once ten are chosen', () => {
+    const five = metricReasons(state({
       fwdeDims: 'browser', fwdeMetrics: 'nb_visits,nb_actions,bounce_rate,avg_time_on_site,revenue',
+    }), CATALOG);
+    expect(five.nb_conversions).toBeNull();
+    const reasons = metricReasons(state({
+      fwdeDims: 'browser',
+      fwdeMetrics: 'nb_visits,nb_actions,bounce_rate,avg_time_on_site,revenue,nb_pageviews,'
+        + 'nb_events,nb_downloads,max_actions,avg_event_value',
     }), CATALOG);
     expect(reasons.nb_conversions).toBe('FeinwerkDataExploration_ReasonMaxMetrics');
     expect(reasons.revenue).toBeNull();

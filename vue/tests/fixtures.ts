@@ -43,4 +43,28 @@ export const CATALOG: Catalog = {
   ],
 };
 
+/** a website with goals 3 ("Newsletter") and 5 ("Q&A: Leads") and e-commerce (more metrics, 2026-11-24) */
+export const GOAL_CATALOG: Catalog = {
+  ...CATALOG,
+  metrics: [
+    ...CATALOG.metrics,
+    { id: 'conversion_rate', scope: 'goal', name: 'Conversion rate', nameInActionScope: null, kind: null },
+    ...[[3, 'Newsletter'], [5, 'Q&A: Leads']].flatMap(([idGoal, goal]) => [
+      ['nb_conversions', 'Conversions'], ['conversion_rate', 'Conversion rate'], ['revenue', 'Revenue'],
+    ].map(([metric, name]) => ({
+      id: `goal_${idGoal}_${metric}`,
+      scope: 'goal' as const,
+      group: 'goals' as const,
+      name: `${goal}: ${name}`,
+      nameInActionScope: null,
+      kind: null,
+      idGoal: idGoal as number,
+    }))),
+    {
+      id: 'goal_ecommerceOrder_revenue', scope: 'goal', group: 'ecommerce', name: 'Order revenue',
+      nameInActionScope: null, kind: null, idGoal: null,
+    },
+  ],
+};
+
 export const LIMITS = { defaultRows: 100, maxRows: 1000 };

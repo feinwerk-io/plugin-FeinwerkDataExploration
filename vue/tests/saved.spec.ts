@@ -4,7 +4,7 @@
  */
 import {
   dialogDefaults, differsFromSaved, findSaved, funnelDiffersFromSaved, groupSaved, linkNamesOnlySaved,
-  savedHashParams, savedKind, stateToSave, STATE_KEYS,
+  savedHashParams, savedKind, stateToSave, STATE_KEYS, withMenu,
 } from '../src/saved';
 import { SavedExploration } from '../src/api';
 import { parseState, toHashParams } from '../src/state';
@@ -120,21 +120,39 @@ describe('findSaved', () => {
 describe('dialogDefaults', () => {
   it('starts with the open exploration\'s name and visibility when the user may change it', () => {
     expect(dialogDefaults(saved(3, 'anna', true), 'Browser', true))
-      .toEqual({ name: 'Exploration 3', shared: true });
+      .toEqual({ name: 'Exploration 3', shared: true, menu: '' });
   });
 
   it('starts a copy of someone else\'s exploration as private', () => {
     expect(dialogDefaults(saved(1, 'bert', true), 'Browser', true))
-      .toEqual({ name: 'Exploration 1', shared: false });
+      .toEqual({ name: 'Exploration 1', shared: false, menu: 'FeinwerkDataExploration_Explorations' });
   });
 
   it('suggests the result title for a new exploration, at most 100 characters', () => {
-    expect(dialogDefaults(null, 'x'.repeat(120), true)).toEqual({ name: 'x'.repeat(100), shared: false });
+    expect(dialogDefaults(null, 'x'.repeat(120), true))
+      .toEqual({ name: 'x'.repeat(100), shared: false, menu: 'FeinwerkDataExploration_Explorations' });
   });
 
   it('starts private for users who may not share (no write access)', () => {
     expect(dialogDefaults(saved(3, 'anna', true), 'Browser', false))
-      .toEqual({ name: 'Exploration 3', shared: false });
+      .toEqual({ name: 'Exploration 3', shared: false, menu: '' });
+  });
+
+  // saved reports (2026-11-24): new saves go into Explorations, an own one keeps its place
+  it('keeps the menu place of an own exploration', () => {
+    expect(dialogDefaults({ ...saved(3, 'anna'), menu: 'Goals_Goals' }, 'Browser', true).menu)
+      .toBe('Goals_Goals');
+  });
+});
+
+describe('menu place in the saved state (saved reports, 2026-11-24)', () => {
+  it('goes into the saved state, never into the link', () => {
+    expect(withMenu({ fwdeDims: 'browser' }, 'Goals_Goals'))
+      .toEqual({ fwdeDims: 'browser', fwdeMenu: 'Goals_Goals' });
+    expect(withMenu({ fwdeDims: 'browser' }, '')).toEqual({ fwdeDims: 'browser' });
+    const placed = { ...saved(3, 'anna'), state: { fwdeDims: 'browser', fwdeMenu: 'Goals_Goals' } };
+    expect(savedHashParams(placed)).not.toHaveProperty('fwdeMenu');
+    expect(STATE_KEYS).not.toContain('fwdeMenu');
   });
 });
 

@@ -5,8 +5,8 @@ without waiting for archiving.
 
 ## Description
 
-**Ask a question, get the table: any dimension, a second dimension and up to five metrics, straight from your raw data,
-without setting up a report.**
+**Ask a question, get the table: up to three dimensions, a dimension as columns and up to ten metrics, straight from
+your raw data, without setting up a report.**
 
 Matomo's reports are archived: they are fast, but you only get the combinations someone has set up in advance.
 Questions like "which browsers do visitors from our newsletter use?" or "which events happen on which page?" need a
@@ -14,13 +14,18 @@ secondary dimension or a quick cross table, often just once.
 
 Feinwerk Data Exploration answers them directly from the raw data of your website:
 
-- **Free-form table:** choose a dimension, an optional secondary dimension and up to five metrics. The table appears
-  at once, one row per combination, sortable by every column.
+- **Free-form table:** choose up to three dimensions and up to ten metrics. The table appears at once, one row per
+  combination, sortable by every column.
+- **Columns (pivot):** the top 3, 5 or 10 values of one more dimension become columns, for example channels by device:
+  each value with every metric, then "Others" (where the rest adds up) and "Total". Weekday shows its seven days. The
+  chart shows one bar per value. While segments or periods are compared, the columns pause.
 - **Many dimensions:** acquisition, location, devices and software, time, pages, events, downloads, site search,
   visitors and your Custom Dimensions.
-- **Visit, goal and action metrics:** visits, unique visitors, actions, bounce rate, average visit duration, actions
-  per visit, maximum actions in one visit, conversions (all goals or one goal), conversion rate, revenue, pageviews,
-  unique pageviews, events, sum and average of event values, downloads, outlinks and site searches.
+- **Visit, goal, ecommerce and action metrics:** visits, unique visitors, actions, bounce rate, average and total time
+  on website, actions per visit, maximum actions in one visit; conversions, conversion rate and revenue of all goals
+  and of each goal on its own, side by side; visits with a conversion and revenue per visit; on ecommerce websites
+  orders, order revenue, products sold, average order value, ecommerce conversion rate, abandoned carts and their
+  value; pageviews, unique pageviews, events, sum and average of event values, downloads, outlinks and site searches.
 - **Compare segments:** click the compare icon next to a saved segment, and the table shows one column per segment
   for every metric, with a total row and each count's share of its column; the bar chart shows one bar per segment.
 - **Compare periods:** choose "Compare to" in the date picker, for example this month against the last one: one
@@ -37,13 +42,24 @@ Feinwerk Data Exploration answers them directly from the raw data of your websit
 - **Save and share:** save an exploration with its segment, for yourself or (with write access) for everyone who may
   use explorations on the website, open it again from the list at the top of the page, and copy it to your other
   websites (Matomo 5.14 or newer). Administrators of a website manage its shared explorations and can delete them.
-- **Filters:** every Matomo segment, plus simple row filters: a dimension contains, does not contain, is, is not,
-  starts with or ends with a text; a metric is greater or less than a number. Rows meet all filters or any of them.
-  The filters are edited in a panel at the side and run once with "Apply"; the left column lists the applied ones.
+- **KPI cards:** save an exploration as a KPI card and put one number on your dashboard: one metric for the
+  dashboard's period, compared with the average of the same weekday in the last four weeks (or the day, week or month
+  before), with a small line of the last 7 or 30 days. Days without data are left out of the average, and today counts
+  up to the current time on every day it is compared with.
+- **Saved explorations as reports:** every saved exploration is also a Matomo report. Add it to a dashboard, send it
+  with Matomo's scheduled email reports or Feinwerk Email Reports Pro, and give it its own menu entry under Visitors,
+  Behaviour, Acquisition, Ecommerce, Goals or Explorations. Reports are calculated from the raw data when they are
+  shown, nothing is archived.
+- **Filters:** every Matomo segment, plus row filters: a dimension contains, does not contain, is, is not, starts
+  with, does not start with, ends with or does not end with a text, or matches a regular expression; a metric is
+  greater than, at least, less than or at most a number. Conditions combine in groups, each group meeting all or any of
+  its conditions and the rows all or any of the groups, for example (A and B) or C: up to 10 conditions in up to 5
+  groups. The filters are edited in a panel at the side and run once with "Apply"; the left column lists the applied
+  ones.
 - **Open from your reports:** "Open in exploration" under the standard reports (channels, referrers, keywords,
   continents, countries, devices, browsers and their versions, page URLs, events, campaigns and more) opens the exploration with that report's dimension, period and segment, and "Explore
-  this row" on a report row opens it on that row's visits, ready to break them down by a second dimension.
-- **A menu on every row:** filter to the row's value, break it down by a second dimension, or show the visits behind
+  this row" on a report row opens it on that row's visits, ready to break them down by another dimension.
+- **A menu on every row:** filter to the row's value, break it down by another dimension, or show the visits behind
   it in Matomo's Visits Log.
 - **Chart, table or both:** bars for every dimension, lines over time for date, hour and weekday (one line per value
   of the secondary dimension); the chart shows one of the chosen metrics. In the table, counts and sums carry a bar.
@@ -100,15 +116,18 @@ have no raw data of their own, so explorations are not offered there.
 
 1. Open **Explorations → Free-form table** in the reporting menu, or click **Open in exploration** under a standard
    report (Matomo 6: in the report's menu).
-2. Choose the dimensions and metrics on the left; the table updates on every change.
+2. Choose up to three dimensions and the metrics on the left, and if you like a dimension under **Columns (pivot)**
+   with the number of its values; the table updates on every change.
 3. Use the period selector and the segment editor of Matomo as usual (at most 31 days).
-4. Add row filters (**Add filter** opens a panel at the side, **Apply** runs them), sort by a column, choose the
+4. Add row filters (**Add filter** opens a panel at the side, **Add group** combines conditions in groups, **Apply**
+   runs them), sort by a column, choose the
    number of rows, and switch between table, chart or both. The menu at the end of each row filters to it, breaks it
    down or shows its visits. The result's title is followed by the period and the segment it covers.
 5. Export the table as CSV or TSV, or copy the link to share the exploration with colleagues who can see the site.
 6. Click **Save** at the top of the result to keep the exploration (a panel opens at the side): for yourself only,
-   or, with write access to the website, for everyone who may use explorations on it. Saved explorations open from the
-   list at the top of the left column.
+   or, with write access to the website, for everyone who may use explorations on it. **Show in menu** chooses where it
+   gets its own menu entry as a report (or "Not in the menu"). Saved explorations open from the list at the top of the
+   left column.
 
 **Comparing:** on **Explorations → Free-form table**, compare a saved segment with the compare icon in the segment
 list, or a period with "Compare to" in the date picker. The table then shows, for each metric, one column for your own
@@ -148,16 +167,17 @@ short line with a tip on another Feinwerk offer, for example Feinwerk Campaigns 
 Matomo's interface, never in exports, API results, email reports or embedded widgets, and never for a Feinwerk plugin
 you already have installed. "×" hides a tip for 30 days in your browser. The tips are part of the plugin: nothing is
 loaded from outside and nothing is sent. Links to feinwerk.io open in a new tab and carry only the campaign
-parameters `mtm_campaign`, `mtm_source` and `mtm_content`; the tip on the Feinwerk Marketplace Connector opens it in
-your Matomo Marketplace (super users) or on plugins.matomo.org (other administrators); where Matomo's Marketplace is
-switched off, super users get no tip on it.
+parameters `mtm_campaign`, `mtm_source` and `mtm_content`; the tip on the Feinwerk Marketplace Connector opens its
+installer under Administration (super users; with `connector_installer = 0` their Matomo Marketplace) or
+plugins.matomo.org (other administrators); where Matomo's Marketplace is switched off, super users get no tip on it.
 
 The same users also see a recommendation for a paid Feinwerk plugin this Matomo does not have yet, below the result of
 **Explorations → Free-form table**: one plugin at a time and a different one first each day; while it shows, the tip
-line under the result gives way to it. "×" hides a recommendation for 30 days and the next one shows. With a connected
-Feinwerk Marketplace Connector 5.5.0 or later the recommendation uses the connector's current list, and for super users
-"Learn more" opens the plugin on its Feinwerk Plugins screen, with price and picture. Everyone else gets the plugin's
-page in the Feinwerk Plugins store in a new tab, and administrators read that their Matomo super user can install it.
+line under the result gives way to it. "×" hides the recommendation for 30 days; after that the next paid plugin shows,
+and the one you closed stays away for 90 days. With a connected Feinwerk Marketplace Connector 5.5.0 or later the
+recommendation uses the connector's current list, and for super users "Learn more" opens the plugin on its Feinwerk
+Plugins screen, with price and picture. Everyone else gets the plugin's page in the Feinwerk Plugins store in a new
+tab, and administrators read that their Matomo super user can install it.
 Without a connected connector the plugin uses its own list of paid Feinwerk plugins (names and one-liners, no prices);
 plugins already present in Matomo's `plugins` folder and plugins without a version for this Matomo are left out.
 
@@ -206,7 +226,10 @@ The same line in the section `[FeinwerkMarketplaceConnector]` hides it for all F
   condition with OR (for example "converted goal 1 OR event category is Video").
 - Copying the link needs a browser that allows access to the clipboard (Matomo over HTTPS).
 - A text filter you type matches the value as Matomo stores it: page URLs keep characters like "ü" percent-encoded
-  ("%C3%BC"), and page titles keep "&" as "&amp;". "Filter to this value" in the row menu always matches.
+  ("%C3%BC"), and page titles keep "&" as "&amp;". "Filter to this value" in the row menu always matches. A regular
+  expression ("matches regular expression") uses the syntax of your database (MySQL or MariaDB); the common one
+  (`.`, `*`, `+`, `?`, `[]`, `^`, `$`, `|`, `()`) works on all of them. On page titles, event names and search keywords
+  it finds & ' " < > also where Matomo stores them escaped (outside of `[...]`).
 
 ## License
 

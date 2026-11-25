@@ -27,6 +27,29 @@ const saved = (fields: Partial<SavedExploration>): SavedExploration => ({
 describe('managing shared explorations (design 2026-11-20)', () => {
   const remove = vi.fn((id: number) => Promise.resolve({ id }));
 
+  // Peter, 2026-11-24 ("B"): admins may change a shared exploration's menu place
+  it('changes the menu place of a shared exploration', async () => {
+    const place = vi.fn(() => Promise.resolve({}));
+    const wrapper = mount(ManageSavedDialog, {
+      props: {
+        remove,
+        place,
+        menuSections: [{ id: 'Goals_Goals', name: 'Goals' }],
+        saved: [
+          saved({ id: 4, name: 'Team view', canPlace: true, menu: null }),
+          saved({ id: 5, name: 'Read only', canPlace: false, menu: 'Goals_Goals' }),
+        ],
+      },
+    });
+    const selects = wrapper.findAll('select.fwde-manage__menu');
+    expect(selects.length).toBe(1);
+    expect(wrapper.find('tr[data-id="5"]').text()).toContain('Goals');
+    await selects[0].setValue('Goals_Goals');
+    await flushPromises();
+    expect(place).toHaveBeenCalledWith(4, 'Goals_Goals');
+    expect(wrapper.emitted('placed')).toEqual([[4]]);
+  });
+
   it('lists only the shared explorations with owner, kind and last change', () => {
     const wrapper = mount(ManageSavedDialog, {
       props: {
@@ -43,6 +66,38 @@ describe('managing shared explorations (design 2026-11-20)', () => {
     expect(rows[1].text()).toContain('carla');
     expect(rows[1].text()).toContain('FeinwerkDataExploration_Funnel');
     expect(rows[0].text()).toContain('2026-11-19');
+  });
+
+  // UI review 2026-11-24 (F3): a KPI card is named as such and has no menu place
+  it('names a KPI card and offers it no menu place', () => {
+    const wrapper = mount(ManageSavedDialog, {
+      props: {
+        remove,
+        place: vi.fn(() => Promise.resolve({})),
+        menuSections: [{ id: 'Goals_Goals', name: 'Goals' }],
+        saved: [saved({ id: 6, name: 'Visits today', kind: 'kpi', canPlace: true, menu: null })],
+      },
+    });
+    const row = wrapper.find('tr[data-id="6"]');
+    expect(row.find('.fwde-manage__kind').text()).toBe('FeinwerkDataExploration_SaveAsKpiCard');
+    expect(row.find('select.fwde-manage__menu').exists()).toBe(false);
+    expect(row.text()).not.toContain('FeinwerkDataExploration_MenuNone');
+  });
+
+  // UI review 2026-11-24 (F4): the confirmation says where else it disappears, except for a funnel
+  it('says that a delete also takes it from the menu, dashboards and email reports', async () => {
+    const wrapper = mount(ManageSavedDialog, {
+      props: {
+        remove,
+        saved: [saved({ id: 7, name: 'Team view' }), saved({ id: 9, name: 'Steps', kind: 'funnel' })],
+      },
+    });
+    await wrapper.find('tr[data-id="7"] button.fwde-manage__delete').trigger('click');
+    expect(wrapper.find('tr[data-id="7"] .fwde-manage__confirm').text())
+      .toContain('FeinwerkDataExploration_DeleteAlsoRemoves');
+    await wrapper.find('tr[data-id="9"] button.fwde-manage__delete').trigger('click');
+    expect(wrapper.find('tr[data-id="9"] .fwde-manage__confirm').text())
+      .not.toContain('FeinwerkDataExploration_DeleteAlsoRemoves');
   });
 
   it('asks before deleting for everyone, then deletes and tells the page', async () => {

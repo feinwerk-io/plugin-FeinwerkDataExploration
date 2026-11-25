@@ -9,6 +9,8 @@
 
 namespace Piwik\Plugins\FeinwerkDataExploration\Widgets;
 
+use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationRules;
+use Piwik\Piwik;
 use Piwik\Common;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\ComparisonList;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\AccessPolicy;
@@ -25,6 +27,27 @@ use Piwik\Widget\WidgetConfig;
  */
 class GetExploration extends Widget
 {
+    private const MENU_NAMES = ['General_Actions' => 'Actions_Behaviour', 'Referrers_Referrers' => 'Referrers_Acquisition'];
+
+    /**
+     * Matomo's sections a saved exploration can show in as a report (saved reports, 2026-11-24), by Matomo's names;
+     * Ecommerce only on an e-commerce website.
+     *
+     * @return list<array{id: string, name: string}>
+     */
+    public static function menuSections(int $idSite): array
+    {
+        $sections = [];
+        foreach (SavedExplorationRules::MENU_SECTIONS as $id) {
+            if ($id === SavedExplorationRules::MENU_ECOMMERCE && !Site::isEcommerceEnabledFor($idSite)) {
+                continue;
+            }
+            // Matomo's menu names two sections differently from their ids (ActionsCategory, ReferrersCategory)
+            $sections[] = ['id' => $id, 'name' => Piwik::translate(self::MENU_NAMES[$id] ?? $id)];
+        }
+        return $sections;
+    }
+
     public static function configure(WidgetConfig $config)
     {
         $config->setCategoryId('FeinwerkDataExploration_Explorations');
@@ -49,6 +72,7 @@ class GetExploration extends Widget
             'defaultRows' => $limits->defaultRows,
             'currencySymbol' => Site::getCurrencySymbolFor($idSite),
             'hourLabels' => self::hourLabels(),
+            'menuSections' => self::menuSections($idSite),
         ]);
     }
 

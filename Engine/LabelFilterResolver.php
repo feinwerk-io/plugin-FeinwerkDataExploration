@@ -10,6 +10,7 @@
 namespace Piwik\Plugins\FeinwerkDataExploration\Engine;
 
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\DimensionDefinition;
+use Piwik\Plugins\FeinwerkDataExploration\Definition\ExplorationDefinition;
 
 /**
  * Turns a text filter on a coded dimension (e.g. browser "chrome", stored as "CH") into the stored values whose label
@@ -34,8 +35,9 @@ final class LabelFilterResolver
     }
 
     /**
-     * @param string $operator a text operator; for notContains and notEquals the positive matches (of contains and
-     *                         equals) are returned, the query builder negates them
+     * @param string $operator a text operator; for notContains, notEquals, notStartsWith and notEndsWith the positive
+     *                         matches (of contains, equals, startsWith, endsWith) are returned, the query builder
+     *                         negates them; matches tests the regular expression on the label
      * @return array{values: list<string>, includeNull: bool}
      */
     public function resolve(DimensionDefinition $dimension, string $operator, string $value, int $idSite): array
@@ -49,7 +51,11 @@ final class LabelFilterResolver
         foreach ($domain as $raw) {
             $raw = $raw === null ? null : (string) $raw;
             $label = $dimension->formatLabel($raw, $idSite);
-            $matches = self::matches(mb_strtolower($label), mb_strtolower($value), $operator);
+            // a regular expression matches the label as shown, case-insensitive by its flags; the pattern is never
+            // lowercased ("\D" would become "\d")
+            $matches = $operator === 'matches'
+                ? preg_match(ExplorationDefinition::pcre($value), $label) === 1
+                : self::matches(mb_strtolower($label), mb_strtolower($value), $operator);
             if (!$matches) {
                 continue;
             }
@@ -71,8 +77,10 @@ final class LabelFilterResolver
             case 'notEquals':
                 return $label === $value;
             case 'startsWith':
+            case 'notStartsWith':
                 return mb_substr($label, 0, mb_strlen($value)) === $value;
             case 'endsWith':
+            case 'notEndsWith':
                 return $value === '' || mb_substr($label, -mb_strlen($value)) === $value;
             default:
                 return mb_strpos($label, $value) !== false;

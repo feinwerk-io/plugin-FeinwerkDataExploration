@@ -4,7 +4,8 @@
 
   The filters in the side panel (UI item 4; Peter, 2026-11-21: "Filter mit Apply ja"): the editor
   works on a draft of the applied filters and their match; Apply (or Enter in a field) hands both
-  over at once, so the exploration runs once; Cancel, Escape and the dimmed page drop the draft.
+  over at once, so the exploration runs once; Cancel, Escape and the dimmed page drop the draft. A
+  filter the user changed but left without a value keeps the panel open and says what is missing.
 -->
 <template>
   <SidePanel
@@ -31,6 +32,7 @@
         :start-with-row="true"
         @change="draft.filters = $event"
         @match="draft.match = $event"
+        @group-match="draft.groupMatch = $event"
       />
     </form>
     <template #footer>
@@ -71,12 +73,19 @@ export default defineComponent({
     return {
       /** a new editor (rows from the applied filters) every time the panel opens */
       session: 0,
-      draft: { filters: [] as RowFilter[], match: 'all' as FilterMatch },
+      draft: {
+        filters: [] as RowFilter[], match: 'all' as FilterMatch, groupMatch: [] as FilterMatch[],
+      },
     };
   },
   computed: {
     draftState(): ExplorationState {
-      return { ...this.state, filters: this.draft.filters, match: this.draft.match };
+      return {
+        ...this.state,
+        filters: this.draft.filters,
+        match: this.draft.match,
+        groupMatch: this.draft.groupMatch,
+      };
     },
   },
   watch: {
@@ -97,15 +106,29 @@ export default defineComponent({
       this.draft = {
         filters: this.state.filters.map((filter) => ({ ...filter })),
         match: this.state.match,
+        groupMatch: this.state.groupMatch.slice(),
       };
       this.session += 1;
     },
     apply() {
-      const editor = this.$refs.editor as { flush?: () => void } | undefined;
+      const editor = this.$refs.editor as {
+        flush?: () => void,
+        checkComplete?: () => boolean,
+      } | undefined;
+      // a filter left half done stays in the panel with what is missing (UI review 2026-11-23)
+      if (editor && editor.checkComplete && !editor.checkComplete()) {
+        return;
+      }
       if (editor && editor.flush) {
         editor.flush();
       }
-      this.$emit('apply', { filters: this.draft.filters, match: this.draft.match });
+      // the switch between the groups matters from two groups on
+      const groupCount = this.draft.groupMatch.length;
+      this.$emit('apply', {
+        filters: this.draft.filters,
+        groupMatch: this.draft.groupMatch,
+        match: groupCount > 1 ? this.draft.match : 'all',
+      });
       this.$emit('update:open', false);
     },
     cancel() {

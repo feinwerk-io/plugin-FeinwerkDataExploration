@@ -31,6 +31,7 @@
             :login="login"
             :can-copy="canCopy"
             :can-manage="canManage"
+            :menu-sections="menuSections"
             @open="openSaved"
             @deleted="loadSavedList()"
           />
@@ -50,21 +51,25 @@
             :state="state"
             @change="update({ dimensions: $event })"
           />
+          <PivotPicker
+            :catalog="catalog"
+            :state="state"
+            :comparing="comparing"
+            @change="update($event)"
+          />
         </section>
         <section class="fwde-section">
           <h3 class="fwde-section__title">
             {{ translate('FeinwerkDataExploration_Metrics') }}
             <span class="fwde-section__count">
-              {{ translate('FeinwerkDataExploration_MetricsCount', state.metrics.length, 5) }}
+              {{ metricsCount }}
             </span>
           </h3>
           <MetricPicker
             :catalog="catalog"
             :state="state"
-            :goals="goals"
             :action-scope="actionScope"
             @change="update({ metrics: $event })"
-            @goal="update({ idGoal: $event === '' ? null : Number($event) })"
           />
         </section>
         <section class="fwde-section">
@@ -76,12 +81,8 @@
             <li
               v-for="(line, i) in filterLines"
               :key="i"
-              class="fwde-filtersummary__item"
-            >{{ line }}</li>
-            <li
-              v-if="state.match === 'any' && filterLines.length > 1"
-              class="fwde-filtersummary__item fwde-filtersummary__match"
-            >{{ translate('FeinwerkDataExploration_FilterMatchAny') }}</li>
+              :class="['fwde-filtersummary__item', { 'fwde-filtersummary__match': line.join }]"
+            >{{ line.text }}</li>
           </ul>
           <button
             type="button"
@@ -134,6 +135,8 @@
               :can-share="canShare"
               :busy="saveBusy"
               :error="saveError"
+              :menu-sections="menuSections"
+              :metrics="saveMetrics"
               @open="saveError = ''"
               @save="saveExploration"
               @delete="deleteCurrent"
@@ -247,7 +250,8 @@
             </template>
             <ResultChart
               v-if="!error && ownRows && ownRows.length && view !== 'table'"
-              :rows="ownRows"
+              :rows="fullRows && fullRowsKey === lastDefinition ? fullRows : ownRows"
+              :row-limit="fullRows && fullRowsKey === lastDefinition ? maxRows : 0"
               :state="state"
               :catalog="catalog"
               :metric="chartMetric"
@@ -264,6 +268,7 @@
               :donut-reason="donutReason"
               :others-value="donutOthers"
               :others-note="donutOthersNote"
+              :pivot-values="pivotValues"
               :class="{ 'fwde-main__stale': loading }"
               @metric="update({ chartMetric: $event })"
               @chart-type="update({ chartType: $event })"
@@ -284,8 +289,22 @@
               @row-breakdown="breakDownRow"
               @row-visits="showRowVisits"
             />
+            <PivotTable
+              v-if="pivoting && !error && rows && ownRows && ownRows.length && view !== 'chart'"
+              :rows="rows"
+              :state="state"
+              :catalog="catalog"
+              :action-scope="actionScope"
+              :currency-symbol="currencySymbol"
+              :visits-log-enabled="visitsLogEnabled"
+              :class="{ 'fwde-main__stale': loading }"
+              @sort="sortBy"
+              @row-filter="filterToRow"
+              @row-breakdown="breakDownRow"
+              @row-visits="showRowVisits"
+            />
             <ResultTable
-              v-if="!comparing && !error && rows && rows.length && view !== 'chart'"
+              v-if="!comparing && !pivoting && !error && rows && rows.length && view !== 'chart'"
               :rows="rows"
               :state="state"
               :catalog="catalog"
@@ -340,11 +359,14 @@ import {
 import DimensionPicker from './DimensionPicker.vue';
 import MetricPicker from './MetricPicker.vue';
 import FilterPanel from './FilterPanel.vue';
-import { filterSummary } from './filterSummary';
+import { filterSummaryLines, SummaryLine } from './filterSummary';
 import { viewChips } from './viewChips';
 import { emptyState } from './emptyState';
 import ResultTable from './ResultTable.vue';
 import CompareTable from './CompareTable.vue';
+import PivotTable from './PivotTable.vue';
+import PivotPicker from './PivotPicker.vue';
+import { parsePivotResult, PivotValue } from './pivot';
 import {
   comparisonColumns, isComparing, mergeColumn, remainingColumns, requestColumns,
   withoutComparisonColumns,
@@ -359,19 +381,20 @@ import PremiumBanner from './PremiumBanner.vue';
 import { PremiumProps } from './premium';
 import { FeedbackSettings } from './feedback';
 import {
-  differsFromSaved, findSaved, linkNamesOnlySaved, savedHashParams, savedKind, stateToSave,
-  STATE_KEYS,
+  CardSettings, differsFromSaved, findSaved, linkNamesOnlySaved, savedHashParams, savedKind,
+  STATE_KEYS, stateToSave, withCard, withMenu,
 } from './saved';
 import ResultChart from './ResultChart.vue';
 import {
   Catalog, ChartType, ChartView, ComparisonColumn, ExplorationState, OthersState,
 } from './types';
 import {
-  MAX_DIMENSIONS, NUMBER_OPERATORS, parseState, toDefinition, toHashParams,
+  MAX_DIMENSIONS, MAX_METRICS, NUMBER_OPERATORS, parseState, STATE_HASH_KEYS, toDefinition,
+  toHashParams,
 } from './state';
 import {
   canChart, chartMetricFor, compareChartHint, donutBlocker, donutNeedsOthers, effectiveChartType,
-  effectiveView, othersAnswered, resultTitle,
+  effectiveView, needsFullTimeRows, othersAnswered, resultTitle,
 } from './chart';
 import {
   canTrend, mergeTrendLines, needsOwnLine, trendColumns, trendIsCurrent, withOwnLine,
@@ -381,17 +404,16 @@ import { periodDays as daysOfPeriod } from './period';
 import { createRequestGuard } from './requestGuard';
 import { createRunQueue } from './runQueue';
 import {
-  addSaved, deleteSaved, errorText, Goal, loadCatalog, loadGoals, loadPeriodVisits, loadSaved,
-  loadSuggestedPeriod, PeriodVisits, ResultRow, runComparison, runExploration, runOthers, runTrend,
+  addSaved, deleteSaved, errorText, loadCatalog, loadPeriodVisits, loadSaved,
+  loadSuggestedPeriod, MenuSection, PeriodVisits, ResultRow, runComparison, runExploration,
+  runOthers, runTrend,
   SavedExploration, SuggestedPeriod, TrendRow, updateSaved,
 } from './api';
 
-const HASH_KEYS = [
-  'fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder', 'fwdeLimit', 'fwdeFilters',
-  'fwdeView', 'fwdeChart', 'fwdeChartType', 'fwdeMatch',
+const HASH_KEYS = STATE_HASH_KEYS.concat([
   // Matomo's comparison of segments and periods (comparison design)
   'compareSegments', 'comparePeriods', 'compareDates',
-];
+]);
 
 /** Globals of Matomo's Live plugin (segmented visits log). */
 interface WindowWithLive {
@@ -414,7 +436,6 @@ interface Data {
   saveBusy: boolean;
   saveError: string;
   catalog: Catalog|null;
-  goals: Goal[];
   state: ExplorationState|null;
   rows: ResultRow[]|null;
   loading: boolean;
@@ -453,6 +474,14 @@ interface Data {
   trendKey: string;
   trendSequence: number;
   trendAbort: AbortController|null;
+  /**
+   * every row of an exploration with a time dimension, for the chart's lines when the table is cut
+   * at its row limit (Peter, 2026-11-24); null until loaded
+   */
+  fullRows: ResultRow[]|null;
+  /** the definition fullRows belong to ('' none) */
+  fullRowsKey: string;
+  fullRowsAbort: AbortController|null;
 }
 
 export default defineComponent({
@@ -464,6 +493,8 @@ export default defineComponent({
     MetricPicker,
     FilterPanel,
     ResultTable,
+    PivotTable,
+    PivotPicker,
     CompareTable,
     ResultChart,
     ExplorationToolbar,
@@ -482,6 +513,8 @@ export default defineComponent({
     canCopy: { type: Boolean, default: false },
     /** admin access to the website: manage its shared explorations */
     canManage: { type: Boolean, default: false },
+    /** Matomo's sections a saved exploration can show in as a report (saved reports, 2026-11-24) */
+    menuSections: { type: Array as PropType<MenuSection[]>, default: () => [] },
     promo: {
       type: Object as PropType<PromoVariables|null>,
       default: null,
@@ -512,7 +545,6 @@ export default defineComponent({
       saveBusy: false,
       saveError: '',
       catalog: null,
-      goals: [],
       state: null,
       rows: null,
       loading: false,
@@ -539,13 +571,15 @@ export default defineComponent({
       trendKey: '',
       trendSequence: 0,
       trendAbort: null,
+      fullRows: null,
+      fullRowsKey: '',
+      fullRowsAbort: null,
     };
   },
   created() {
     this.loadSavedList(true);
-    Promise.all([loadCatalog(), loadGoals()]).then(([catalog, goals]) => {
+    loadCatalog().then((catalog) => {
       this.catalog = catalog;
-      this.goals = goals;
       this.readState();
     }).catch((e) => {
       this.loadError = errorText(e);
@@ -569,6 +603,11 @@ export default defineComponent({
     }
   },
   computed: {
+    /** "n of 10" (more metrics, 2026-11-24) */
+    metricsCount(): string {
+      const chosen = this.state ? this.state.metrics.length : 0;
+      return translate('FeinwerkDataExploration_MetricsCount', String(chosen), String(MAX_METRICS));
+    },
     /** the table was cut: the row limit is reached or a number filter removed rows */
     tableCut(): boolean {
       if (!this.state || !this.rows) {
@@ -593,6 +632,28 @@ export default defineComponent({
     },
     comparing(): boolean {
       return isComparing(this.comparison.columns);
+    },
+    /** a pivot applies (rows and pivot, 2026-11-24): chosen and Matomo does not compare */
+    pivoting(): boolean {
+      return !!this.state && !!this.state.pivot && !this.comparing;
+    },
+    /** the exploration's metrics with the names the table shows: a KPI card picks one of them */
+    saveMetrics(): { id: string, name: string }[] {
+      const { catalog, state } = this;
+      if (!catalog || !state) {
+        return [];
+      }
+      return state.metrics.map((id) => {
+        const metric = catalog.metrics.find((m) => m.id === id);
+        const name = metric && this.actionScope && metric.nameInActionScope
+          ? metric.nameInActionScope
+          : metric?.name || id;
+        return { id, name };
+      });
+    },
+    /** the pivot's values of the result, for the chart */
+    pivotValues(): PivotValue[] {
+      return this.pivoting && this.rows ? parsePivotResult(this.rows).values : [];
     },
     compareLimitText(): string {
       return translate('FeinwerkDataExploration_CompareLimit', String(this.maxCompareColumns));
@@ -621,12 +682,12 @@ export default defineComponent({
         translate('General_Unknown'),
       );
     },
-    /** the applied filters, one line each, for the left column (UI item 4) */
-    filterLines(): string[] {
+    /** the applied filters for the left column (UI item 4; groups 2026-11-23) */
+    filterLines(): SummaryLine[] {
       if (!this.state || !this.catalog) {
         return [];
       }
-      return filterSummary(this.state, this.catalog, this.actionScope, translate);
+      return filterSummaryLines(this.state, this.catalog, this.actionScope, translate);
     },
     view(): ChartView {
       const rowCount = this.ownRows ? this.ownRows.length : 0;
@@ -637,7 +698,12 @@ export default defineComponent({
     },
     chartType(): ChartType {
       return this.state
-        ? effectiveChartType(this.state, this.ownRows ? this.ownRows.length : 0, this.donutReason)
+        ? effectiveChartType(
+          this.state,
+          this.ownRows ? this.ownRows.length : 0,
+          this.donutReason,
+          this.pivoting,
+        )
         : 'bar';
     },
     /**
@@ -697,6 +763,16 @@ export default defineComponent({
     trendRequestKey(): string {
       return this.showsTrend && !this.loading ? this.lastDefinition : '';
     },
+    /** the definition whose every row the chart's time lines need ('' none) */
+    fullRowsRequestKey(): string {
+      if (!this.state || this.loading || this.error || !this.ownRows || this.view === 'table') {
+        return '';
+      }
+      const { length } = this.ownRows;
+      return needsFullTimeRows(this.state, length, this.maxRows, this.comparing, this.pivoting)
+        ? this.lastDefinition
+        : '';
+    },
     chartMetric(): string {
       return this.state ? chartMetricFor(this.state) : '';
     },
@@ -726,7 +802,8 @@ export default defineComponent({
       return this.catalog && this.state ? resultTitle(this.state, this.catalog) : '';
     },
     currentSaved(): SavedExploration|null {
-      return findSaved(this.saved, String(MatomoUrl.parsed.value.fwdeSaved || ''), 'table');
+      // a KPI card opens as its exploration on this page (2026-11-24)
+      return findSaved(this.saved, String(MatomoUrl.parsed.value.fwdeSaved || ''), ['table', 'kpi']);
     },
     /** The page shows another setup than the open saved exploration (changed, or an older link). */
     savedChanged(): boolean {
@@ -774,6 +851,11 @@ export default defineComponent({
         this.loadTrend(key);
       }
     },
+    fullRowsRequestKey(key: string) {
+      if (key !== '' && key !== this.fullRowsKey) {
+        this.loadFullRows(key);
+      }
+    },
   },
   methods: {
     translate,
@@ -786,11 +868,11 @@ export default defineComponent({
       this.state = state;
       // "Explore this row" from a report: open the second-dimension picker once
       if (MatomoUrl.parsed.value.fwdeBreakdown === '1') {
-        this.openSecondDimension();
+        this.openNextDimension();
         MatomoUrl.updateHash({ ...MatomoUrl.hashParsed.value, fwdeBreakdown: '' });
       }
       const definition = JSON.stringify([
-        toDefinition(state),
+        toDefinition(state, this.comparing),
         this.comparing ? this.comparison.columns : [],
       ]);
       if (definition !== this.lastDefinition) {
@@ -800,6 +882,12 @@ export default defineComponent({
         if (this.trendAbort) {
           this.trendAbort.abort();
         }
+        // so are the chart's full rows
+        if (this.fullRowsAbort) {
+          this.fullRowsAbort.abort();
+        }
+        this.fullRows = null;
+        this.fullRowsKey = '';
         // a short pause, so a few quick changes start one request; the table is dimmed meanwhile
         window.clearTimeout(this.runTimer);
         if (first) {
@@ -863,19 +951,25 @@ export default defineComponent({
       });
       MatomoUrl.updateHash({ ...hash, fwdeSaved: '' });
     },
-    saveExploration(event: { name: string, shared: boolean, asNew: boolean }) {
+    saveExploration(event: {
+      name: string, shared: boolean, asNew: boolean, menu: string, card?: CardSettings,
+    }) {
       if (!this.state) {
         return;
       }
+      const explored = stateToSave(toHashParams(this.state));
       const fields = {
         name: event.name,
-        state: stateToSave(toHashParams(this.state)),
+        // the menu place goes into the saved state, never into the link (saved reports); a KPI card
+        // keeps its settings instead and has no menu place (2026-11-24)
+        state: event.card ? withCard(explored, event.card) : withMenu(explored, event.menu),
         segment: String(MatomoUrl.parsed.value.segment || ''),
         shared: event.shared,
       };
       const current = this.currentSaved;
-      // a saved funnel is never overwritten by a table (its page saves it)
-      const request = current && current.canEdit && !event.asNew && savedKind(current) === 'table'
+      // a saved funnel is never overwritten by a table, a table never by a card (and back)
+      const request = current && current.canEdit && !event.asNew
+        && savedKind(current) === (event.card ? 'kpi' : 'table')
         ? updateSaved(current.id, fields).then(() => current.id)
         : addSaved(fields).then((result) => Number(result.id));
       this.saveBusy = true;
@@ -914,13 +1008,15 @@ export default defineComponent({
     },
     breakDownRow(row: ResultRow) {
       this.filterToRow(row);
-      this.openSecondDimension();
+      this.openNextDimension();
     },
-    openSecondDimension() {
+    /** the dimension picker's next empty slot ("break down", "Explore this row") */
+    openNextDimension() {
       this.$nextTick(() => {
         const picker = this.$refs.dimensionPicker as PickerRef|undefined;
         if (picker) {
-          picker.openSlot = 1;
+          const chosen = this.state ? this.state.dimensions.length : 1;
+          picker.openSlot = Math.min(MAX_DIMENSIONS - 1, chosen);
           if (picker.$el) {
             picker.$el.scrollIntoView({ block: 'nearest' });
           }
@@ -1049,6 +1145,32 @@ export default defineComponent({
       }).finally(() => {
         if (latest()) {
           this.trendLoading = false;
+        }
+      });
+    },
+    /**
+     * Every row of the exploration (the largest row limit) for the chart's time lines: the table
+     * keeps its limit. On failure the chart stays with the table's rows and its hint.
+     */
+    loadFullRows(key: string) {
+      if (!this.state) {
+        return;
+      }
+      if (this.fullRowsAbort) {
+        this.fullRowsAbort.abort();
+      }
+      const abortController = new AbortController();
+      this.fullRowsAbort = abortController;
+      this.fullRowsKey = key;
+      this.fullRows = null;
+      runExploration({ ...this.state, limit: this.maxRows }, abortController).then((rows) => {
+        if (!this.unmounted && !abortController.signal.aborted && this.lastDefinition === key) {
+          this.fullRows = rows;
+        }
+      }).catch(() => {
+        if (this.lastDefinition === key) {
+          // the same setup may be asked again later
+          this.fullRowsKey = '';
         }
       });
     },

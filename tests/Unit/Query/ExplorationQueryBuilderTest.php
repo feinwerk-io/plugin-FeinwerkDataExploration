@@ -169,12 +169,78 @@ class ExplorationQueryBuilderTest extends TestCase
         $this->assertStringContainsString('ROUND(COALESCE(SUM(fwde_c.fwde_revenue), 0), 2) AS revenue', $query['sql']);
     }
 
-    public function testGoalMetricWithIdGoalBindsGoal(): void
+    /** since more metrics (2026-11-24) idGoal narrows the all-goals columns by a conditional sum, not the subquery */
+    public function testGoalMetricWithIdGoalNarrowsTheAllGoalsColumns(): void
     {
         $query = $this->build('{"dimensions": ["browser"], "metrics": ["nb_conversions"], "idGoal": 7}');
 
-        $this->assertStringContainsString('AND log_conversion.idgoal >= 0 AND log_conversion.idgoal = ? GROUP BY', $query['sql']);
-        $this->assertSame(7, end($query['bind']));
+        $this->assertStringContainsString('SUM(CASE WHEN log_conversion.idgoal = 7 THEN 1 ELSE 0 END) AS fwde_conversions', $query['sql']);
+        $this->assertStringContainsString('AND log_conversion.idgoal >= 0 GROUP BY', $query['sql']);
+        $this->assertSame([self::START, self::END, 1, 1, self::START, self::END], $query['bind']);
+    }
+
+    public function testPerGoalColumnsAreConditionalSums(): void
+    {
+        $query = $this->build('{"dimensions": ["browser"], "metrics": ["goal_3_nb_conversions", "goal_3_conversion_rate", "goal_5_revenue"]}');
+        $revenue = 'CASE WHEN ABS(log_conversion.revenue) > 1000000000000 THEN 0 ELSE log_conversion.revenue END';
+
+        $this->assertStringContainsString('SUM(CASE WHEN log_conversion.idgoal = 3 THEN 1 ELSE 0 END) AS fwde_conv_g3', $query['sql']);
+        $this->assertStringContainsString('SUM(CASE WHEN log_conversion.idgoal = 5 THEN ' . $revenue . ' ELSE 0 END) AS fwde_rev_g5', $query['sql']);
+        $this->assertStringContainsString('COALESCE(SUM(fwde_c.fwde_conv_g3), 0) AS goal_3_nb_conversions', $query['sql']);
+        $this->assertStringContainsString('ROUND(SUM(CASE WHEN fwde_c.fwde_conv_g3 > 0 THEN 1 ELSE 0 END) / COUNT(*), 4) AS goal_3_conversion_rate', $query['sql']);
+        $this->assertStringContainsString('ROUND(COALESCE(SUM(fwde_c.fwde_rev_g5), 0), 2) AS goal_5_revenue', $query['sql']);
+        $this->assertStringContainsString('AND log_conversion.idgoal >= 0 GROUP BY', $query['sql']);
+        $this->assertSame([self::START, self::END, 1, 1, self::START, self::END], $query['bind']);
+    }
+
+    /** review focus 4: a definition mixing idGoal with per-goal and visit metrics never gives silent zeros */
+    public function testIdGoalNarrowsOnlyTheAllGoalsMetrics(): void
+    {
+        $sql = $this->build('{"dimensions": ["browser"], "metrics": ["nb_conversions", "goal_5_nb_conversions", "nb_visits_converted"], "idGoal": 3}')['sql'];
+
+        $this->assertStringContainsString('SUM(CASE WHEN log_conversion.idgoal = 3 THEN 1 ELSE 0 END) AS fwde_conversions', $sql);
+        $this->assertStringContainsString('SUM(CASE WHEN log_conversion.idgoal = 5 THEN 1 ELSE 0 END) AS fwde_conv_g5', $sql);
+        $this->assertStringContainsString('COUNT(*) AS fwde_conv_any', $sql);
+        $this->assertStringContainsString('AND log_conversion.idgoal >= 0 GROUP BY', $sql);
+    }
+
+    public function testAbandonedCartsWidenTheIdgoalConditionOnlyWhenAsked(): void
+    {
+        $sql = $this->build('{"dimensions": ["browser"], "metrics": ["nb_conversions", "goal_ecommerceAbandonedCart_nb_conversions",'
+            . ' "goal_ecommerceAbandonedCart_revenue"]}')['sql'];
+
+        $this->assertStringContainsString('AND log_conversion.idgoal >= -1 GROUP BY', $sql);
+        $this->assertStringContainsString('SUM(CASE WHEN log_conversion.idgoal >= 0 THEN 1 ELSE 0 END) AS fwde_conversions', $sql);
+        $this->assertStringContainsString('SUM(CASE WHEN log_conversion.idgoal = -1 THEN 1 ELSE 0 END) AS fwde_carts', $sql);
+        $this->assertStringContainsString('COALESCE(SUM(fwde_c.fwde_carts), 0) AS goal_ecommerceAbandonedCart_nb_conversions', $sql);
+        $this->assertStringContainsString('ROUND(COALESCE(SUM(fwde_c.fwde_cart_rev), 0), 2) AS goal_ecommerceAbandonedCart_revenue', $sql);
+
+        $this->assertStringContainsString('AND log_conversion.idgoal >= 0 GROUP BY',
+            $this->build('{"dimensions": ["browser"], "metrics": ["goal_ecommerceOrder_nb_conversions"]}')['sql']);
+    }
+
+    public function testEcommerceAndVisitMetricSql(): void
+    {
+        $sql = $this->build('{"dimensions": ["browser"], "metrics": ["goal_ecommerceOrder_nb_conversions", "goal_ecommerceOrder_revenue",'
+            . ' "goal_ecommerceOrder_items", "goal_ecommerceOrder_avg_order_revenue", "goal_ecommerceOrder_conversion_rate",'
+            . ' "nb_visits_converted", "revenue_per_visit", "sum_visit_length"]}')['sql'];
+
+        $this->assertStringContainsString('SUM(CASE WHEN log_conversion.idgoal = 0 THEN log_conversion.items ELSE 0 END) AS fwde_items', $sql);
+        $this->assertStringContainsString('COALESCE(SUM(fwde_c.fwde_orders), 0) AS goal_ecommerceOrder_nb_conversions', $sql);
+        $this->assertStringContainsString('ROUND(COALESCE(SUM(fwde_c.fwde_order_rev), 0), 2) AS goal_ecommerceOrder_revenue', $sql);
+        $this->assertStringContainsString('COALESCE(SUM(fwde_c.fwde_items), 0) AS goal_ecommerceOrder_items', $sql);
+        $this->assertStringContainsString('ROUND(COALESCE(SUM(fwde_c.fwde_order_rev) / NULLIF(SUM(fwde_c.fwde_orders), 0), 0), 2)'
+            . ' AS goal_ecommerceOrder_avg_order_revenue', $sql);
+        $this->assertStringContainsString('ROUND(SUM(CASE WHEN fwde_c.fwde_orders > 0 THEN 1 ELSE 0 END) / COUNT(*), 4)'
+            . ' AS goal_ecommerceOrder_conversion_rate', $sql);
+        $this->assertStringContainsString('SUM(CASE WHEN fwde_c.fwde_conv_any > 0 THEN 1 ELSE 0 END) AS nb_visits_converted', $sql);
+        $this->assertStringContainsString('ROUND(COALESCE(SUM(fwde_c.fwde_rev_any), 0) / COUNT(*), 2) AS revenue_per_visit', $sql);
+        $this->assertStringContainsString('SUM(fwde_a.fwde_time) AS sum_visit_length', $sql);
+        $this->assertStringContainsString('log_visit.visit_total_time AS fwde_time', end($this->stageACalls)[0]);
+
+        // next to an action dimension: the time of the visits behind the row
+        $this->assertStringContainsString('SUM(fwde_v.visit_total_time) AS sum_visit_length',
+            $this->build('{"dimensions": ["pageUrl"], "metrics": ["sum_visit_length"]}')['sql']);
     }
 
     public function testBindOrderStageAThenConversions(): void
@@ -182,6 +248,105 @@ class ExplorationQueryBuilderTest extends TestCase
         $query = $this->build('{"dimensions": ["browser"], "metrics": ["nb_conversions"]}');
 
         $this->assertSame([self::START, self::END, 1, 1, self::START, self::END], $query['bind']);
+    }
+
+    /**
+     * Saved reports (2026-11-24): the first level of a two-dimension report, each first value's totals over what the text
+     * filters let through (a filter on the second dimension too), grouped by the first key only, no number filters,
+     * no sort, no limit.
+     */
+    /** rows and pivot (2026-11-24): a deeper level of a report groups by its keys, the third one's filter still applies */
+    public function testLevelGroupsByItsKeys(): void
+    {
+        [$definition, $dimensionDefinitions, $context, $builder] = $this->parts('{"dimensions": ["pageUrl", "browser", "deviceType"],'
+            . ' "metrics": ["nb_visits"], "filters": [{"target": "tertiary_label", "operator": "equals", "value": "desktop"}]}');
+        $query = $builder->buildLevel($definition, $dimensionDefinitions, 1, $context, [], [['/a', 'Firefox'], [null, 'Chrome']]);
+
+        [$select, , $where, , $groupBy] = end($this->stageACalls);
+        $this->assertStringContainsString('AS fwde_k2', $select);
+        $this->assertStringNotContainsString('AS fwde_k3', $select);
+        $this->assertSame('fwde_k1, fwde_k2, log_link_visit_action.idvisit', $groupBy);
+        $this->assertStringContainsString('config_device_type', $where, 'the third dimension\'s filter still applies');
+        $this->assertStringContainsString('CASE WHEN (fwde_a.fwde_k1 <=> ? AND fwde_a.fwde_k2 <=> ?) THEN 0 WHEN (fwde_a.fwde_k1 <=> ? AND fwde_a.fwde_k2 <=> ?) THEN 1 END AS fwde_row', $query['sql']);
+    }
+
+    public function testFirstLevelGroupsByTheFirstKeyOnly(): void
+    {
+        [$definition, $dimensionDefinitions, $context, $builder] = $this->parts('{"dimensions": ["pageUrl", "browser"],'
+            . ' "metrics": ["nb_visits", "nb_pageviews"], "limit": 10, "filters": [{"target": "secondary_label", "operator":'
+            . ' "contains", "value": "fire"}, {"target": "nb_visits", "operator": "gt", "value": 5}]}');
+        $query = $builder->buildLevel($definition, $dimensionDefinitions, 1, $context, [], [['/a'], [null]]);
+
+        [$select, , $where, , $groupBy] = end($this->stageACalls);
+        $this->assertStringContainsString('AS fwde_k1', $select);
+        $this->assertStringNotContainsString('AS fwde_k2', $select);
+        $this->assertSame('fwde_k1, log_link_visit_action.idvisit', $groupBy);
+        $this->assertStringContainsString('LIKE', $where, 'the second dimension\'s text filter still applies');
+        $this->assertStringContainsString('CASE WHEN (fwde_a.fwde_k1 <=> ?) THEN 0 WHEN (fwde_a.fwde_k1 <=> ?) THEN 1 END AS fwde_row', $query['sql']);
+        $this->assertStringContainsString('WHERE (fwde_a.fwde_k1 IN (?) OR fwde_a.fwde_k1 IS NULL) GROUP BY fwde_row HAVING fwde_row IS NOT NULL', $query['sql']);
+        $this->assertStringNotContainsString('nb_visits > ?', $query['sql']);
+        $this->assertStringNotContainsString('LIMIT', $query['sql']);
+    }
+
+    /** rows and pivot (2026-11-24): a third key in stage A, its filter and its sort */
+    public function testThreeKeysWithTheirFilterAndSort(): void
+    {
+        $query = $this->build('{"dimensions": ["browser", "deviceType", "pageTitle"], "metrics": ["nb_visits"], "sort": "tertiary_label",'
+            . ' "sortOrder": "asc", "filters": [{"target": "tertiary_label", "operator": "contains", "value": "shop"}]}');
+        [$select, , $where, , $groupBy] = end($this->stageACalls);
+
+        $this->assertStringContainsString('AS fwde_k3', $select);
+        $this->assertSame('fwde_k1, fwde_k2, fwde_k3, log_link_visit_action.idvisit', $groupBy);
+        $this->assertStringContainsString('LIKE', $where);
+        $this->assertStringContainsString(' GROUP BY fwde_a.fwde_k1, fwde_a.fwde_k2, fwde_a.fwde_k3', $query['sql']);
+        $this->assertStringContainsString(' ORDER BY fwde_k3 ASC, fwde_k1 ASC, fwde_k2 ASC LIMIT 100', $query['sql']);
+    }
+
+    /** the pivot values: grouped by the pivot key alone, ordered by the first metric, cut at the limit */
+    public function testPivotValues(): void
+    {
+        [$definition, $dimensions, $context, $builder] = $this->parts('{"dimensions": ["browser"], "metrics": ["nb_visits", "bounce_rate"],'
+            . ' "pivot": {"dimension": "deviceType", "limit": 3}}');
+        $pivot = $this->dimensions()->get(1, 'deviceType');
+        $query = $builder->buildPivotValues($definition, $dimensions, $pivot, 1, $context, [], 3);
+        [$select, , , , $groupBy] = end($this->stageACalls);
+
+        $this->assertStringContainsString('AS fwde_k2', $select, 'the pivot key follows the row keys');
+        $this->assertStringNotContainsString('AS fwde_k1', $select);
+        $this->assertStringContainsString(' GROUP BY fwde_a.fwde_k2 ORDER BY nb_visits DESC, fwde_k2 ASC LIMIT 3', $query['sql']);
+        $this->assertStringContainsString('AS bounce_rate', $query['sql']);
+        // Weekday: every value in its own order
+        $all = $builder->buildPivotValues($definition, $dimensions, $pivot, 1, $context, [], null);
+        $this->assertStringEndsWith(' GROUP BY fwde_a.fwde_k2 ORDER BY fwde_k2 ASC', $all['sql']);
+        // MySQL before 8.0 (GroupingQuirk): the outer query sorts the grouped values
+        $quirk = $builder->buildPivotValues($definition, $dimensions, $pivot, 1, $context, [], 3, true);
+        $this->assertStringStartsWith('SELECT * FROM (SELECT ', $quirk['sql']);
+        $this->assertStringEndsWith(' GROUP BY fwde_a.fwde_k2) AS fwde_g ORDER BY nb_visits DESC, fwde_k2 ASC LIMIT 3', $quirk['sql']);
+    }
+
+    /** the cells of the shown rows by pivot value, and the Others group of the rest */
+    public function testPivotCellsAndOthers(): void
+    {
+        [$definition, $dimensions, $context, $builder] = $this->parts('{"dimensions": ["browser"], "metrics": ["nb_visits"],'
+            . ' "pivot": {"dimension": "deviceType"}}');
+        $pivot = $this->dimensions()->get(1, 'deviceType');
+        $cells = $builder->buildPivotCells($definition, $dimensions, $pivot, 1, $context, [], [['Firefox'], ['Chrome']], ['smartphone', 'desktop'], false);
+
+        $this->assertStringContainsString('CASE WHEN (fwde_a.fwde_k1 <=> ?) THEN 0 WHEN (fwde_a.fwde_k1 <=> ?) THEN 1 END AS fwde_row', $cells['sql']);
+        $this->assertStringContainsString(', CASE WHEN fwde_a.fwde_k2 <=> ? THEN 0 WHEN fwde_a.fwde_k2 <=> ? THEN 1 END AS fwde_p', $cells['sql']);
+        $this->assertStringContainsString('(fwde_a.fwde_k2 IN (?, ?))', $cells['sql']);
+        $this->assertStringContainsString('GROUP BY fwde_row, fwde_p HAVING fwde_row IS NOT NULL', $cells['sql']);
+        $this->assertSame(['Firefox', 'Chrome', 'smartphone', 'desktop'], array_slice($cells['bind'], 0, 4), 'the row, then the pivot index');
+        $this->assertSame(['smartphone', 'desktop'], array_slice($cells['bind'], -2));
+
+        $others = $builder->buildPivotCells($definition, $dimensions, $pivot, 1, $context, [], [['Firefox']], ['smartphone'], true);
+        $this->assertStringContainsString('NULL AS fwde_p', $others['sql']);
+        $this->assertStringContainsString('(fwde_a.fwde_k2 IN (?)) IS NOT TRUE', $others['sql']);
+        $this->assertStringContainsString('GROUP BY fwde_row HAVING fwde_row IS NOT NULL', $others['sql']);
+
+        $total = $builder->buildPivotTotals($definition, $dimensions, $pivot, 1, $context, [], ['smartphone']);
+        $this->assertStringContainsString('(fwde_a.fwde_k2 IN (?)) IS NOT TRUE', $total['sql']);
+        $this->assertStringNotContainsString('GROUP BY', $total['sql']);
     }
 
     public function testSortAndLimit(): void
@@ -396,6 +561,97 @@ class ExplorationQueryBuilderTest extends TestCase
         $this->assertStringEndsWith(' AND log_visit.idsite = ?', $this->stageACalls[0][2]);
     }
 
+    /** Filter groups (2026-11-23): outer "any" with a number condition puts every condition on the grouped rows */
+    public function testOuterAnyWithNumberMovesEverythingToHaving(): void
+    {
+        $query = $this->build('{"dimensions": ["browser", "referrerName"], "metrics": ["nb_visits"], "filterGroups": {"match": "any", "groups": ['
+            . '{"filters": [{"target": "secondary_label", "operator": "contains", "value": "goo"}, {"target": "secondary_label", "operator": "endsWith", "value": ".de"}]},'
+            . '{"filters": [{"target": "nb_visits", "operator": "gte", "value": 5}]}]}}');
+
+        $this->assertStringEndsWith(' AND log_visit.idsite = ?', $this->stageACalls[0][2]);
+        $this->assertStringContainsString(' HAVING (((MAX(fwde_a.fwde_k2)) LIKE ? AND (MAX(fwde_a.fwde_k2)) LIKE ?) OR nb_visits >= ?)', $query['sql']);
+        $this->assertSame(['%goo%', '%.de', 5.0], array_slice($query['bind'], -3));
+    }
+
+    /** Outer "all": an "any" group of text and the text of an "all" group run before the grouping, its number after */
+    public function testOuterAllSplitsGroups(): void
+    {
+        $query = $this->build('{"dimensions": ["browser", "referrerName"], "metrics": ["nb_visits"], "filterGroups": {"groups": ['
+            . '{"match": "any", "filters": [{"target": "secondary_label", "operator": "equals", "value": "Google"}, {"target": "secondary_label", "operator": "equals", "value": "Bing"}]},'
+            . '{"filters": [{"target": "secondary_label", "operator": "contains", "value": "o"}, {"target": "nb_visits", "operator": "gt", "value": 10}]}]}}');
+
+        $key = 'log_visit.referer_name';
+        $this->assertStringEndsWith(" AND (($key) = ? OR ($key) = ?) AND ($key) LIKE ?", $this->stageACalls[0][2]);
+        $this->assertSame([self::START, self::END, 1, 'Google', 'Bing', '%o%'], $this->stageACalls[0][3]);
+        $this->assertStringContainsString(' HAVING nb_visits > ? ', $query['sql'] . ' ');
+        $this->assertSame(10.0, $query['bind'][count($query['bind']) - 1]);
+    }
+
+    /** A condition that excludes nothing makes its "any" group true: the clause and its binds go */
+    public function testUnrestrictedConditionInOrGroupDropsTheClauseAndItsBinds(): void
+    {
+        $query = $this->build('{"dimensions": ["browser"], "metrics": ["nb_visits"], "filterGroups": {"match": "any", "groups": ['
+            . '{"filters": [{"target": "label", "operator": "contains", "value": "chr"}]},'
+            . '{"filters": [{"target": "label", "operator": "notEquals", "value": "Opera"}, {"target": "nb_visits", "operator": "lt", "value": 3}]}]}}',
+            [0 => ['values' => ['CH'], 'includeNull' => false], 1 => ['values' => [], 'includeNull' => false]]);
+
+        // group 2: "is not Opera" excludes nothing, but "visits < 3" still restricts it, so the clause stays
+        $this->assertStringContainsString(' HAVING (((MAX(fwde_a.fwde_k1)) IN (?)) OR nb_visits < ?)', $query['sql']);
+
+        $all = $this->build('{"dimensions": ["browser"], "metrics": ["nb_visits"], "filterGroups": {"match": "any", "groups": ['
+            . '{"filters": [{"target": "label", "operator": "contains", "value": "chr"}]},'
+            . '{"filters": [{"target": "label", "operator": "notEquals", "value": "Opera"}]}]}}',
+            [0 => ['values' => ['CH'], 'includeNull' => false], 1 => ['values' => [], 'includeNull' => false]]);
+        $this->assertStringEndsWith(' AND log_visit.idsite = ?', $this->stageACalls[1][2]);
+        $this->assertSame([self::START, self::END, 1], $this->stageACalls[1][3]);
+        $this->assertStringNotContainsString(' HAVING ', $all['sql']);
+    }
+
+    public function testNewOperatorSql(): void
+    {
+        $query = $this->build('{"dimensions": ["browser", "referrerName"], "metrics": ["nb_visits", "bounce_rate"], "filters": ['
+            . '{"target": "secondary_label", "operator": "notStartsWith", "value": "Bi_"},'
+            . '{"target": "secondary_label", "operator": "notEndsWith", "value": ".de"},'
+            . '{"target": "secondary_label", "operator": "matches", "value": "^(goo|bi)[a-z]+$"},'
+            . '{"target": "nb_visits", "operator": "gte", "value": 2},'
+            . '{"target": "bounce_rate", "operator": "lte", "value": 0.5}]}');
+
+        $key = 'log_visit.referer_name';
+        $this->assertStringEndsWith(" AND (($key) IS NULL OR ($key) NOT LIKE ?) AND (($key) IS NULL OR ($key) NOT LIKE ?) AND ($key) REGEXP ?",
+            $this->stageACalls[0][2]);
+        $this->assertSame([self::START, self::END, 1, 'Bi\\_%', '%.de', '^(goo|bi)[a-z]+$'], $this->stageACalls[0][3]);
+        $this->assertStringContainsString(' HAVING nb_visits >= ? AND bounce_rate <= ?', $query['sql']);
+    }
+
+    /** Titles are stored HTML-escaped: the pattern matches an apostrophe in both forms (final review, 2026-11-24) */
+    public function testMatchesOnAnEscapedDimensionMatchesBothForms(): void
+    {
+        $this->build('{"dimensions": ["pageTitle"], "metrics": ["nb_pageviews"], "filters": ['
+            . '{"target": "label", "operator": "matches", "value": "^Men\'s"}]}');
+
+        $this->assertSame("^Men('|&#039;)s", $this->stageACalls[0][3][3]);
+    }
+
+    public function testResolvedNegatedNewOperators(): void
+    {
+        $this->build('{"dimensions": ["browser"], "metrics": ["nb_visits"], "filters": ['
+            . '{"target": "label", "operator": "notStartsWith", "value": "chr"},'
+            . '{"target": "label", "operator": "matches", "value": "fox$"}]}',
+            [0 => ['values' => ['CH', 'CM'], 'includeNull' => false], 1 => ['values' => ['FF'], 'includeNull' => false]]);
+
+        $key = "NULLIF(NULLIF(log_visit.config_browser_name, ''), 'UNK')";
+        $this->assertStringEndsWith(" AND (($key) IS NULL OR ($key) NOT IN (?, ?)) AND (($key) IN (?))", $this->stageACalls[0][2]);
+    }
+
+    public function testTotalsUseOnlyStageAClauses(): void
+    {
+        $this->totals('{"dimensions": ["referrerName"], "metrics": ["nb_visits"], "filterGroups": {"groups": ['
+            . '{"filters": [{"target": "label", "operator": "contains", "value": "goo"}, {"target": "nb_visits", "operator": "gt", "value": 5}]}]}}');
+
+        $this->assertStringEndsWith(' AND (log_visit.referer_name) LIKE ?', $this->stageACalls[0][2]);
+        $this->assertSame([self::START, self::END, 1, '%goo%'], $this->stageACalls[0][3]);
+    }
+
     /** "Others" (2026-11-20): one row over everything but the shown key tuples, NULL keys compared null-safe */
     public function testOthersExcludeTheShownKeysNullSafe(): void
     {
@@ -525,7 +781,7 @@ class ExplorationQueryBuilderTest extends TestCase
         $query = $this->build('{"dimensions": ["pageUrl"], "metrics": ["nb_conversions"], "idGoal": 3, "filters": ['
             . '{"target": "nb_conversions", "operator": "gt", "value": 0}, {"target": "label", "operator": "contains", "value": "shop"}]}');
 
-        $this->assertSame([self::START, self::END, 1, '%shop%', 1, self::START, self::END, 3, 0.0], $query['bind']);
+        $this->assertSame([self::START, self::END, 1, '%shop%', 1, self::START, self::END, 0.0], $query['bind']);
     }
 
     /**
@@ -654,7 +910,9 @@ class ExplorationQueryBuilderTest extends TestCase
     private function parts(string $json): array
     {
         $dimensions = $this->dimensions();
-        $definition = ExplorationDefinition::fromJson($json, 1, $dimensions, new MetricCatalog(), new Limits());
+        // goals 3 and 5 on an e-commerce website (more metrics, 2026-11-24)
+        $definition = ExplorationDefinition::fromJson($json, 1, $dimensions,
+            new MetricCatalog(fn (int $idSite) => [3 => 'Newsletter', 5 => 'Lead'], fn (int $idSite) => true), new Limits());
         $context = new QueryContext($definition->scope($dimensions, new MetricCatalog(), 1), 'UTC', self::START, self::END);
         $dimensionDefinitions = array_map(fn (string $id) => $dimensions->get(1, $id), $definition->dimensionIds);
 

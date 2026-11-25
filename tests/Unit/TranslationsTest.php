@@ -79,7 +79,8 @@ class TranslationsTest extends TestCase
         $registered = FeinwerkDataExploration::clientCoreKeys();
         $used = [];
         foreach (glob(dirname(__DIR__, 2) . '/vue/src/*.{vue,ts}', GLOB_BRACE) as $path) {
-            preg_match_all("/'((?:General|CoreHome|Intl)_[A-Za-z_]+)'/", (string) file_get_contents($path), $matches);
+            // Goals_: the e-commerce heading of the metric list (more metrics, 2026-11-24)
+            preg_match_all("/'((?:General|CoreHome|Intl|Goals)_[A-Za-z_]+)'/", (string) file_get_contents($path), $matches);
             foreach ($matches[1] as $key) {
                 $used[$key] = basename($path);
             }

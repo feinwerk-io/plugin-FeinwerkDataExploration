@@ -25,6 +25,7 @@ describe('shouldSortClientSide', () => {
     expect(shouldSortClientSide(12, 100, 'label')).toBe(true);
     expect(shouldSortClientSide(100, 100, 'label')).toBe(false);
     expect(shouldSortClientSide(12, 100, 'secondary_label')).toBe(true);
+    expect(shouldSortClientSide(12, 100, 'tertiary_label')).toBe(true);
     expect(shouldSortClientSide(12, 100, 'nb_visits')).toBe(false);
   });
 });

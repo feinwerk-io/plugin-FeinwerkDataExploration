@@ -4,50 +4,79 @@
  */
 import { ExplorationState, FilterMatch, RowFilter } from './types';
 import { ResultRow } from './api';
-import { MAX_FILTERS, MAX_FILTER_TEXT } from './state';
+import {
+  groupsOf, MAX_FILTERS, MAX_FILTER_TEXT, MAX_GROUPS,
+} from './filterGroups';
+import { LABEL_COLUMNS, STORED_VALUES } from './labels';
 
 /**
  * The value a filter on the row's dimension matches: the stored value the API sends for
  * dimensions filtered on it (the label is URL- and HTML-decoded), else the label.
  */
-function filterValue(row: ResultRow, dimension: 1|2): string {
-  const stored = dimension === 1 ? row.fwde_value : row.fwde_value2;
+function filterValue(row: ResultRow, index: number): string {
+  const stored = row[STORED_VALUES[index]];
   if (stored !== undefined && stored !== null) {
     return String(stored);
   }
-  return String(dimension === 1 ? row.label : row.secondary_label);
+  return String(row[LABEL_COLUMNS[index]]);
+}
+
+/** The label columns the row has, in order: one per row dimension. */
+function rowLabelIndexes(row: ResultRow, dimensionCount: number): number[] {
+  return LABEL_COLUMNS.map((_, i) => i)
+    .filter((i) => i === 0 || (i < dimensionCount && row[LABEL_COLUMNS[i]] !== undefined));
+}
+
+/** The row's dimension values as "equals" conditions of the given group. */
+function rowConditions(state: ExplorationState, row: ResultRow, group: number): RowFilter[] {
+  return rowLabelIndexes(row, state.dimensions.length).map((i) => ({
+    target: LABEL_COLUMNS[i], operator: 'equals', value: filterValue(row, i), group,
+  }));
 }
 
 /**
- * The filters after "filter to this row": the row's dimension values as "equals" filters, in
- * place of filters on the same columns; the oldest filters give way when more than five.
+ * The conditions of one "all" list after "filter to this row": the row's dimension values as
+ * "equals" conditions, in place of conditions on the same columns; the oldest give way at the
+ * limit.
  */
 export function filtersForRow(state: ExplorationState, row: ResultRow): RowFilter[] {
-  const added: RowFilter[] = [{ target: 'label', operator: 'equals', value: filterValue(row, 1) }];
-  if (state.dimensions.length > 1 && row.secondary_label !== undefined) {
-    added.push({
-      target: 'secondary_label', operator: 'equals', value: filterValue(row, 2),
-    });
-  }
+  const added = rowConditions(state, row, 0);
   const targets = added.map((f) => f.target);
-  const kept = state.filters.filter((f) => !targets.includes(f.target));
+  const kept = state.filters
+    .filter((f) => !targets.includes(f.target))
+    .map((f) => ({ ...f, group: 0 }));
   return [...kept, ...added].slice(-MAX_FILTERS);
 }
 
 /**
- * The filters and match after "filter to this value" or "break down": with "match all" the row
- * joins the filters (filtersForRow); with "match any" another filter would widen the table, so the
- * row's own filters replace them and the match goes back to "all".
+ * The filters after "filter to this value" or "break down" (filter groups, 2026-11-23): one "all"
+ * list (or one condition) takes the row in (filtersForRow); with groups joined by "all", or one
+ * "any" group, the row becomes a group of its own: "(A or B) and the row"; with groups joined by
+ * "any", or when a new group would pass the limits, the row's conditions replace the filters
+ * (another group would widen the table).
  */
 export function rowFilterState(
   state: ExplorationState,
   row: ResultRow,
-): { filters: RowFilter[], match: FilterMatch } {
-  // one filter matches the same with "all" or "any" (the switch shows only from two on): keep it
-  if (state.match !== 'any' || state.filters.length < 2) {
-    return { filters: filtersForRow(state, row), match: 'all' };
+): { filters: RowFilter[], groupMatch: FilterMatch[], match: FilterMatch } {
+  const groups = groupsOf(state.filters, state.groupMatch);
+  const oneList = groups.length === 1
+    && (groups[0].match === 'all' || groups[0].filters.length < 2);
+  if (groups.length === 0 || oneList) {
+    return { filters: filtersForRow(state, row), groupMatch: ['all'], match: 'all' };
   }
-  return { filters: filtersForRow({ ...state, filters: [] }, row), match: 'all' };
+  const added = rowConditions(state, row, groups.length);
+  const fits = groups.length < MAX_GROUPS && state.filters.length + added.length <= MAX_FILTERS;
+  if (state.match === 'all' && fits) {
+    // the groups renumbered in order, the row's group after them
+    const filters = groups.flatMap((group, i) => group.filters.map((f) => ({ ...f, group: i })));
+    return {
+      filters: [...filters, ...added],
+      groupMatch: [...groups.map((group) => group.match), 'all'],
+      match: 'all',
+    };
+  }
+  return { filters: rowConditions(state, row, 0), groupMatch: ['all'], match: 'all' };
 }
 
 /**
@@ -58,10 +87,7 @@ export function canFilterTo(row: ResultRow): boolean {
   if (row.fwde_no_value) {
     return false;
   }
-  const values = [filterValue(row, 1)];
-  if (row.secondary_label !== undefined) {
-    values.push(filterValue(row, 2));
-  }
+  const values = rowLabelIndexes(row, LABEL_COLUMNS.length).map((i) => filterValue(row, i));
   return values.every((value) => value.length <= MAX_FILTER_TEXT);
 }
 

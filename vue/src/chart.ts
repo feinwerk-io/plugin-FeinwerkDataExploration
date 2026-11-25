@@ -5,28 +5,16 @@
 import {
   Catalog, ChartType, ChartView, ComparisonColumn, ExplorationState, OthersState,
 } from './types';
-import {
-  changeKey, columnLabel, SHARE_METRICS, valueKey,
-} from './comparison';
+import { changeKey, columnLabel, valueKey } from './comparison';
+import { hasShare, isInteger, zeroForMissing as metricZeroForMissing } from './metricMeta';
 import { addsUp } from './additivity';
 import { ResultRow } from './api';
 import { NUMBER_OPERATORS } from './state';
+import { labelColumns, LABEL_COLUMNS } from './labels';
+import { PivotValue } from './pivot';
 
 /** First dimensions shown as a line over time instead of bars. */
 export const TIME_DIMENSIONS = ['date', 'hour', 'weekday'];
-
-/** Metrics where a missing row is not zero (a rate or an average of no visits): lines get a gap. */
-const NO_ZERO_METRICS = [
-  'bounce_rate', 'conversion_rate', 'avg_time_on_site', 'nb_actions_per_visit', 'avg_event_value',
-  'max_actions',
-];
-
-/** Metrics counted in whole numbers (and seconds): their axis steps by whole numbers. */
-export const INTEGER_METRICS = [
-  'nb_visits', 'nb_uniq_visitors', 'nb_actions', 'nb_conversions', 'nb_pageviews',
-  'nb_uniq_pageviews', 'nb_events', 'nb_downloads', 'nb_outlinks', 'avg_time_on_site',
-  'nb_searches', 'max_actions',
-];
 
 const NICE_STEPS = [1, 2, 2.5, 5, 10];
 
@@ -42,6 +30,8 @@ export interface ChartOptions {
   tickCount?: number;
   maxBars?: number;
   maxSeries?: number;
+  /** the pivot's values (rows and pivot, 2026-11-24): one bar or line per value */
+  pivotValues?: PivotValue[];
 }
 
 export interface Scale {
@@ -81,6 +71,8 @@ export interface ChartModel {
   omittedSeries: number;
   /** a line chart of a result cut at the row limit: points outside the result are gaps */
   incomplete: boolean;
+  /** a complete line chart with points without a value (a rate without visits, a number filter) */
+  gaps: boolean;
   scale: Scale;
 }
 
@@ -244,9 +236,8 @@ export function compareKeys(a: number|string, b: number|string): number {
 }
 
 function rowLabel(row: ResultRow): string {
-  return row.secondary_label === undefined
-    ? String(row.label)
-    : `${row.label} · ${row.secondary_label}`;
+  return LABEL_COLUMNS.filter((column) => row[column] !== undefined)
+    .map((column) => String(row[column])).join(' · ');
 }
 
 function barModel(
@@ -269,11 +260,12 @@ function barModel(
     omittedRows: Math.max(0, rows.length - maxBars),
     omittedSeries: 0,
     incomplete: false,
+    gaps: false,
     scale: niceScale(
       Math.min(...values),
       Math.max(...values),
       tickCount,
-      INTEGER_METRICS.includes(metric),
+      isInteger(metric),
     ),
   };
 }
@@ -325,11 +317,52 @@ function lineModel(
     omittedRows: 0,
     omittedSeries: ranked.length - kept.length,
     incomplete: !complete,
+    gaps: complete && series.some((s) => s.points.some((p) => p.value === null)),
     scale: niceScale(
       Math.min(0, ...values),
       Math.max(0, ...values),
       tickCount,
-      INTEGER_METRICS.includes(metric),
+      isInteger(metric),
+    ),
+  };
+}
+
+/**
+ * The bar chart of a pivot (rows and pivot, 2026-11-24): the largest rows by the metric's total,
+ * one bar per pivot value (no bars for Others and Total).
+ */
+function pivotBarModel(
+  rows: ResultRow[],
+  values: PivotValue[],
+  metric: string,
+  maxBars: number,
+  tickCount: number,
+): ChartModel {
+  const top = [...rows]
+    .sort((a, b) => (numberOrNull(b[metric]) ?? 0) - (numberOrNull(a[metric]) ?? 0))
+    .slice(0, maxBars);
+  const series: ChartSeries[] = values.map((value, n) => ({
+    label: value.label,
+    points: top.map((row) => ({
+      label: rowLabel(row),
+      value: numberOrNull(row[`${metric}__p${n + 1}`]),
+    })),
+  }));
+  const numbers = series.flatMap((s) => s.points.map((p) => p.value))
+    .filter((value): value is number => value !== null);
+  return {
+    type: 'bar',
+    categories: top.map(rowLabel),
+    series,
+    omittedRows: Math.max(0, rows.length - maxBars),
+    omittedSeries: 0,
+    incomplete: false,
+    gaps: false,
+    scale: niceScale(
+      Math.min(0, ...numbers),
+      Math.max(0, ...numbers),
+      tickCount,
+      isInteger(metric),
     ),
   };
 }
@@ -373,11 +406,12 @@ export function compareBarModel(
     omittedRows: Math.max(0, data.length - maxBars),
     omittedSeries: 0,
     incomplete: false,
+    gaps: false,
     scale: niceScale(
       Math.min(0, ...values),
       Math.max(0, ...values),
       tickCount,
-      INTEGER_METRICS.includes(metric),
+      isInteger(metric),
     ),
   };
 }
@@ -420,20 +454,39 @@ export function chartModel(
 ): ChartModel {
   const {
     weekdayNames, hourLabels = [], periodDays = null, complete = true,
-    tickCount = 5, maxBars = 20, maxSeries = 5,
+    tickCount = 5, maxBars = 20, pivotValues = [],
   } = options;
-  let dimension = state.dimensions[0];
-  let data = rows;
-  if (!TIME_DIMENSIONS.includes(dimension) && TIME_DIMENSIONS.includes(state.dimensions[1])) {
-    // "Browser x Date": the date is the axis, one line per browser (trend design 3)
-    [, dimension] = state.dimensions;
-    data = rows.map((row) => ({ ...row, label: row.secondary_label, secondary_label: row.label }));
+  let { maxSeries = 5 } = options;
+  const own = rows.filter((row) => !row.fwde_total);
+  // the first time dimension is the axis, one line per value of the others ("Browser x Date": one
+  // line per browser, trend design 3)
+  const axis = state.dimensions.findIndex((id) => TIME_DIMENSIONS.includes(id));
+  if (pivotValues.length && (axis < 0 || state.dimensions.length > 1)) {
+    return pivotBarModel(own, pivotValues, metric, Math.min(maxBars, 10), tickCount);
   }
-  if (!TIME_DIMENSIONS.includes(dimension)) {
-    return barModel(rows, metric, maxBars, tickCount);
+  if (axis < 0) {
+    return barModel(own, metric, maxBars, tickCount);
+  }
+  const dimension = state.dimensions[axis];
+  const columns = labelColumns(state.dimensions.length);
+  let data = own;
+  if (pivotValues.length) {
+    // a single time dimension with a pivot: one line per pivot value
+    maxSeries = pivotValues.length;
+    data = own.flatMap((row) => pivotValues.map((value, n) => ({
+      label: row.label,
+      secondary_label: value.label,
+      [metric]: row[`${metric}__p${n + 1}`],
+    })));
+  } else if (columns.length > 1) {
+    data = own.map((row) => ({
+      ...row,
+      label: row[columns[axis]],
+      secondary_label: columns.filter((_, i) => i !== axis).map((c) => String(row[c])).join(' · '),
+    }));
   }
   const metricFilter = state.filters.some((f) => NUMBER_OPERATORS.includes(f.operator));
-  const zeroForMissing = complete && !metricFilter && !NO_ZERO_METRICS.includes(metric);
+  const zeroForMissing = complete && !metricFilter && metricZeroForMissing(metric);
   let allCategories: string[]|null = null;
   if (zeroForMissing) {
     if (dimension === 'hour' && hourLabels.length === 24) {
@@ -547,7 +600,11 @@ export function donutBlocker(
   if (comparing) {
     return 'FeinwerkDataExploration_DonutNotWhileComparing';
   }
-  if (!SHARE_METRICS.includes(metric)) {
+  if (state.pivot) {
+    // with a pivot the chart offers bars only (rows and pivot, 2026-11-24)
+    return 'FeinwerkDataExploration_ReasonNotWithPivot';
+  }
+  if (!hasShare(metric)) {
     return 'FeinwerkDataExploration_DonutNeedsCount';
   }
   if (!addsUp(state, catalog)) {
@@ -564,12 +621,14 @@ export function effectiveChartType(
   state: ExplorationState,
   rowCount: number,
   donutReason: string|null,
+  pivoting = false,
 ): ChartType {
   // a time dimension draws a line over time and offers no switch, so no donut there either
   if (state.chartType === 'donut' && rowCount >= 2 && donutReason === null && canTrend(state)) {
     return 'donut';
   }
-  if (!canTrend(state)) {
+  // with a pivot the chart offers bars only (rows and pivot, 2026-11-24)
+  if (!canTrend(state) || pivoting) {
     return 'bar';
   }
   return rowCount === 1 || state.chartType === 'trend' ? 'trend' : 'bar';
@@ -624,4 +683,24 @@ export function othersAnswered(
   answer: Record<string, number|null>|null,
 ): { others: Record<string, number|null>|null, othersState: OthersState } {
   return { others: answer, othersState: 'done' };
+}
+
+/**
+ * Whether the lines of a time dimension need the exploration's every row (Peter, 2026-11-24, to
+ * the proposal "the chart fetches its lines separately, with every day"): the table reached its
+ * row limit, which is below the largest one; not while comparing (the lines show column totals).
+ */
+export function needsFullTimeRows(
+  state: ExplorationState,
+  rowCount: number,
+  maxRows: number,
+  comparing: boolean,
+  pivoting = false,
+): boolean {
+  // a pivot draws bars of the table's rows, lines only over a single time dimension
+  return !comparing
+    && !(pivoting && state.dimensions.length > 1)
+    && state.dimensions.some((id) => TIME_DIMENSIONS.includes(id))
+    && rowCount >= state.limit
+    && state.limit < maxRows;
 }

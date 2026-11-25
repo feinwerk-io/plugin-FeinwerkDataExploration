@@ -4,8 +4,11 @@
 -->
 <template>
   <div class="fwde-table fwde-compare">
-    <div class="fwde-table__scroller">
-      <table class="dataTable fwde-table__table fwde-compare__table">
+    <TableScroller @layout="onLayout">
+      <table
+        class="dataTable fwde-table__table fwde-compare__table"
+        :class="{ 'fwde-table__table--natural': naturalFirst }"
+      >
         <thead>
           <tr>
             <th
@@ -15,7 +18,7 @@
                 label: true,
                 'fwde-table__dimension': true,
                 'fwde-table__dimension-last': dimension.key === lastDimension,
-                'fwde-table__dimension--fit': dimension.key === 'label' && firstDimensionFits,
+                'fwde-table__dimension--fit': dimension.key === 'label' && firstColumnFits,
               }"
               rowspan="2"
             >{{ dimension.label }}</th>
@@ -95,7 +98,7 @@
                 'fwde-table__label': true,
                 'fwde-table__dimension': true,
                 'fwde-table__dimension-last': dimension.key === lastDimension,
-                'fwde-table__dimension--fit': dimension.key === 'label' && firstDimensionFits,
+                'fwde-table__dimension--fit': dimension.key === 'label' && firstColumnFits,
               }"
             >{{ dimension.key === 'label' ? total.label : '' }}</td>
             <template
@@ -126,7 +129,7 @@
                 'fwde-table__label': true,
                 'fwde-table__dimension': true,
                 'fwde-table__dimension-last': dimension.key === lastDimension,
-                'fwde-table__dimension--fit': dimension.key === 'label' && firstDimensionFits,
+                'fwde-table__dimension--fit': dimension.key === 'label' && firstColumnFits,
               }"
               :title="String(row[dimension.key])"
             >
@@ -162,7 +165,7 @@
             <td class="fwde-table__menu">
               <RowMenu
                 :label="rowLabel(row)"
-                :can-break-down="state.dimensions.length === 1"
+                :can-break-down="state.dimensions.length < MAX_DIMENSIONS"
                 :visits-reason="visitsReason(row)"
                 :filter-reason="filterReason(row)"
                 @filter="$emit('row-filter', row)"
@@ -173,7 +176,7 @@
           </tr>
         </tbody>
       </table>
-    </div>
+    </TableScroller>
     <p
       v-if="overcountKey"
       class="fwde-table__overcount"
@@ -193,6 +196,7 @@ import { defineComponent, PropType } from 'vue';
 import {
   ComparisonsStoreInstance, Matomo, NumberFormatter, translate,
 } from 'CoreHome';
+import { hasShare } from './metricMeta';
 import { Catalog, ComparisonColumn, ExplorationState } from './types';
 import { ResultRow } from './api';
 import {
@@ -200,11 +204,15 @@ import {
 } from './format';
 import { shouldSortClientSide, sortByLabel } from './sorting';
 import RowMenu from './RowMenu.vue';
+import TableScroller from './TableScroller.vue';
+import { roomyAfter, TableLayout } from './scrollEdges';
 import { canFilterTo } from './rows';
 import {
-  changeKey, SHARE_METRICS, shareKey, valueKey,
+  changeKey, shareKey, valueKey,
 } from './comparison';
 import { barMaximum, cellBarWidth, headAndTail } from './cellBars';
+import { LABEL_COLUMNS } from './labels';
+import { MAX_DIMENSIONS } from './state';
 import { overcountUnit } from './additivity';
 
 /** colours of the column dots: the plugin's series; Matomo's comparison colour wins */
@@ -221,7 +229,7 @@ export interface HeaderColumn {
  * columns with the change of the page's period against them.
  */
 export default defineComponent({
-  components: { RowMenu },
+  components: { RowMenu, TableScroller },
   props: {
     /** the total row (fwde_total) first, then the own rows */
     rows: { type: Array as PropType<ResultRow[]>, required: true },
@@ -235,6 +243,15 @@ export default defineComponent({
     visitsLogEnabled: { type: Boolean, default: false },
   },
   emits: ['sort', 'row-filter', 'row-breakdown', 'row-visits'],
+  data() {
+    return {
+      MAX_DIMENSIONS,
+      /** two dimensions: the first at its natural width while the table fits (Peter, 2026-11-23) */
+      roomy: true,
+      /** the scroller's last width; a shrunk table tries again only when it widens */
+      boxWidth: 0,
+    };
+  },
   computed: {
     /** why the rows can add up to more than the total (design 2026-11-20), '' when they add up */
     overcountKey(): string {
@@ -249,7 +266,7 @@ export default defineComponent({
     dimensionColumns(): HeaderColumn[] {
       const name = (id: string) => this.catalog.dimensions.find((d) => d.id === id)?.name || id;
       return this.state.dimensions.map((id, i) => ({
-        key: i === 0 ? 'label' : 'secondary_label',
+        key: LABEL_COLUMNS[i],
         label: name(id),
       }));
     },
@@ -263,7 +280,7 @@ export default defineComponent({
       });
     },
     lastDimension(): string {
-      return this.state.dimensions.length > 1 ? 'secondary_label' : 'label';
+      return LABEL_COLUMNS[this.state.dimensions.length - 1];
     },
     /**
      * With two dimensions and only short values in the first one, the first column is only as
@@ -276,12 +293,23 @@ export default defineComponent({
         && this.rows.every((row) => headAndTail(String(row.label))[1] === '');
     },
     /**
+     * the first of two dimension columns is only as wide as its values: always for short values,
+     * for long ones while the table has room; the second dimension then takes the free width
+     */
+    firstColumnFits(): boolean {
+      return this.state.dimensions.length > 1 && (this.firstDimensionFits || this.roomy);
+    },
+    /** long first values shown on one line at their natural width (up to the usual 32em) */
+    naturalFirst(): boolean {
+      return this.state.dimensions.length > 1 && !this.firstDimensionFits && this.roomy;
+    },
+    /**
      * What each count's bars are measured against: the metric's largest value in all its columns,
      * so a smaller segment shows smaller bars (sorting does not change it).
      */
     barMaxima(): Record<string, number> {
       const maxima: Record<string, number> = {};
-      this.state.metrics.filter((id) => SHARE_METRICS.includes(id)).forEach((id) => {
+      this.state.metrics.filter((id) => hasShare(id)).forEach((id) => {
         maxima[id] = barMaximum(this.rows, this.columns.map((_, n) => valueKey(id, n)));
       });
       return maxima;
@@ -307,7 +335,17 @@ export default defineComponent({
       };
     },
   },
+  watch: {
+    // a new result tries the natural width again
+    rows() {
+      this.roomy = true;
+    },
+  },
   methods: {
+    onLayout(layout: TableLayout) {
+      this.roomy = roomyAfter(this.roomy, this.naturalFirst, layout, this.boxWidth);
+      this.boxWidth = layout.width;
+    },
     translate,
     rowCountKey,
     formatNumber(value: number): string {
@@ -331,7 +369,7 @@ export default defineComponent({
         return Number(change) > 0 ? `+${formatted}` : formatted;
       }
       const share = row[shareKey(metric, n)];
-      if (!SHARE_METRICS.includes(metric) || share === null || share === undefined) {
+      if (!hasShare(metric) || share === null || share === undefined) {
         return '';
       }
       return NumberFormatter.formatPercent(Number(share), 1, 0);
@@ -365,9 +403,8 @@ export default defineComponent({
       return ComparisonsStoreInstance.getSeriesColorName(n, 0);
     },
     rowLabel(row: ResultRow): string {
-      return row.secondary_label === undefined
-        ? String(row.label)
-        : `${row.label} · ${row.secondary_label}`;
+      return LABEL_COLUMNS.filter((column) => row[column] !== undefined)
+        .map((column) => String(row[column])).join(' · ');
     },
     filterReason(row: ResultRow): string {
       return canFilterTo(row) ? '' : translate('FeinwerkDataExploration_NoFilterForRow');

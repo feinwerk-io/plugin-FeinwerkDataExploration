@@ -4,6 +4,7 @@
  */
 import { mount } from '@vue/test-utils';
 import ResultTable from '../src/ResultTable.vue';
+import TableScroller from '../src/TableScroller.vue';
 import { parseState } from '../src/state';
 import { CATALOG, LIMITS } from './fixtures';
 
@@ -68,7 +69,41 @@ describe('result table', () => {
         currencySymbol: '$',
       },
     });
+    // while the table has room, a long first dimension is as wide as its longest value too (Peter, 2026-11-23:
+    // "secondary dimension immer noch ganz rechts drüben, wenn nur wenige Metriken angezeigt werden")
+    expect(longFirst.find('thead th').classes()).toContain('fwde-table__dimension--fit');
+    expect(longFirst.find('table').classes()).toContain('fwde-table__table--natural');
+  });
+
+  it('a long first dimension shrinks again when the table no longer fits, and tries again when it gets room', async () => {
+    const swapped = parseState({ fwdeDims: 'pageUrl,browser', fwdeMetrics: 'nb_visits,bounce_rate' }, CATALOG, LIMITS);
+    const longFirst = mount(ResultTable, {
+      props: {
+        rows: rows.map((row) => ({ ...row, label: row.secondary_label, secondary_label: row.label })),
+        state: swapped,
+        catalog: CATALOG,
+        actionScope: false,
+        currencySymbol: '$',
+      },
+    });
+    const scroller = longFirst.findComponent(TableScroller);
+    await scroller.vm.$emit('layout', { overflow: false, width: 900 });
+    expect(longFirst.find('thead th').classes()).toContain('fwde-table__dimension--fit');
+    await scroller.vm.$emit('layout', { overflow: true, width: 900 });
     expect(longFirst.find('thead th').classes()).not.toContain('fwde-table__dimension--fit');
+    expect(longFirst.find('table').classes()).not.toContain('fwde-table__table--natural');
+    // the same width again (the shrunk table fits now): stays shrunk, no back and forth
+    await scroller.vm.$emit('layout', { overflow: false, width: 900 });
+    expect(longFirst.find('thead th').classes()).not.toContain('fwde-table__dimension--fit');
+    // more room (a wider window): tries the natural width again
+    await scroller.vm.$emit('layout', { overflow: false, width: 1200 });
+    expect(longFirst.find('thead th').classes()).toContain('fwde-table__dimension--fit');
+    // a new result tries again too
+    await scroller.vm.$emit('layout', { overflow: true, width: 1200 });
+    await longFirst.setProps({
+      rows: rows.map((row) => ({ ...row, label: row.secondary_label, secondary_label: row.label })),
+    });
+    expect(longFirst.find('thead th').classes()).toContain('fwde-table__dimension--fit');
   });
 
   it('never shortens a short value; only a long one may shrink when the table runs out of room', () => {
@@ -158,6 +193,29 @@ describe('Others row (exact rest, on demand)', () => {
     expect(row.find('.fwde-table__menu').text()).toBe('');
     button.trigger('click');
     expect(wrapper.emitted('others-calculate')).toHaveLength(1);
+  });
+
+  it('keeps the two dimensions together when the Others row shows (UI review 2026-11-23, F2)', () => {
+    // without the class Matomo's `td.label { width: 100% }` made both dimension cells of the row ask for all the width
+    const twoDims = parseState({
+      fwdeDims: 'channelType,country', fwdeMetrics: 'nb_visits,bounce_rate', fwdeFilters: 'nb_visits~gt~1',
+    }, CATALOG, LIMITS);
+    const wrapper = mountOthers({
+      rows: [
+        { label: 'Websites', secondary_label: 'Smartphone (Mobile Safari)', nb_visits: 80, bounce_rate: 0.4 },
+        { label: 'Search Engines', secondary_label: 'Desktop', nb_visits: 20, bounce_rate: 0.6 },
+      ],
+      state: twoDims,
+      cut: true,
+      othersState: 'idle',
+      others: null,
+    });
+    expect(othersRow(wrapper).exists()).toBe(true);
+    const dataCells = wrapper.findAll('tbody tr')[0].findAll('td');
+    const restCells = othersRow(wrapper).findAll('td.fwde-table__dimension');
+    expect(dataCells[0].classes()).toContain('fwde-table__dimension--fit');
+    expect(restCells.map((td) => td.classes().includes('fwde-table__dimension--fit'))).toEqual([true, false]);
+    expect(restCells[1].classes()).toContain('fwde-table__dimension-last');
   });
 
   it('shows no Others row when the server found no rest', () => {

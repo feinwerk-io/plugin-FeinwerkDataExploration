@@ -3,6 +3,7 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 import {
+  needsFullTimeRows,
   axisLabelStep, canChart, chartMetricFor, chartModel, compareBarModel, compareChartHint, effectiveView, linePath,
   niceScale, resultTitle, truncateLabel, donutBlocker, donutModel, donutNeedsOthers, effectiveChartType, othersAnswered,
 } from '../src/chart';
@@ -447,3 +448,115 @@ describe('donutNeedsOthers', () => {
   });
 });
 
+describe('lines of a time dimension without gaps from the row limit (Peter, 2026-11-24: "wie empfohlen")', () => {
+  it('asks for every row when the table with a time dimension is cut, never while comparing', () => {
+    const cut = state({ fwdeDims: 'date,browser', fwdeMetrics: 'nb_visits', fwdeLimit: '10' });
+    expect(needsFullTimeRows(cut, 10, 1000, false)).toBe(true);
+    expect(needsFullTimeRows(cut, 9, 1000, false)).toBe(false);
+    expect(needsFullTimeRows(cut, 10, 1000, true)).toBe(false);
+    expect(needsFullTimeRows(cut, 10, 10, false)).toBe(false);
+    const noTime = state({ fwdeDims: 'browser', fwdeMetrics: 'nb_visits', fwdeLimit: '10' });
+    expect(needsFullTimeRows(noTime, 10, 1000, false)).toBe(false);
+  });
+
+  it('marks correct gaps (a rate without visits, a number filter), not an incomplete result', () => {
+    // two lines: Smartphone has no visits on the 29th, so its rate has no value there
+    const rows = [
+      { label: '2026-03-27', secondary_label: 'Desktop', bounce_rate: 0.5 },
+      { label: '2026-03-29', secondary_label: 'Desktop', bounce_rate: 0.25 },
+      { label: '2026-03-27', secondary_label: 'Smartphone', bounce_rate: 0.4 },
+    ];
+    const days = ['2026-03-27', '2026-03-28', '2026-03-29'];
+    const rate = chartModel(rows, state({ fwdeDims: 'date,browser', fwdeMetrics: 'bounce_rate' }), 'bounce_rate', {
+      weekdayNames: [], periodDays: days,
+    });
+    expect(rate.incomplete).toBe(false);
+    expect(rate.gaps).toBe(true);
+    const counts = chartModel(
+      [{ label: '2026-03-27', nb_visits: 2 }, { label: '2026-03-29', nb_visits: 1 }],
+      state({ fwdeDims: 'date', fwdeMetrics: 'nb_visits' }),
+      'nb_visits',
+      { weekdayNames: [], periodDays: days },
+    );
+    expect(counts.gaps).toBe(false);
+    expect(counts.series[0].points.map((p) => p.value)).toEqual([2, 0, 1]);
+    const cut = chartModel(rows, state({ fwdeDims: 'date,browser', fwdeMetrics: 'bounce_rate' }), 'bounce_rate', {
+      weekdayNames: [], periodDays: days, complete: false,
+    });
+    expect(cut.incomplete).toBe(true);
+    expect(cut.gaps).toBe(false);
+  });
+});
+
+
+describe('rows and pivot (2026-11-24)', () => {
+  const values = [
+    { label: 'Germany', value: 'de', segment: 'countryCode==de' },
+    { label: 'France', value: 'fr', segment: 'countryCode==fr' },
+  ];
+
+  it('draws one bar per pivot value for each row, no bars for Others and Total', () => {
+    const rows: ResultRow[] = [
+      { label: 'Total', fwde_total: 1, nb_visits: 20, nb_visits__p1: 12, nb_visits__p2: 6, nb_visits__p_others: 2 },
+      { label: 'Chrome', nb_visits: 12, nb_visits__p1: 8, nb_visits__p2: 3, nb_visits__p_others: 1 },
+      { label: 'Firefox', nb_visits: 8, nb_visits__p1: 4, nb_visits__p2: 3, nb_visits__p_others: 1 },
+    ];
+    const pivoted = state({ fwdeDims: 'browser', fwdeMetrics: 'nb_visits', fwdePivot: 'country' });
+    const model = chartModel(rows, pivoted, 'nb_visits', options({ pivotValues: values }));
+    expect(model.type).toBe('bar');
+    expect(model.categories).toEqual(['Chrome', 'Firefox']);
+    expect(model.series.map((s) => s.label)).toEqual(['Germany', 'France']);
+    expect(model.series[0].points.map((p) => p.value)).toEqual([8, 4]);
+    expect(model.series[1].points.map((p) => p.value)).toEqual([3, 3]);
+  });
+
+  it('draws one line per pivot value over a single time dimension', () => {
+    const rows = [
+      { label: '2026-03-27', nb_visits: 5, nb_visits__p1: 3, nb_visits__p2: 2 },
+      { label: '2026-03-28', nb_visits: 4, nb_visits__p1: 1, nb_visits__p2: 3 },
+    ];
+    const pivoted = state({ fwdeDims: 'date', fwdeMetrics: 'nb_visits', fwdePivot: 'country' });
+    const model = chartModel(rows, pivoted, 'nb_visits', options({ pivotValues: values }));
+    expect(model.type).toBe('line');
+    expect(model.categories).toEqual(['2026-03-27', '2026-03-28']);
+    expect(model.series.map((s) => s.label).sort()).toEqual(['France', 'Germany']);
+    const germany = model.series.find((s) => s.label === 'Germany');
+    expect(germany?.points.map((p) => p.value)).toEqual([3, 1]);
+  });
+
+  it('names a row of three dimensions by all three labels', () => {
+    const rows = [
+      { label: 'Chrome', secondary_label: 'Germany', tertiary_label: 'Home', nb_visits: 3 },
+      { label: 'Chrome', secondary_label: 'France', tertiary_label: 'Shop', nb_visits: 2 },
+    ];
+    const model = chartModel(rows, state({ fwdeDims: 'browser,country,pageTitle' }), 'nb_visits', options());
+    expect(model.categories).toEqual(['Chrome · Germany · Home', 'Chrome · France · Shop']);
+  });
+
+  it('draws a line per combination of the other two dimensions over a time dimension', () => {
+    const rows = [
+      { label: 'Chrome', secondary_label: '2026-03-27', tertiary_label: 'Home', nb_visits: 3 },
+      { label: 'Chrome', secondary_label: '2026-03-28', tertiary_label: 'Home', nb_visits: 2 },
+    ];
+    const model = chartModel(rows, state({ fwdeDims: 'browser,date,pageTitle' }), 'nb_visits', options());
+    expect(model.type).toBe('line');
+    expect(model.series.map((s) => s.label)).toEqual(['Chrome · Home']);
+  });
+
+  // final review: pivot bars need no rows beyond the table's; lines over a single time dimension do
+  it('asks for every time row only where the pivot draws lines', () => {
+    const cut = (dims: string) => state({
+      fwdeDims: dims, fwdeMetrics: 'nb_visits', fwdePivot: 'country', fwdeLimit: '10',
+    });
+    expect(needsFullTimeRows(cut('date,browser'), 10, 1000, false, true)).toBe(false);
+    expect(needsFullTimeRows(cut('date'), 10, 1000, false, true)).toBe(true);
+    expect(needsFullTimeRows(cut('date,browser'), 10, 1000, false, false)).toBe(true);
+  });
+
+  it('offers bars only with a pivot', () => {
+    const pivoted = state({ fwdeDims: 'browser', fwdeMetrics: 'nb_visits', fwdePivot: 'country', fwdeChartType: 'trend' });
+    expect(effectiveChartType(pivoted, 5, null, true)).toBe('bar');
+    expect(effectiveChartType(pivoted, 5, null, false)).toBe('trend');
+    expect(donutBlocker(pivoted, CATALOG, 'nb_visits', false)).toBe('FeinwerkDataExploration_ReasonNotWithPivot');
+  });
+});

@@ -5,13 +5,17 @@
   The premium banner below the result (Peter, 2026-11-17: "ein randloses Banner unter dem
   Hauptfenster mit Premium-Plugin Rotation"): paid Feinwerk plugins this Matomo does not have, one
   at a time, in the markup of the promotion kit's templates/_premiumBanner.twig (Page Filter
-  Report 99c4100) with this plugin's classes. The list comes from
+  Report d4ce520) with this plugin's classes. The list comes from
   Promo\PremiumPromo::bannerProps() as the widget prop `premium` (null for users without admin
   access, in embeds, with promotions off). The kit's javascripts/promocard.js does the rest: it
-  shows the first plugin not hidden, its x hides it for `days` (demo: this session) and the next
-  follows, and it removes the group when none is left. So Vue renders the group once (v-once) and
-  never patches it again; it carries no data-fwpromo-widget, which would hide the whole
-  exploration page (one Matomo widget) with the last plugin.
+  shows the first plugin not hidden. The banner is a pausable place (promocard.js 5; Peter,
+  2026-11-24: "Ein × blendet alles 30 Tage aus"): any x empties the place `fwde-banner` for
+  `pauseDays` and keeps the closed plugin away for `days`, so the next one shows after the pause;
+  older kit copies never see the group (no data-fwpromo-rotation until version 5 has checked the
+  pause). Demo mode (pauseDays 0) keeps the plain rotation: the x hides a plugin for this session
+  and the next follows. The script removes the group when none is left. So Vue renders the group
+  once (v-once) and never patches it again; it carries no data-fwpromo-widget, which would hide
+  the whole exploration page (one Matomo widget) with the group.
 -->
 <template>
   <div
@@ -21,7 +25,7 @@
     <div
       v-once
       class="fwde-premium"
-      data-fwpromo-rotation="banner"
+      v-bind="placeAttributes"
     >
       <section
         v-for="plugin in premium.plugins"
@@ -95,6 +99,22 @@ export default defineComponent({
     label: { type: String, required: true },
     moreLabel: { type: String, required: true },
     dismissLabel: { type: String, required: true },
+  },
+  computed: {
+    /**
+     * a pausable place, or in demo mode (pauseDays 0) the plain rotation group (kit
+     * _premiumBanner.twig)
+     */
+    placeAttributes(): Record<string, string> {
+      const pauseDays = this.premium ? this.premium.pauseDays : 0;
+      return pauseDays > 0
+        ? {
+          'data-fwpromo-pausable': 'banner',
+          'data-fwpromo-pause': 'fwde-banner',
+          'data-fwpromo-pause-days': String(pauseDays),
+        }
+        : { 'data-fwpromo-rotation': 'banner' };
+    },
   },
 });
 </script>

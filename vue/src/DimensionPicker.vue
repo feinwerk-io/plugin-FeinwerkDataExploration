@@ -6,14 +6,12 @@
 <template>
   <div class="fwde-picker">
     <div
-      v-for="slot in [0, 1]"
+      v-for="slot in slots"
       :key="slot"
       class="fwde-picker__slot"
     >
       <div class="fwde-field__label">
-        {{ translate(slot === 0
-          ? 'FeinwerkDataExploration_Dimension'
-          : 'FeinwerkDataExploration_SecondDimension') }}
+        {{ translate(SLOT_KEYS[slot]) }}
       </div>
       <button
         :ref="`current${slot}`"
@@ -33,10 +31,10 @@
         class="fwde-picker__panel"
       >
         <button
-          v-if="slot === 1 && dimensions.length === 2"
+          v-if="slot > 0 && dimensions.length > slot"
           type="button"
           class="btn-flat fwde-picker__none"
-          @click="choose(1, null)"
+          @click="choose(slot, null)"
         >{{ translate('FeinwerkDataExploration_NoSecondDimension') }}</button>
         <SearchableList
           :items="items(slot)"
@@ -56,16 +54,15 @@ import { translate } from 'CoreHome';
 import SearchableList, { ListItem } from './SearchableList.vue';
 import { Catalog, ExplorationState } from './types';
 import { dimensionReasons } from './availability';
+import { MAX_DIMENSIONS } from './state';
+import { GROUP_KEYS } from './labels';
 
-const GROUP_KEYS: Record<string, string> = {
-  acquisition: 'FeinwerkDataExploration_GroupAcquisition',
-  visitor: 'FeinwerkDataExploration_GroupVisitor',
-  technology: 'FeinwerkDataExploration_GroupTechnology',
-  time: 'FeinwerkDataExploration_GroupTime',
-  visit: 'FeinwerkDataExploration_GroupVisit',
-  behaviour: 'FeinwerkDataExploration_GroupBehaviour',
-  custom: 'FeinwerkDataExploration_GroupCustom',
-};
+/** the label of each slot */
+const SLOT_KEYS = [
+  'FeinwerkDataExploration_Dimension',
+  'FeinwerkDataExploration_SecondDimension',
+  'FeinwerkDataExploration_ThirdDimension',
+];
 
 export default defineComponent({
   components: { SearchableList },
@@ -75,11 +72,16 @@ export default defineComponent({
   },
   emits: ['change'],
   data() {
-    return { openSlot: null as number|null };
+    return { openSlot: null as number|null, SLOT_KEYS };
   },
   computed: {
     dimensions(): string[] {
       return this.state.dimensions;
+    },
+    /** the chosen slots and one empty slot after them (rows and pivot: up to three) */
+    slots(): number[] {
+      const count = Math.min(MAX_DIMENSIONS, Math.max(2, this.dimensions.length + 1));
+      return Array.from({ length: count }, (_, i) => i);
     },
   },
   methods: {
@@ -101,12 +103,12 @@ export default defineComponent({
       if (dimension) {
         return dimension.name;
       }
-      return translate(slot === 1
+      return translate(slot > 0
         ? 'FeinwerkDataExploration_NoSecondDimension'
         : 'FeinwerkDataExploration_ChooseDimension');
     },
     items(slot: number): ListItem[] {
-      const reasons = dimensionReasons(this.state, this.catalog, slot === 0 ? 0 : 1);
+      const reasons = dimensionReasons(this.state, this.catalog, slot);
       return this.catalog.dimensions.map((d) => ({
         key: d.id,
         label: d.name,
@@ -117,7 +119,8 @@ export default defineComponent({
     choose(slot: number, id: string|null) {
       const dimensions = [...this.dimensions];
       if (id === null) {
-        dimensions.splice(1);
+        // "None" takes this slot and the ones after it away
+        dimensions.splice(slot);
       } else {
         dimensions[slot] = id;
       }

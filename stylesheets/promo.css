@@ -38,6 +38,19 @@
     align-self: center;
 }
 
+/* the link is never cut (UI review 2026-11-23): [data-fwpromo-fit] is set only by promo.js 3+, so these rules outrank
+   the shrinking link of older kit copies in Matomo's merged CSS whatever the load order */
+.fwpromo-line[data-fwpromo-ready][data-fwpromo-fit] .fwpromo-line__link {
+    flex: none;
+    overflow: visible;
+}
+
+/* too short for the sentence: no sentence at all, logo mark, link and x stay (Peter, 2026-11-23: "Compact: logo,
+   link, x"; javascripts/promo.js fit()) */
+.fwpromo-line[data-fwpromo-ready].fwpromo-line--bare .fwpromo-line__text {
+    display: none;
+}
+
 /* only the round mark when the line is too short for the word mark (javascripts/promo.js) */
 .fwpromo-line--compact .fwlogo .fwlogo__word {
     display: none;
@@ -110,6 +123,7 @@
 
 .fwpromo-line[data-fwpromo-ready] .fwpromo-line__dismiss {
     position: static;
+    align-self: center;
 }
 
 /* the link, and the Feinwerk logo at the end of the row (templates/_feinwerkLogo.twig) */
@@ -134,6 +148,9 @@
 .fwpromo-box__dismiss {
     margin: 0 0 0 auto;
     padding: 0 4px;
+    /* a 24 px target (UI standards), centred on the line */
+    min-width: 24px;
+    min-height: 24px;
     border: 0;
     background: transparent;
     color: var(--theme-color-text-lighter, #646464);
@@ -153,6 +170,12 @@
 .fwpromo-box__dismiss:focus-visible {
     outline: 2px solid var(--theme-color-focus-ring, #0969da);
     outline-offset: 2px;
+}
+
+/* Matomo 5 and 6 still colour every focused button turquoise (button:focus, 2.5:1 with this text): not ours */
+.fwpromo-line .fwpromo-line__dismiss:focus,
+.fwpromo-box .fwpromo-box__dismiss:focus {
+    background: transparent;
 }
 
 /* --- Banner on Matomo's admin home and context box at the end of Matomo's report pages --- */

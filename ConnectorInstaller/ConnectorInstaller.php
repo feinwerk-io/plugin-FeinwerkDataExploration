@@ -11,9 +11,13 @@ namespace Piwik\Plugins\FeinwerkDataExploration\ConnectorInstaller;
 
 use Piwik\Cache;
 use Piwik\Config;
+use Piwik\Container\StaticContainer;
 use Piwik\Piwik;
+use Piwik\Plugin\Dependency;
 use Piwik\Plugin\Manager as PluginManager;
+use Piwik\Plugin\MetadataLoader;
 use Piwik\SettingsPiwik;
+use Piwik\Translation\Translator;
 
 /**
  * Feinwerk kit: a small installer for the Feinwerk Marketplace Connector in every Feinwerk plugin (Peter, 2026-11-19:
@@ -37,12 +41,17 @@ final class ConnectorInstaller
     public const PHP_FLOOR = '8.1.0';
     /** where the super user lands after the click: the connector's Discover tab (Connect, "Show Feinwerk plugins") */
     public const CONNECTOR_URL = 'index.php?module=FeinwerkMarketplaceConnector&action=index';
+    /** this plugin's installer page, also the target of the connector tip where the page is offered (Peter, 2026-11-23,
+     * "Auf den Installer") */
+    public const PAGE_URL = 'index.php?module=FeinwerkDataExploration&action=connectorInstaller';
     /** where the page sends a super user when it has nothing to offer (switched off) */
     public const ADMIN_HOME_URL = 'index.php?module=CoreAdminHome&action=home';
     /** activation where plugin administration is switched off (an identifier admins type, not a translation) */
     public const CONSOLE_COMMAND = './console plugin:activate FeinwerkMarketplaceConnector';
     /** one entry across all Feinwerk plugins: the first that builds the menu claims it */
     public const CLAIM = 'fwconnector.installer.claimed';
+    /** environment() once per request (the menu hook runs on every admin page) */
+    public const ENV_CACHE = 'fwconnector.installer.env.FeinwerkDataExploration';
 
     public const HIDDEN = 'hidden';
     public const INSTALL = 'install';
@@ -58,8 +67,10 @@ final class ConnectorInstaller
      * - hidden: no super user, switched off, or the connector is active;
      * - wordpress: Matomo for WordPress (the connector installs there as a WordPress plugin, never inside Matomo);
      * - php: PHP below the connector's floor;
-     * - activate: its files are there (also a link or a git checkout), plugin administration allowed;
-     * - console: its files are there, plugin administration switched off (activate on the command line);
+     * - activate: its files are there (also a link or a git checkout) and fit this Matomo and PHP, plugin
+     *   administration allowed (files that do not fit count as missing: the install below updates them, as Matomo's
+     *   own plugin list offers no Activate for them either);
+     * - console: such files are there, plugin administration switched off (activate on the command line);
      * - install: Matomo would offer its own one-click install (plugin administration, Marketplace, internet features,
      *   automatic updates possible: the same rule as the Install button of Matomo's Marketplace);
      * - manual: everything else, with instructions instead of a button.
@@ -78,7 +89,7 @@ final class ConnectorInstaller
         if (!$env['phpOk']) {
             return self::PHP;
         }
-        if ($env['present']) {
+        if (self::usableFiles($env)) {
             return $env['pluginsAdmin'] ? self::ACTIVATE : self::CONSOLE;
         }
 
@@ -103,6 +114,17 @@ final class ConnectorInstaller
     }
 
     /**
+     * Whether the connector's files are there and fit this Matomo and PHP (its plugin.json requirements); only then
+     * can it simply be activated. Pure.
+     *
+     * @param array<string, bool> $env
+     */
+    public static function usableFiles(array $env): bool
+    {
+        return $env['present'] && ($env['compatible'] ?? true);
+    }
+
+    /**
      * One config section's switch, read like `promotions`: 0, off, no, false and an empty value switch it off.
      *
      * @param array<string, mixed> $section
@@ -118,11 +140,33 @@ final class ConnectorInstaller
             && !in_array(strtolower(trim((string) $value)), ['0', '', 'off', 'no', 'false'], true);
     }
 
-    /** The current request's situation; never throws (on any doubt: hidden). @return array<string, bool> */
+    /**
+     * The current request's situation, computed once per request (Matomo's transient cache); never throws (on any
+     * doubt: hidden). @return array<string, bool>
+     */
     public static function environment(): array
     {
+        try {
+            $cache = Cache::getTransientCache();
+            $cached = $cache->fetch(self::ENV_CACHE);
+            if (is_array($cached)) {
+                return $cached;
+            }
+            $env = self::readEnvironment();
+            $cache->save(self::ENV_CACHE, $env);
+
+            return $env;
+        } catch (\Throwable $e) {
+            return self::readEnvironment();
+        }
+    }
+
+    /** @return array<string, bool> */
+    private static function readEnvironment(): array
+    {
         $env = array_fill_keys(
-            ['superUser', 'enabled', 'active', 'present', 'wordpress', 'phpOk', 'pluginsAdmin', 'marketplace', 'internet', 'autoUpdate'],
+            ['superUser', 'enabled', 'active', 'present', 'compatible', 'wordpress', 'phpOk', 'pluginsAdmin', 'marketplace',
+             'internet', 'autoUpdate'],
             false
         );
         try {
@@ -135,12 +179,15 @@ final class ConnectorInstaller
             $connector = $config->{self::CONNECTOR};
             $env['enabled'] = self::switchOnBy(is_array($own) ? $own : []) && self::switchOnBy(is_array($connector) ? $connector : []);
             $manager = PluginManager::getInstance();
-            $env['active'] = $manager->isPluginActivated(self::CONNECTOR);
+            // activated in the config but not loaded (its requirements missing, e.g. an old connector after Matomo's
+            // major update) counts as not active: the page offers the update
+            $env['active'] = $manager->isPluginActivated(self::CONNECTOR) && $manager->isPluginLoaded(self::CONNECTOR);
             if ($env['active'] || !$env['enabled']) {
                 return $env;
             }
             // the files decide (a link or a git checkout counts too); one directory scan per request
             $env['present'] = $manager->isPluginInFilesystem(self::CONNECTOR);
+            $env['compatible'] = $env['present'] && self::requirementsMet();
             $env['wordpress'] = defined('ABSPATH') && function_exists('matomo_add_plugin');
             $env['phpOk'] = version_compare(PHP_VERSION, self::PHP_FLOOR, '>=');
             $env['pluginsAdmin'] = \Piwik\Plugins\CorePluginsAdmin\CorePluginsAdmin::isPluginsAdminEnabled();
@@ -201,6 +248,29 @@ final class ConnectorInstaller
                 'message' => $e->getMessage(),
                 'html' => method_exists($e, 'isHtmlMessage') && (bool) $e->isHtmlMessage(),
             ];
+        }
+    }
+
+    /** Whether the connector's plugin.json requirements (Matomo, PHP) are met here; on any doubt yes. */
+    private static function requirementsMet(): bool
+    {
+        try {
+            $info = (new MetadataLoader(self::CONNECTOR))->load();
+            $require = is_array($info['require'] ?? null) ? $info['require'] : [];
+
+            return (new Dependency())->getMissingDependencies($require) === [];
+        } catch (\Throwable $e) {
+            return true;
+        }
+    }
+
+    /** The user's interface language for the page's <html lang> and piwik.language ('' when unknown). */
+    public static function pageLanguage(): string
+    {
+        try {
+            return (string) StaticContainer::get(Translator::class)->getCurrentLanguage();
+        } catch (\Throwable $e) {
+            return '';
         }
     }
 

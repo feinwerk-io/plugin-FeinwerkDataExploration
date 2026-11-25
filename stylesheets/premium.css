@@ -211,8 +211,19 @@
     cursor: pointer;
 }
 
+/* not Matomo's turquoise button:focus after a click */
+.fwde-premium .fwde-premium__close:focus {
+    background: transparent;
+}
+
 .fwde-premium .fwde-premium__close:hover,
 .fwde-premium .fwde-premium__close:focus-visible {
     color: var(--theme-color-text, #212121);
     background: var(--fwde-premium-soft);
+}
+
+/* focus shows as a ring, not only as a 10 % tint */
+.fwde-premium .fwde-premium__close:focus-visible {
+    outline: 2px solid var(--theme-color-focus-ring, #0969da);
+    outline-offset: 1px;
 }

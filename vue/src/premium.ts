@@ -24,8 +24,13 @@ export interface PremiumPlugin {
 /** the widget prop `premium` (Promo\PremiumPromo::forBanner()) */
 export interface PremiumProps {
   plugins: PremiumPlugin[];
-  /** days the x hides a plugin; 0 in demo mode (this browser session) */
+  /** days the x keeps the closed plugin away (90); 0 in demo mode (this browser session) */
   days: number;
+  /**
+   * days any x empties the whole place (30, a pausable place of promocard.js 5); 0 in demo
+   * mode, which keeps the plain rotation
+   */
+  pauseDays: number;
   demo: boolean;
   /** for admins under a store link: who can install the plugin; '' for super users */
   note: string;

@@ -46,10 +46,29 @@ final class ResultCache
         return 'fwde_' . sha1(json_encode(['others', $pluginVersion, $idSite, $startUtc, $endUtc, $segment, $definition->normalized(), sha1(json_encode($shownKeys))]));
     }
 
+    /**
+     * The first level of a two-dimension report (saved reports, 2026-11-24), keyed by the first values it was asked for.
+     *
+     * @param list<?string> $firstKeys
+     */
+    public function firstLevelKey(int $idSite, string $startUtc, string $endUtc, string $segment, ExplorationDefinition $definition, array $firstKeys, string $pluginVersion): string
+    {
+        return 'fwde_' . sha1(json_encode(['first', $pluginVersion, $idSite, $startUtc, $endUtc, $segment, $definition->normalized(), sha1(json_encode($firstKeys))]));
+    }
+
     /** The trend (trend design 5): the own rows by $onlyKeys, or the totals (null), per day or hour. */
     public function trendKey(int $idSite, string $startUtc, string $endUtc, string $segment, ExplorationDefinition $definition, ?array $onlyKeys, string $unit, string $pluginVersion): string
     {
         return 'fwde_' . sha1(json_encode(['trend', $pluginVersion, $idSite, $startUtc, $endUtc, $segment, $definition->normalized(), $onlyKeys, $unit]));
+    }
+
+    /**
+     * A pivot query (rows and pivot, 2026-11-24): its kind, the definition with its pivot and what restricts it (shown
+     * rows, pivot values, limit).
+     */
+    public function pivotKey(string $kind, int $idSite, string $startUtc, string $endUtc, string $segment, ExplorationDefinition $definition, array $restriction, string $pluginVersion): string
+    {
+        return 'fwde_' . sha1(json_encode(['pivot', $kind, $pluginVersion, $idSite, $startUtc, $endUtc, $segment, $definition->normalized(), sha1(json_encode($restriction))]));
     }
 
     public function funnelKey(int $idSite, string $startUtc, string $endUtc, string $segment, FunnelDefinition $definition, string $pluginVersion): string

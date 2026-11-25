@@ -5,3 +5,5 @@
 
 export { default as ExplorationPage } from './ExplorationPage.vue';
 export { default as FunnelPage } from './FunnelPage.vue';
+export { default as SavedReportFooter } from './SavedReportFooter.vue';
+export { default as KpiCard } from './KpiCard.vue';

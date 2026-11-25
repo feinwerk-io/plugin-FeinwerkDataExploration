@@ -334,6 +334,7 @@ import {
 import { ResultRow, TrendRow } from './api';
 import { compareTimeModel, trendModel } from './trend';
 import { columnLabel } from './comparison';
+import { PivotValue } from './pivot';
 import SegmentedSwitch from './SegmentedSwitch.vue';
 import {
   formatDay, formatDuration, formatHour, formatMetric, Formatters,
@@ -385,6 +386,11 @@ export default defineComponent({
     trendLoading: { type: Boolean, default: false },
     /** lines of a line chart (free: 5) */
     maxLines: { type: Number, default: 5 },
+    /**
+     * the row limit of the rows given: the page's own request for every row of a time dimension
+     * (2026-11-24) asks with the largest limit; 0 = the table's
+     */
+    rowLimit: { type: Number, default: 0 },
     /** comparison columns: one line per column (time dimension) or one bar per column and row */
     compareColumns: { type: Array as PropType<ComparisonColumn[]>, default: () => [] },
     /** why the donut cannot show the chart metric (a lang key), null when it can (donutBlocker) */
@@ -393,6 +399,8 @@ export default defineComponent({
     othersValue: { type: Number as PropType<number|null>, default: null },
     /** lang key: why the donut's "Others" lacks the cut rows (loading, failed); '' when complete */
     othersNote: { type: String, default: '' },
+    /** the pivot's values (rows and pivot, 2026-11-24): one bar or line per value, bars only */
+    pivotValues: { type: Array as PropType<PivotValue[]>, default: () => [] },
   },
   emits: ['metric', 'chart-type'],
   data() {
@@ -449,12 +457,13 @@ export default defineComponent({
         weekdayNames: weekdays,
         hourLabels: this.hourLabels,
         periodDays: this.periodDays,
-        complete: this.rows.length < this.state.limit,
+        complete: this.rows.length < (this.rowLimit || this.state.limit),
         // about 70 pixels per axis label; the line chart's axis is vertical and always fits five
         tickCount: this.state.dimensions.some((id) => TIME_DIMENSIONS.includes(id))
           ? LINE_TICKS
           : Math.min(5, Math.max(2, Math.floor(this.barPlotWidth / 70))),
         maxSeries: this.maxLines,
+        pivotValues: this.pivotValues,
       };
       if (this.compareColumns.length > 1) {
         const { dimensions } = this.state;
@@ -475,7 +484,7 @@ export default defineComponent({
       if (this.model.type === 'bar') {
         return this.model.series.length > 1;
       }
-      return this.state.dimensions.length > 1
+      return this.state.dimensions.length > 1 || this.pivotValues.length > 0
         || this.chartType === 'trend' || this.compareColumns.length > 1;
     },
     /** the height of one row: a single bar, or one bar per comparison column */
@@ -498,7 +507,10 @@ export default defineComponent({
       ];
       if (canTrend(this.state)) {
         options.push({
-          type: 'trend', label: translate('FeinwerkDataExploration_ChartTypeTrend'), reason: null,
+          type: 'trend',
+          label: translate('FeinwerkDataExploration_ChartTypeTrend'),
+          // with a pivot the chart offers bars only (rows and pivot, 2026-11-24)
+          reason: this.pivotValues.length ? 'FeinwerkDataExploration_ReasonNotWithPivot' : null,
         });
       }
       options.push({
@@ -602,6 +614,9 @@ export default defineComponent({
       }
       if (this.model.incomplete) {
         return translate('FeinwerkDataExploration_ChartIncomplete');
+      }
+      if (this.model.gaps) {
+        return translate('FeinwerkDataExploration_ChartGaps');
       }
       if (this.model.omittedRows > 0) {
         return translate(

@@ -29,6 +29,9 @@ use Piwik\Plugins\FeinwerkDataExploration\Definition\ExplorationDefinition;
 final class ExplorationQueryBuilder
 {
     private const VISIT = 'log_visit';
+    /** text operators that keep rows without a value and test the negation of their positive match */
+    private const NEGATED_TEXT_OPERATORS = ['notContains', 'notEquals', 'notStartsWith', 'notEndsWith'];
+    private const NUMBER_SQL = ['gt' => '>', 'gte' => '>=', 'lt' => '<', 'lte' => '<='];
     private const ACTION = 'log_link_visit_action';
 
     private const IS_PAGEVIEW = 'log_link_visit_action.idaction_event_category IS NULL AND log_link_visit_action.idaction_url IS NOT NULL'
@@ -91,30 +94,31 @@ final class ExplorationQueryBuilder
         $groupBy = array_map(fn (string $alias) => 'fwde_a.' . $alias, array_keys($keys));
         $sql .= ' GROUP BY ' . implode(', ', $groupBy);
 
+        // clauses with a number condition test the grouped rows; their text conditions test the grouped key. The key goes
+        // inside an aggregate: MySQL (not MariaDB) may check a bare column of the merged derived table against a row of
+        // another group; within a group every key is equal, so MAX() is the group's key.
         $having = [];
         $havingBind = [];
-        $anyByNumber = $definition->matchesAnyByNumber();
-        $unrestricted = false;
-        foreach ($definition->filters as $i => $filter) {
-            if (in_array($filter['operator'], ExplorationDefinition::NUMBER_OPERATORS, true)) {
-                $having[] = $filter['target'] . ($filter['operator'] === 'gt' ? ' > ?' : ' < ?');
-                $havingBind[] = $filter['value'];
-            } elseif ($anyByNumber) {
-                // "match any" with a number filter: the text filters test the grouped key here, not each unit in stage A.
-                // The key goes inside an aggregate: MySQL (not MariaDB) may check a bare column of the merged derived
-                // table against a row of another group; within a group every key is equal, so MAX() is the group's key.
-                $alias = 'MAX(fwde_a.fwde_k' . ($filter['target'] === ExplorationDefinition::SORT_LABEL ? 1 : 2) . ')';
-                $condition = self::textCondition($filter, $i, $dimensions, $alias, $resolvedFilters, $havingBind);
-                if ($condition === null) {
-                    $unrestricted = true;
-                } else {
-                    $having[] = $condition;
+        foreach (FilterClauses::of($definition) as $clause) {
+            if (!$clause['number']) {
+                continue;
+            }
+            [$condition, $conditionBind] = self::clauseSql($clause, function (int $i, array &$conditionBind) use ($definition, $dimensions, $resolvedFilters): ?string {
+                $filter = $definition->filters[$i];
+                if (in_array($filter['operator'], ExplorationDefinition::NUMBER_OPERATORS, true)) {
+                    $conditionBind[] = $filter['value'];
+                    return $filter['target'] . ' ' . self::NUMBER_SQL[$filter['operator']] . ' ?';
                 }
+                $alias = 'MAX(fwde_a.fwde_k' . self::labelKey($filter['target']) . ')';
+                return self::textCondition($filter, $i, $dimensions, $alias, $resolvedFilters, $conditionBind);
+            });
+            if ($condition !== null) {
+                $having[] = $condition;
+                array_push($havingBind, ...$conditionBind);
             }
         }
-        // binds join only with their conditions: an OR group that a filter excluding nothing drops takes its binds along
-        if ($having !== [] && !($anyByNumber && $unrestricted)) {
-            $sql .= ' HAVING ' . ($anyByNumber ? '(' . implode(' OR ', $having) . ')' : implode(' AND ', $having));
+        if ($having !== []) {
+            $sql .= ' HAVING ' . implode(' AND ', $having);
             array_push($bind, ...$havingBind);
         }
 
@@ -199,6 +203,107 @@ final class ExplorationQueryBuilder
     }
 
     /**
+     * An upper level of a report (saved reports, 2026-11-24; any depth since rows and pivot): each prefix of the first
+     * k dimensions in $prefixKeys (k = the length of its tuples) with its totals over what the text filters let through
+     * (filters on the deeper dimensions included), as buildTotals() does for the whole table; stage A grouped by visit
+     * and the k keys, so a visit counts once per prefix. No number filters, no sorting, no limit.
+     *
+     * @param list<list<?string>> $prefixKeys the raw keys of the prefixes, all of one length (1 to the dimensions - 1)
+     * @return array{sql: string, bind: array} result columns fwde_row (the index into $prefixKeys) and the metric ids
+     */
+    public function buildLevel(ExplorationDefinition $definition, array $dimensions, int $idSite, QueryContext $context, array $resolvedFilters, array $prefixKeys): array
+    {
+        $keys = $this->keys($dimensions, $context);
+        $aliases = array_slice(array_keys($keys), 0, max(1, count($prefixKeys[0] ?? [])));
+        $stageA = $this->stageA($definition, $dimensions, $keys, $idSite, $context, $resolvedFilters, false, null, $aliases);
+        return $this->restricted($definition, $aliases, $stageA, $idSite, $context, array_values($prefixKeys));
+    }
+
+    /**
+     * The pivot's values (rows and pivot, 2026-11-24) with every metric of the definition: grouped by the pivot key
+     * alone over what the text filters let through (the row dimensions' filters and kind of action included), the
+     * first metric's largest first, cut at $limit; with a null limit every value in the key's own order (Weekday). The
+     * pivot key follows the row keys (fwde_k{n+1}); in action scope stage A has one row per visit and pivot value.
+     * $sortOutsideGrouping: see GroupingQuirk.
+     *
+     * @return array{sql: string, bind: array} result columns fwde_k{n+1} and the metric ids
+     */
+    public function buildPivotValues(ExplorationDefinition $definition, array $dimensions, DimensionDefinition $pivot, int $idSite, QueryContext $context, array $resolvedFilters, ?int $limit, bool $sortOutsideGrouping = false): array
+    {
+        [$all, $keys, $alias] = $this->withPivot($dimensions, $pivot, $context);
+        $stageA = $this->stageA($definition, $all, $keys, $idSite, $context, $resolvedFilters, false, null, [$alias]);
+        [$sql, $bind] = $this->stageB($definition, [$alias], $stageA, $idSite, $context);
+        $sql .= ' GROUP BY fwde_a.' . $alias;
+        $orderBy = ' ORDER BY ' . ($limit === null ? $alias . ' ASC' : $definition->metricIds[0] . ' DESC, ' . $alias . ' ASC LIMIT ' . $limit);
+        // see GroupingQuirk: the outer query sorts the grouped values only
+        $sql = $sortOutsideGrouping ? 'SELECT * FROM (' . $sql . ') AS fwde_g' . $orderBy : $sql . $orderBy;
+        return ['sql' => $sql, 'bind' => $bind];
+    }
+
+    /**
+     * The pivot cells of the shown rows: each row (fwde_row, the index in $rowKeys, matched as the database compares)
+     * by pivot value (fwde_p, the index in $pivotKeys, matched the same way); with $others the rest of the pivot values
+     * as one group (fwde_p NULL).
+     * No number filters, sorting or limit.
+     *
+     * @param list<list<?string>> $rowKeys raw row keys of the shown rows (Explorer::rowKeys)
+     * @param list<?string> $pivotKeys raw keys of the pivot values shown as columns
+     * @return array{sql: string, bind: array} result columns fwde_row, fwde_p and the metric ids
+     */
+    public function buildPivotCells(ExplorationDefinition $definition, array $dimensions, DimensionDefinition $pivot, int $idSite, QueryContext $context, array $resolvedFilters, array $rowKeys, array $pivotKeys, bool $others): array
+    {
+        [$all, $keys, $alias] = $this->withPivot($dimensions, $pivot, $context);
+        $stageA = $this->stageA($definition, $all, $keys, $idSite, $context, $resolvedFilters);
+        $rowAliases = array_slice(array_keys($keys), 0, count($dimensions));
+        return $this->restricted($definition, $rowAliases, $stageA, $idSite, $context, $rowKeys, false,
+            ['alias' => $alias, 'keys' => $pivotKeys, 'others' => $others]);
+    }
+
+    /**
+     * The Others column's total: the definition's metrics over what the text filters let through, outside the pivot
+     * values shown as columns (the column totals of the shown values come with buildPivotValues()). One row.
+     *
+     * @param list<?string> $pivotKeys raw keys of the pivot values shown as columns
+     * @return array{sql: string, bind: array} one row with the metric ids as columns
+     */
+    public function buildPivotTotals(ExplorationDefinition $definition, array $dimensions, DimensionDefinition $pivot, int $idSite, QueryContext $context, array $resolvedFilters, array $pivotKeys): array
+    {
+        [$all, $keys, $alias] = $this->withPivot($dimensions, $pivot, $context);
+        $stageA = $this->stageA($definition, $all, $keys, $idSite, $context, $resolvedFilters, false, null, [$alias]);
+        [$sql, $bind] = $this->stageB($definition, [], $stageA, $idSite, $context);
+        [$condition, $conditionBind] = self::pivotCondition($alias, $pivotKeys, true);
+        return ['sql' => $sql . ' WHERE ' . $condition, 'bind' => array_merge($bind, $conditionBind)];
+    }
+
+    /** @return array{0: list<DimensionDefinition>, 1: array<string, string>, 2: string} the dimensions with the pivot last, their keys, the pivot's alias */
+    private function withPivot(array $dimensions, DimensionDefinition $pivot, QueryContext $context): array
+    {
+        $all = array_merge(array_values($dimensions), [$pivot]);
+        $keys = $this->keys($all, $context);
+        return [$all, $keys, 'fwde_k' . count($all)];
+    }
+
+    /**
+     * The pivot key among the given values (an IN list, NULL for a value without key), or with $others outside them:
+     * IS NOT TRUE, so a NULL key outside the list belongs to the rest.
+     *
+     * @return array{0: string, 1: array}
+     */
+    private static function pivotCondition(string $alias, array $pivotKeys, bool $others): array
+    {
+        $values = array_values(array_unique(array_map('strval', array_filter($pivotKeys, static fn ($key) => $key !== null))));
+        $tests = [];
+        if ($values !== []) {
+            $tests[] = 'fwde_a.' . $alias . ' IN (' . implode(', ', array_fill(0, count($values), '?')) . ')';
+        }
+        if (in_array(null, $pivotKeys, true)) {
+            $tests[] = 'fwde_a.' . $alias . ' IS NULL';
+        }
+        $condition = '(' . ($tests === [] ? '1 = 0' : implode(' OR ', $tests)) . ')';
+        return [$others ? $condition . ' IS NOT TRUE' : $condition, $values];
+    }
+
+    /**
      * The trend (trend design 5): with $onlyKeys the rows of the own view by their index (fwde_row, as in build()) and
      * the time key, otherwise the totals (as buildTotals()) by the time key. The time key fwde_t is the expression of
      * the "Date" or "Hour" dimension, so the trend counts days and hours as those dimensions do. No number filters,
@@ -258,7 +363,7 @@ final class ExplorationQueryBuilder
      * @param list<array{0: ?string, 1: ?string}> $onlyKeys
      * @param bool $byTime also by the time key fwde_t of stage A (trend)
      */
-    private function restricted(ExplorationDefinition $definition, array $aliases, array $stageA, int $idSite, QueryContext $context, array $onlyKeys, bool $byTime = false): array
+    private function restricted(ExplorationDefinition $definition, array $aliases, array $stageA, int $idSite, QueryContext $context, array $onlyKeys, bool $byTime = false, ?array $pivot = null): array
     {
         $whens = [];
         $caseBind = [];
@@ -273,6 +378,20 @@ final class ExplorationQueryBuilder
         $leading = $onlyKeys === []
             ? ['sql' => 'NULL AS fwde_row', 'bind' => []]
             : ['sql' => 'CASE ' . implode(' ', $whens) . ' END AS fwde_row', 'bind' => $caseBind];
+        if ($pivot !== null) {
+            // the pivot value of each group (rows and pivot): its index in the pivot keys, matched as the database
+            // compares (as the rows), or nothing for the Others group
+            if ($pivot['others'] || $pivot['keys'] === []) {
+                $leading['sql'] .= ', NULL AS fwde_p';
+            } else {
+                $pivotWhens = [];
+                foreach (array_values($pivot['keys']) as $index => $key) {
+                    $pivotWhens[] = 'WHEN fwde_a.' . $pivot['alias'] . ' <=> ? THEN ' . (int) $index;
+                    $leading['bind'][] = $key;
+                }
+                $leading['sql'] .= ', CASE ' . implode(' ', $pivotWhens) . ' END AS fwde_p';
+            }
+        }
         [$sql, $bind] = $this->stageB($definition, $byTime ? ['fwde_t'] : [], $stageA, $idSite, $context, $leading);
 
         if ($onlyKeys === []) {
@@ -299,7 +418,14 @@ final class ExplorationQueryBuilder
             }
             $filters[] = '(' . implode(' OR ', $parts) . ')';
         }
-        $sql .= ' WHERE ' . implode(' AND ', $filters) . ' GROUP BY fwde_row' . ($byTime ? ', fwde_a.fwde_t' : '') . ' HAVING fwde_row IS NOT NULL';
+        $groupBy = 'fwde_row' . ($byTime ? ', fwde_a.fwde_t' : '');
+        if ($pivot !== null) {
+            [$pivotSql, $pivotBind] = self::pivotCondition($pivot['alias'], $pivot['keys'], $pivot['others']);
+            $filters[] = $pivotSql;
+            array_push($bind, ...$pivotBind);
+            $groupBy .= $pivot['others'] ? '' : ', fwde_p';
+        }
+        $sql .= ' WHERE ' . implode(' AND ', $filters) . ' GROUP BY ' . $groupBy . ' HAVING fwde_row IS NOT NULL';
         return ['sql' => $sql, 'bind' => $bind];
     }
 
@@ -320,8 +446,11 @@ final class ExplorationQueryBuilder
      * @param bool $perVisit totals: no key columns, and in action scope one row per visit
      * @param DimensionDefinition|null $time a time key fwde_t, selected and grouped in both modes (trend)
      */
-    private function stageA(ExplorationDefinition $definition, array $dimensions, array $keys, int $idSite, QueryContext $context, array $resolvedFilters, bool $perVisit = false, ?DimensionDefinition $time = null): array
+    private function stageA(ExplorationDefinition $definition, array $dimensions, array $keys, int $idSite, QueryContext $context, array $resolvedFilters, bool $perVisit = false, ?DimensionDefinition $time = null, ?array $groupKeys = null): array
     {
+        // the keys stage A selects and groups by: all, none per visit, or only some (the first level, saved reports);
+        // the filters still read every key
+        $grouping = $perVisit ? [] : ($groupKeys === null ? $keys : array_intersect_key($keys, array_flip($groupKeys)));
         $timeKeys = $time === null ? [] : ['fwde_t' => $time->keySql($context, 'fwde_t')];
         $isAction = $context->scope === QueryContext::SCOPE_ACTION;
         $base = $isAction ? self::ACTION : self::VISIT;
@@ -347,7 +476,7 @@ final class ExplorationQueryBuilder
         $from = array_merge($from, $joins);
 
         $select = [$base . '.idvisit AS fwde_idvisit'];
-        foreach (($perVisit ? [] : $keys) + $timeKeys as $alias => $keySql) {
+        foreach ($grouping + $timeKeys as $alias => $keySql) {
             $select[] = $keySql . ' AS ' . $alias;
         }
         foreach ($this->stageAMeasures($definition, $dimensions, $isAction) as $alias => $sql) {
@@ -366,39 +495,63 @@ final class ExplorationQueryBuilder
         }
 
         $bind = [$context->windowStartUtc, $context->windowEndUtc, $idSite];
-        // "match any" with a number filter tests the text filters on the grouped rows (build()), else here per unit
-        if (!$definition->matchesAnyByNumber()) {
-            $conditions = [];
-            $conditionBind = [];
-            $unrestricted = false;
-            foreach ($definition->filters as $i => $filter) {
-                if (!in_array($filter['operator'], ExplorationDefinition::TEXT_OPERATORS, true)) {
-                    continue;
-                }
-                $key = $keys['fwde_k' . ($filter['target'] === ExplorationDefinition::SORT_LABEL ? 1 : 2)];
-                $condition = self::textCondition($filter, $i, $dimensions, $key, $resolvedFilters, $conditionBind);
-                if ($condition === null) {
-                    $unrestricted = true;
-                } else {
-                    $conditions[] = $condition;
-                }
+        // text-only clauses test every unit here; clauses with a number condition test the grouped rows (build())
+        foreach (FilterClauses::of($definition) as $clause) {
+            if ($clause['number']) {
+                continue;
             }
-            if ($definition->match === ExplorationDefinition::MATCH_ANY) {
-                // one filter that excludes nothing lets every unit through; the dropped group takes its binds along
-                if ($conditions !== [] && !$unrestricted) {
-                    $where .= ' AND (' . implode(' OR ', $conditions) . ')';
-                    array_push($bind, ...$conditionBind);
-                }
-            } elseif ($conditions !== []) {
-                $where .= ' AND ' . implode(' AND ', $conditions);
+            [$condition, $conditionBind] = self::clauseSql($clause, function (int $i, array &$conditionBind) use ($definition, $dimensions, $keys, $resolvedFilters): ?string {
+                $filter = $definition->filters[$i];
+                $key = $keys['fwde_k' . self::labelKey($filter['target'])];
+                return self::textCondition($filter, $i, $dimensions, $key, $resolvedFilters, $conditionBind);
+            });
+            if ($condition !== null) {
+                $where .= ' AND ' . $condition;
                 array_push($bind, ...$conditionBind);
             }
         }
 
-        $grouped = array_keys(($perVisit ? [] : $keys) + $timeKeys);
+        $grouped = array_keys($grouping + $timeKeys);
         $groupBy = $isAction ? implode(', ', array_merge($grouped, ['log_link_visit_action.idvisit'])) : null;
 
         return ($this->segmentedSelect)(implode(', ', $select), $from, $where, $bind, $groupBy);
+    }
+
+    /**
+     * The SQL of one clause: its groups joined by OR, each group's conditions by its join. A condition that excludes
+     * nothing (null) drops out of an AND group and makes an OR group true; a true group makes the clause true (null,
+     * no binds): binds stay with their conditions, so a dropped part takes its binds along.
+     *
+     * @param array{groups: list<array{join: string, indexes: list<int>}>, number: bool} $clause
+     * @param callable $condition fn(int $index, array &$bind): ?string the SQL of one condition
+     * @return array{0: ?string, 1: array}
+     */
+    private static function clauseSql(array $clause, callable $condition): array
+    {
+        $groups = [];
+        $bind = [];
+        foreach ($clause['groups'] as $group) {
+            $parts = [];
+            $partBind = [];
+            foreach ($group['indexes'] as $i) {
+                $conditionBind = [];
+                $sql = $condition($i, $conditionBind);
+                if ($sql === null) {
+                    if ($group['join'] === 'OR') {
+                        return [null, []];
+                    }
+                    continue;
+                }
+                $parts[] = $sql;
+                array_push($partBind, ...$conditionBind);
+            }
+            if ($parts === []) {
+                return [null, []];
+            }
+            $groups[] = count($parts) === 1 ? $parts[0] : '(' . implode(' ' . $group['join'] . ' ', $parts) . ')';
+            array_push($bind, ...$partBind);
+        }
+        return [count($groups) === 1 ? $groups[0] : '(' . implode(' OR ', $groups) . ')', $bind];
     }
 
     /**
@@ -409,10 +562,13 @@ final class ExplorationQueryBuilder
      */
     private static function textCondition(array $filter, int $i, array $dimensions, string $key, array $resolvedFilters, array &$bind): ?string
     {
-        $index = $filter['target'] === ExplorationDefinition::SORT_LABEL ? 0 : 1;
-        $value = array_values($dimensions)[$index]->storesSanitizedText
-            ? Common::sanitizeInputValue((string) $filter['value'])
-            : (string) $filter['value'];
+        $index = self::labelKey($filter['target']) - 1;
+        // Matomo stores titles and the like HTML-escaped: a text is escaped the same way; a pattern matches the five
+        // escaped characters in both forms (StoredTextPattern)
+        $value = (string) $filter['value'];
+        if (array_values($dimensions)[$index]->storesSanitizedText) {
+            $value = $filter['operator'] === 'matches' ? StoredTextPattern::of($value) : Common::sanitizeInputValue($value);
+        }
         return isset($resolvedFilters[$i])
             ? self::resolvedFilterSql($key, $filter['operator'], $resolvedFilters[$i], $bind)
             : self::textFilterSql($key, $filter['operator'], $value, $bind);
@@ -427,11 +583,18 @@ final class ExplorationQueryBuilder
             $bind[] = $value;
             return $operator === 'equals' ? '(' . $key . ') = ?' : '((' . $key . ') IS NULL OR (' . $key . ') <> ?)';
         }
+        if ($operator === 'matches') {
+            // the database's regular expressions, case-insensitive with the tables' collations
+            $bind[] = $value;
+            return '(' . $key . ') REGEXP ?';
+        }
 
         // LIKE treats % and _ as wildcards and \ as escape character; the filter text is matched literally
         $literal = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
-        $bind[] = ($operator === 'startsWith' ? '' : '%') . $literal . ($operator === 'endsWith' ? '' : '%');
-        return $operator === 'notContains'
+        $anchoredStart = $operator === 'startsWith' || $operator === 'notStartsWith';
+        $anchoredEnd = $operator === 'endsWith' || $operator === 'notEndsWith';
+        $bind[] = ($anchoredStart ? '' : '%') . $literal . ($anchoredEnd ? '' : '%');
+        return in_array($operator, self::NEGATED_TEXT_OPERATORS, true)
             ? '((' . $key . ') IS NULL OR (' . $key . ') NOT LIKE ?)'
             : '(' . $key . ') LIKE ?';
     }
@@ -448,7 +611,7 @@ final class ExplorationQueryBuilder
         $placeholders = implode(', ', array_fill(0, count($values), '?'));
         array_push($bind, ...$values);
 
-        if ($operator !== 'notContains' && $operator !== 'notEquals') {
+        if (!in_array($operator, self::NEGATED_TEXT_OPERATORS, true)) {
             if ($values === []) {
                 return $resolved['includeNull'] ? '((' . $key . ') IS NULL)' : '1 = 0';
             }
@@ -492,7 +655,7 @@ final class ExplorationQueryBuilder
                 $measures['fwde_idvisitor'] = 'log_visit.idvisitor';
             } elseif (in_array($metricId, ['nb_actions', 'bounce_rate', 'nb_actions_per_visit', 'max_actions'], true)) {
                 $measures['fwde_actions'] = 'log_visit.visit_total_actions';
-            } elseif ($metricId === 'avg_time_on_site') {
+            } elseif (in_array($metricId, ['avg_time_on_site', 'sum_visit_length'], true)) {
                 $measures['fwde_time'] = 'log_visit.visit_total_time';
             }
         }
@@ -526,44 +689,120 @@ final class ExplorationQueryBuilder
                 return 'ROUND(SUM(CASE WHEN fwde_c.fwde_conversions > 0 THEN 1 ELSE 0 END) / COUNT(*), 4)';
             case 'revenue':
                 return 'ROUND(COALESCE(SUM(fwde_c.fwde_revenue), 0), 2)';
+            case 'sum_visit_length':
+                return 'SUM(' . $time . ')';
+            case 'nb_visits_converted':
+                return 'SUM(CASE WHEN fwde_c.fwde_conv_any > 0 THEN 1 ELSE 0 END)';
+            case 'revenue_per_visit':
+                return 'ROUND(COALESCE(SUM(fwde_c.fwde_rev_any), 0) / COUNT(*), 2)';
             case 'sum_event_value':
                 return 'ROUND(COALESCE(SUM(fwde_a.fwde_event_value), 0), 2)';
             case 'avg_event_value':
                 return 'ROUND(COALESCE(SUM(fwde_a.fwde_event_value) / NULLIF(SUM(fwde_a.fwde_events_with_value), 0), 0), 2)';
-            default:
-                return 'SUM(fwde_a.' . self::ACTION_MEASURES[$metricId][0] . ')';
         }
+        if (preg_match('/^goal_(\d+|ecommerceOrder|ecommerceAbandonedCart)_([a-z_]+)$/', $metricId, $m) === 1) {
+            return self::goalMetricSql($m[1], $m[2]);
+        }
+        return 'SUM(fwde_a.' . self::ACTION_MEASURES[$metricId][0] . ')';
     }
 
+    /**
+     * A goal's or e-commerce metric from the per-visit columns of the conversions subquery (conversionColumns()): counts
+     * and revenue summed, rates over the visits of the row, the average order value over the orders.
+     */
+    private static function goalMetricSql(string $goalKey, string $metric): string
+    {
+        [$count, $revenue] = [
+            'ecommerceOrder' => ['fwde_orders', 'fwde_order_rev'],
+            'ecommerceAbandonedCart' => ['fwde_carts', 'fwde_cart_rev'],
+        ][$goalKey] ?? ['fwde_conv_g' . $goalKey, 'fwde_rev_g' . $goalKey];
+        switch ($metric) {
+            case 'nb_conversions':
+                return 'COALESCE(SUM(fwde_c.' . $count . '), 0)';
+            case 'conversion_rate':
+                return 'ROUND(SUM(CASE WHEN fwde_c.' . $count . ' > 0 THEN 1 ELSE 0 END) / COUNT(*), 4)';
+            case 'revenue':
+                return 'ROUND(COALESCE(SUM(fwde_c.' . $revenue . '), 0), 2)';
+            case 'items':
+                return 'COALESCE(SUM(fwde_c.fwde_items), 0)';
+            case 'avg_order_revenue':
+                // 0 without orders, as every average without data (avg_event_value)
+                return 'ROUND(COALESCE(SUM(fwde_c.fwde_order_rev) / NULLIF(SUM(fwde_c.fwde_orders), 0), 0), 2)';
+        }
+        throw new \InvalidArgumentException('Unknown goal metric ' . $metric);
+    }
+
+    /** a conversion's revenue, without the absurd values a broken tracker can send */
+    private const CONVERSION_REVENUE = 'CASE WHEN ABS(log_conversion.revenue) > 1000000000000 THEN 0 ELSE log_conversion.revenue END';
+
+    /**
+     * Per visit the conversions and revenue the requested metrics need, each as a conditional sum over one pass of the
+     * visits' conversions (more metrics, 2026-11-24): all goals (idGoal narrows only these), any goal or order for the
+     * visit metrics, each requested goal, e-commerce orders with their items, abandoned carts. Ecommerce orders (0) count
+     * as conversions, abandoned carts (-1) do not, as in Matomo's goal reports; the idgoal condition widens to the
+     * carts only when a cart metric asks for them. Goal ids are integers from the catalogue, written into the SQL.
+     */
     private function conversions(ExplorationDefinition $definition, int $idSite, QueryContext $context): array
     {
+        $needs = [];
+        foreach ($definition->metricIds as $metricId) {
+            if (in_array($metricId, ['nb_conversions', 'conversion_rate', 'revenue'], true)) {
+                $needs['all'] = true;
+            } elseif (in_array($metricId, ['nb_visits_converted', 'revenue_per_visit'], true)) {
+                $needs['any'] = true;
+            } elseif (preg_match('/^goal_(\d+|ecommerceOrder|ecommerceAbandonedCart)_/', $metricId, $m) === 1) {
+                $needs[ctype_digit($m[1]) ? 'g' . (int) $m[1] : $m[1]] = true;
+            }
+        }
+        $carts = isset($needs['ecommerceAbandonedCart']);
+        $noCarts = $carts ? 'log_conversion.idgoal >= 0' : null;
+
         // fwde_ names: HAVING looks up names in the joined tables before the select aliases (e.g. "revenue")
-        $sql = 'SELECT log_conversion.idvisit AS idvisit, COUNT(*) AS fwde_conversions,'
-            . ' SUM(CASE WHEN ABS(log_conversion.revenue) > 1000000000000 THEN 0 ELSE log_conversion.revenue END) AS fwde_revenue'
+        $columns = [];
+        $add = static function (string $alias, ?string $condition, string $value) use (&$columns): void {
+            if ($condition === null) {
+                $columns[] = ($value === '1' ? 'COUNT(*)' : 'SUM(' . $value . ')') . ' AS ' . $alias;
+            } else {
+                $columns[] = 'SUM(CASE WHEN ' . $condition . ' THEN ' . $value . ' ELSE 0 END) AS ' . $alias;
+            }
+        };
+        foreach (array_keys($needs) as $need) {
+            if ($need === 'all') {
+                $condition = $definition->idGoal !== null ? 'log_conversion.idgoal = ' . (int) $definition->idGoal : $noCarts;
+                $add('fwde_conversions', $condition, '1');
+                $add('fwde_revenue', $condition, self::CONVERSION_REVENUE);
+            } elseif ($need === 'any') {
+                $add('fwde_conv_any', $noCarts, '1');
+                $add('fwde_rev_any', $noCarts, self::CONVERSION_REVENUE);
+            } elseif ($need === 'ecommerceOrder') {
+                $add('fwde_orders', 'log_conversion.idgoal = 0', '1');
+                $add('fwde_order_rev', 'log_conversion.idgoal = 0', self::CONVERSION_REVENUE);
+                $add('fwde_items', 'log_conversion.idgoal = 0', 'log_conversion.items');
+            } elseif ($need === 'ecommerceAbandonedCart') {
+                $add('fwde_carts', 'log_conversion.idgoal = -1', '1');
+                $add('fwde_cart_rev', 'log_conversion.idgoal = -1', self::CONVERSION_REVENUE);
+            } else {
+                $idGoal = (int) substr($need, 1);
+                $add('fwde_conv_g' . $idGoal, 'log_conversion.idgoal = ' . $idGoal, '1');
+                $add('fwde_rev_g' . $idGoal, 'log_conversion.idgoal = ' . $idGoal, self::CONVERSION_REVENUE);
+            }
+        }
+
+        $sql = 'SELECT log_conversion.idvisit AS idvisit, ' . implode(', ', $columns)
             . ' FROM ' . ($this->prefixTable)('log_conversion') . ' AS log_conversion'
             . ' WHERE log_conversion.idsite = ? AND log_conversion.server_time >= ? AND log_conversion.server_time <= ?'
-            // ecommerce orders (0) count as conversions, abandoned carts (-1) do not, as in Matomo's goal reports
-            . ' AND log_conversion.idgoal >= 0';
-        $bind = [$idSite, $context->windowStartUtc, $context->windowEndUtc];
-        if ($definition->idGoal !== null) {
-            $sql .= ' AND log_conversion.idgoal = ?';
-            $bind[] = $definition->idGoal;
-        }
-        $sql .= ' GROUP BY log_conversion.idvisit';
+            . ' AND log_conversion.idgoal >= ' . ($carts ? '-1' : '0')
+            . ' GROUP BY log_conversion.idvisit';
 
-        return ['sql' => $sql, 'bind' => $bind];
+        return ['sql' => $sql, 'bind' => [$idSite, $context->windowStartUtc, $context->windowEndUtc]];
     }
 
     private function orderBy(ExplorationDefinition $definition, array $keyAliases): string
     {
         $direction = strtoupper($definition->sortOrder);
-        if ($definition->sortColumn === ExplorationDefinition::SORT_LABEL) {
-            $first = 'fwde_k1';
-        } elseif ($definition->sortColumn === ExplorationDefinition::SORT_SECONDARY_LABEL) {
-            $first = 'fwde_k2';
-        } else {
-            $first = $definition->sortColumn;
-        }
+        $first = in_array($definition->sortColumn, ExplorationDefinition::LABEL_COLUMNS, true)
+            ? 'fwde_k' . self::labelKey($definition->sortColumn)
+            : $definition->sortColumn;
 
         $orderBy = [$first . ' ' . $direction];
         foreach ($keyAliases as $alias) {
@@ -572,6 +811,12 @@ final class ExplorationQueryBuilder
             }
         }
         return implode(', ', $orderBy);
+    }
+
+    /** The key number of a label column: label 1, secondary_label 2, tertiary_label 3. */
+    private static function labelKey(string $target): int
+    {
+        return (int) array_search($target, ExplorationDefinition::LABEL_COLUMNS, true) + 1;
     }
 
     private function hasMetricOfScope(ExplorationDefinition $definition, string $scope): bool

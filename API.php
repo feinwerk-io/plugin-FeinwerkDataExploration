@@ -9,6 +9,8 @@
 
 namespace Piwik\Plugins\FeinwerkDataExploration;
 
+use Piwik\Date;
+use Piwik\Site;
 use Piwik\DataTable;
 use Piwik\Piwik;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\DimensionCatalog;
@@ -24,12 +26,20 @@ use Piwik\Plugins\FeinwerkDataExploration\Engine\AccessPolicy;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\CostGuard;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\ExplorationWindow;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\PeriodSuggestion;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\PivotExplorer;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\KpiExplorer;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\ReportLevels;
 use Piwik\Plugins\FeinwerkDataExploration\Query\QueryRunner;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\LimitsProvider;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\TextColumns;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\TrendExplorer;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\ExplorationException;
+use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedStateDefinition;
+use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedReportUnavailable;
+use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedReportTable;
+use Piwik\Plugins\FeinwerkDataExploration\Saved\ReportVisibility;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationCopier;
+use Piwik\Plugins\FeinwerkDataExploration\Saved\KpiCardSettings;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationRules;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationStore;
 use Piwik\Segment;
@@ -48,29 +58,68 @@ use Piwik\Version;
 class API extends \Piwik\Plugin\API
 {
     /**
-     * An ad hoc table straight from the raw data of one site: one or two dimensions and one to five metrics.
+     * An ad hoc table straight from the raw data of one site: one to three dimensions and one to ten metrics.
      *
      * The definition is JSON, e.g. {"dimensions": ["browser", "pageUrl"], "metrics": ["nb_visits", "nb_pageviews"],
      * "idGoal": 2, "sort": "nb_pageviews", "sortOrder": "desc", "limit": 100}; see getAvailableDimensions() and
-     * getAvailableMetrics() for the ids.
+     * getAvailableMetrics() for the ids. idGoal is the older form of a goal's metrics: it narrows only nb_conversions,
+     * conversion_rate and revenue to that goal; the per-goal metrics (goal_<idGoal>_nb_conversions and so on) do the same
+     * side by side and are not affected by it.
      *
-     * With readableColumns=1 the columns are named by the dimension and metric names in the user's language (exports).
+     * Row filters (optional) choose the table's rows: "filterGroups": {"match": "all"|"any", "groups": [{"match":
+     * "all"|"any", "filters": [{"target": ..., "operator": ..., "value": ...}]}]}. The outer match joins the groups,
+     * each group's match its conditions; both default to "all". Example (Chrome on desktops, or more than 100 visits):
+     * {"match": "any", "groups": [{"filters": [{"target": "label", "operator": "contains", "value": "chrome"},
+     * {"target": "secondary_label", "operator": "equals", "value": "Desktop"}]}, {"filters": [{"target": "nb_visits",
+     * "operator": "gt", "value": 100}]}]}. 1 to 5 groups, at most 10 conditions in all, every group with at least one.
+     * - A text condition: target "label" (first dimension), "secondary_label" (second dimension) or "tertiary_label"
+     *   (third dimension), each only when the definition has that dimension;
+     *   operator contains, equals, notContains, notEquals, startsWith, endsWith, notStartsWith, notEndsWith or matches;
+     *   value a text of 1 to 1,000 characters (trimmed), compared case-insensitively with the row's value as shown. The
+     *   negated operators (notContains, notEquals, notStartsWith, notEndsWith) keep rows without a value, the others drop
+     *   them. matches takes a regular expression of at most 200 characters in the dialect of the database (MySQL 8:
+     *   ICU, MariaDB: PCRE, MySQL 5.7: POSIX; the common syntax works everywhere), checked with PHP's PCRE first; on
+     *   page titles, event names, keywords and custom dimensions, which Matomo stores HTML-escaped, the characters & ' "
+     *   < > outside a character class match their plain and their escaped form.
+     * - A number condition: target one of the definition's metric ids; operator gt, gte, lt or lte; value a number in
+     *   the metric's raw unit (rates such as bounce_rate and conversion_rate as fractions: 0.25 for 25 %, durations in
+     *   seconds). Number conditions decide which rows are shown. Totals, shares, "Others" and trend lines cover what
+     *   the text conditions let through before the grouping: a text condition joined by "any" with a number condition
+     *   (in its group, or between groups) is tested on the grouped rows and does not narrow them.
+     * - The form before filter groups is still accepted: "filters": [conditions] with "match": "all"|"any" is one group
+     *   with that match. Sending both forms is refused.
+     * Errors answer HTTP 400 and name the field, e.g. "filterGroups.groups[1].filters[0]", with the allowed values.
+     *
+     * A pivot (optional) turns the top values of one more dimension into column groups: "pivot": {"dimension": <id>,
+     * "limit": 3|5|10} (limit defaults to 5). The pivot dimension may not be a row dimension, Date or Hour; Weekday
+     * shows its seven days (Monday first) whatever the limit. The limit times the number of metrics may be at most 60.
+     * Not together with comparisons. With a pivot the first row is the total row (metadata fwde_total, and fwde_pivot:
+     * {"dimension": id, "values": [{"label", "value" (raw), "segment" (Matomo segment or null)}], "others": bool}).
+     * Every row then has, per pivot value n (from 1, the first metric's largest first over what the text conditions
+     * let through), {metric}__p{n}; when values were cut, {metric}__p_others for the rest of the values where it is
+     * exact (sums of what one visit counts once: not visits or visitors under a page pivot, not rates or averages);
+     * {metric} stays the row's total over all values. A cell without data is 0 for counts and sums, null otherwise.
+     * Sorting, the row limit and number conditions apply to the rows by their totals.
+     *
+     * With readableColumns=1 the columns are named by the dimension and metric names in the user's language (exports);
+     * with a pivot "<value>: <metric>", "Others: <metric>" and "Total: <metric>".
      *
      * @param int $idSite one website; roll-up sites have no raw data and are refused
      * @param 'day'|'week'|'month'|'range' $period one period, at most 31 days (see the plugin settings)
      * @param string $date a day (YYYY-MM-DD, today, yesterday) or for period=range "YYYY-MM-DD,YYYY-MM-DD", lastN or previousN
-     * @param string $definition JSON: dimensions (1 or 2), metrics (1 to 5), optional idGoal, sort, sortOrder, limit
-     *                           (1 to 1,000) and filters (up to 5: label/secondary_label contains, equals, notContains;
-     *                           a selected metric gt, lt)
+     * @param string $definition JSON: dimensions (1 to 3), metrics (1 to 10), optional idGoal, sort, sortOrder, limit
+     *                           (1 to 1,000), filterGroups (row filters) and pivot (both described above)
      * @param string $segment a Matomo segment definition
      * @param int $readableColumns 1 names the columns in the user's language
      * @param string $comparisons JSON, optional: comparison columns after the own one (Matomo's comparison of segments and
      *                            periods), e.g. [{"segment": "browserCode==FF", "period": "day", "date": "2026-03-27"}];
      *                            up to 3 (4 columns per metric with the own one). With comparisons the first row is the
      *                            total row (metadata fwde_total), and each row gets {metric}__share and per comparison n
-     *                            {metric}__c{n} with {metric}__c{n}__share (segments) or {metric}__c{n}__change (periods)
-     * @return DataTable label, secondary_label (two dimensions) and the metric columns; rows carry a "segment"
-     *                   metadata for the visits behind them where the dimensions have one
+     *                            {metric}__c{n} with {metric}__c{n}__share (segments) or {metric}__c{n}__change (periods).
+     *                            Refused together with a pivot (HTTP 400, naming pivot and comparisons)
+     * @return DataTable label, secondary_label (two or three dimensions), tertiary_label (three dimensions) and the
+     *                   metric columns; rows carry a "segment" metadata for the visits behind them where the dimensions
+     *                   have one
      * @unsanitized the definition and the comparisons are JSON and segments are parsed by Matomo's Segment class
      */
     public function getExploration(int $idSite, string $period, string $date, string $definition, string $segment = '', int $readableColumns = 0, string $comparisons = ''): DataTable
@@ -83,6 +132,13 @@ class API extends \Piwik\Plugin\API
         $parsed = ExplorationDefinition::fromJson($definition, $idSite, $dimensions, $metrics, $limits);
         $compared = ComparisonList::fromJson($comparisons, $limits);
 
+        if ($parsed->pivot !== null) {
+            if ($compared !== []) {
+                throw new ExplorationException('FeinwerkDataExploration_ErrorPivotWithComparison');
+            }
+            return TextColumns::skipInTotals((new PivotExplorer($dimensions, $metrics, $limits))
+                ->explore($idSite, trim($period), trim($date), $parsed, trim($segment), $readableColumns === 1));
+        }
         return TextColumns::skipInTotals((new Explorer($dimensions, $metrics, $limits))
             ->explore($idSite, trim($period), trim($date), $parsed, trim($segment), $readableColumns === 1, $compared));
     }
@@ -95,7 +151,9 @@ class API extends \Piwik\Plugin\API
      * @param int $idSite one website
      * @param string $period as for getExploration()
      * @param string $date as for getExploration()
-     * @param string $definition JSON as for getExploration()
+     * @param string $definition JSON as for getExploration(), row filters (filterGroups) included: the rest covers what
+     *                           the text conditions let through before the grouping (see getExploration()), rows hidden
+     *                           by a number condition included; a pivot is ignored (the rest of the rows, no columns)
      * @param string $segment a Matomo segment definition: only its visits count
      * @return array{others: array<string, int|float|null>|null} by metric id
      * @unsanitized the definition is JSON and the segment is parsed by Matomo's Segment class
@@ -122,11 +180,11 @@ class API extends \Piwik\Plugin\API
      * @param int $idSite one website; roll-up sites have no raw data and are refused
      * @param 'day'|'week'|'month'|'range' $period one period, at most 31 days (see the plugin settings)
      * @param string $date as for getExploration()
-     * @param string $definition JSON as for getExploration(); its row filters choose the rows, number filters do not
-     *                           remove days
+     * @param string $definition JSON as for getExploration(), row filters (filterGroups) included: they choose the
+     *                           rows, number conditions do not remove days; a pivot is ignored (lines follow the rows)
      * @param string $segment a Matomo segment definition: only its visits count
      * @param string $comparisons JSON as for getExploration()
-     * @return DataTable one row per line and day or hour: label (and secondary_label for two dimensions) of the row or
+     * @return DataTable one row per line and day or hour: label (secondary_label, tertiary_label per dimension) of the row or
      *                   the title of the comparison, time (YYYY-MM-DD or the hour 0 to 23) and the definition's
      *                   metrics; metadata fwde_line, fwde_key (rows) or fwde_kind (comparisons)
      * @unsanitized the definition and the comparisons are JSON and the segment is parsed by Matomo's Segment class
@@ -248,26 +306,41 @@ class API extends \Piwik\Plugin\API
     }
 
     /**
-     * The metrics an exploration can use, in display order.
+     * The metrics an exploration of this website can use, in display order: the fixed metrics, then three per goal of
+     * the website (goal_<idGoal>_nb_conversions, goal_<idGoal>_conversion_rate, goal_<idGoal>_revenue, in Matomo's goal
+     * order), then on an e-commerce website the e-commerce metrics (goal_ecommerceOrder_nb_conversions, _revenue, _items,
+     * _avg_order_revenue, _conversion_rate, goal_ecommerceAbandonedCart_nb_conversions, _revenue).
      *
      * @param int $idSite one website
-     * @return array<int, array{id: string, scope: string, name: string, nameInActionScope: string|null, kind: string|null,
-     *         description: string}> scope "visit", "goal" or "action"; nameInActionScope is the name next to an action
-     *         dimension (visit metrics then count the visits with that action)
+     * @return array<int, array{id: string, scope: string, group: string, name: string, nameInActionScope: string|null,
+     *         kind: string|null, unit: string, aggregation: string, idGoal: int|null, description: string}>
+     *         scope "visit", "goal" or "action"; group "visits", "goals", "ecommerce" or "actions" (the list's headings);
+     *         name in the user's language ("<goal name>: <column>" for a goal's metrics); nameInActionScope the name next to
+     *         an action dimension (visit metrics then count the visits with that action), else null; kind the kind of
+     *         action an action metric counts (pageview, event, download, outlink), else null; unit "count", "money" (the
+     *         website's currency), "rate" (a fraction from 0 to 1), "seconds" or "number"; aggregation how rows combine:
+     *         "sum" (the rows add up to the total), "distinct" (one visitor or visit can count in several rows), "ratio",
+     *         "average" or "max" (never added up); idGoal the goal of a per-goal metric, else null; description what the
+     *         metric counts. Goal and e-commerce metrics count the conversions of the visits behind each row.
      */
     public function getAvailableMetrics(int $idSite): array
     {
         self::checkAccess($idSite);
 
+        $translate = [Piwik::class, 'translate'];
         $metrics = [];
-        foreach ((new MetricCatalog())->all() as $metric) {
+        foreach ((new MetricCatalog())->all($idSite) as $metric) {
             $metrics[] = [
                 'id' => $metric->id,
                 'scope' => $metric->scope,
-                'name' => Piwik::translate($metric->nameKey),
-                'nameInActionScope' => $metric->nameInActionScopeKey === null ? null : Piwik::translate($metric->nameInActionScopeKey),
+                'group' => $metric->group,
+                'name' => $metric->label($translate),
+                'nameInActionScope' => $metric->nameInActionScopeKey === null ? null : $metric->label($translate, true),
                 'kind' => $metric->kind,
-                'description' => MetricCatalog::description($metric->id, [Piwik::class, 'translate']),
+                'unit' => $metric->unit,
+                'aggregation' => $metric->aggregation,
+                'idGoal' => $metric->goalKey !== null && ctype_digit($metric->goalKey) ? (int) $metric->goalKey : null,
+                'description' => MetricCatalog::description($metric->id, $translate, $metric->goalName),
             ];
         }
         return $metrics;
@@ -276,9 +349,13 @@ class API extends \Piwik\Plugin\API
     /**
      * The saved explorations the current user may open on the site: their own and those shared by others.
      *
-     * @param int $idSite
+     * @param int $idSite the website whose saved explorations are listed (view access)
      * @return array list of explorations with id, name, shared, owner, canEdit, canDelete (also site admins for shared
-     *               ones), kind (table or funnel), updated (UTC), state (the page's parameters) and segment
+     *               ones), menu (the section of its own menu entry: one of General_Visitors, General_Actions,
+     *               Referrers_Referrers, Goals_Ecommerce, Goals_Goals, FeinwerkDataExploration_Explorations, or null
+     *               when it is not in the menu), canPlace (whether the user may change the menu place: as canDelete,
+     *               always false for KPI cards and funnels), kind (table, funnel or kpi: a KPI card), updated (UTC),
+     *               state (the page's parameters) and segment
      */
     public function getSavedExplorations(int $idSite): array
     {
@@ -298,11 +375,24 @@ class API extends \Piwik\Plugin\API
             'canEdit' => self::canEdit($row),
             // site admins may delete the website's shared explorations (design 2026-11-20)
             'canDelete' => self::canDelete($row, $idSite),
-            'kind' => self::isFunnel($row['state']) ? 'funnel' : 'table',
+            // its menu place as a report (saved reports, 2026-11-24) and whether the user may change it
+            'menu' => self::placeable($row['state']) ? SavedExplorationRules::menuOf($row['state']) : null,
+            'canPlace' => self::placeable($row['state']) && self::canDelete($row, $idSite),
+            'kind' => self::isFunnel($row['state']) ? 'funnel' : (KpiCardSettings::isCard($row['state']) ? 'kpi' : 'table'),
             'updated' => $row['ts_updated'],
             'state' => $row['state'],
             'segment' => $row['segment'],
         ], $rows);
+    }
+
+    /**
+     * Only tables get a menu entry; KPI cards and funnels never do (UI review 2026-11-24).
+     *
+     * @param array<string, string> $state
+     */
+    private static function placeable(array $state): bool
+    {
+        return !self::isFunnel($state) && !KpiCardSettings::isCard($state);
     }
 
     /** @param array<string, string> $state */
@@ -314,9 +404,14 @@ class API extends \Piwik\Plugin\API
     /**
      * Saves the exploration as a new one of the current user.
      *
-     * @param int $idSite
+     * @param int $idSite the website the exploration belongs to (view access; sharing needs write access)
      * @param string $name 1 to 100 characters
-     * @param string $state JSON of the page's parameters (fwdeDims, fwdeMetrics, ...)
+     * @param string $state JSON of the page's parameters (fwdeDims, fwdeMetrics, ...). A KPI card (2026-11-24) adds
+     *                      "fwdeKind": "kpi" and its settings: fwdeKpiMetric (one of fwdeMetrics, default the first),
+     *                      fwdeKpiCompare (none, previous, weekday or average4; default average4), fwdeKpiLine (0, 7 or
+     *                      30 days; default 30), fwdeKpiChange (percent or absolute; default percent); a value outside
+     *                      its choices answers HTTP 400 naming the key and the choices. A card has no menu place
+     *                      (fwdeMenu is ignored); getKpiCard returns its numbers
      * @param string $segmentDefinition Matomo segment the exploration opens with (not "segment": Matomo fills that
      *                                  parameter with the page's segment)
      * @param int $shared 1 shows it to everyone who may use explorations on the site
@@ -369,6 +464,179 @@ class API extends \Piwik\Plugin\API
         $segmentDefinition = trim($segmentDefinition);
         self::checkSegment($segmentDefinition, $idSite);
         (new SavedExplorationStore())->update($idSaved, $name, $parsed, $segmentDefinition, $shared === 1);
+    }
+
+    /**
+     * A saved exploration as a Matomo report (saved reports, 2026-11-24): its table computed live from the raw data for
+     * one period, with the exploration's dimensions, metrics, filters, sorting, row limit and segment. This is the
+     * report behind the exploration's dashboard widget, scheduled e-mail reports and menu entry (API.getReportMetadata
+     * lists it as module FeinwerkDataExploration, action getSavedReport, parameter idSaved).
+     *
+     * One dimension without a pivot: one row per value. Otherwise one level per dimension (up to three) and the pivot
+     * dimension as the last level (up to four levels): the first level has one row per value of the first dimension
+     * with its totals over what the text filters let through, each with a sub table (idSubtable, from the row) holding
+     * its rows of the next dimension, and so on; the id comes from the value path, so it stays when the order changes.
+     * The pivot level holds the exploration's top pivot values under every row (0 for counts without data), then an
+     * "Others" row when values were cut and every metric adds up across them. flat=1 gives one row per path. A metric
+     * of a goal the website no longer has is left out. Visible to the owner (private) or to everyone who may use
+     * explorations (shared); Email Reports Pro names the owner with fwReportOwner.
+     *
+     * @param int $idSite the exploration's website
+     * @param 'day'|'week'|'month'|'range' $period one period of at most the plugin's limit (31 days by default); more
+     *                                           than one period (date=last7 with period=day) is refused
+     * @param string $date a day (YYYY-MM-DD, today, yesterday) or for period=range "YYYY-MM-DD,YYYY-MM-DD"
+     * @param int $idSaved the saved exploration (getSavedExplorations: id)
+     * @param string $segment a Matomo segment: it narrows the exploration's own segment further (both apply)
+     * @param int $idSubtable 0 for the report; a row's sub table id (from the row of the level above) for its rows of
+     *                        the next level
+     * @param string $fwReportOwner the login of the e-mail's owner (Email Reports Pro): honoured for super user callers
+     *                              only and only narrowing, the owner's private explorations plus shared ones
+     * @return DataTable\DataTableInterface columns label and the metric ids (raw values: counts, money in the website's
+     *                   currency, rates as fractions, seconds). A KPI card (kind "kpi") is a report without a dimension:
+     *                   one row with its metric for the period, or for period day with a date range or lastN (at most
+     *                   the plugin's days) one such table per day, keyed by the day
+     * @throws SavedReportUnavailable 400 when the period is refused or the exploration no longer resolves on the website
+     *                                (a dimension gone, no metric left); the message is translated
+     * @throws ExplorationException 404 when the exploration does not exist or the user may not see it, 503 when the
+     *                              database is busy (after waiting for a free slot)
+     */
+    public function getSavedReport(int $idSite, string $period, string $date, int $idSaved, string $segment = '', int $idSubtable = 0, string $fwReportOwner = ''): DataTable\DataTableInterface
+    {
+        self::checkAccess($idSite);
+        $owner = trim($fwReportOwner);
+        $visibility = new ReportVisibility(null, static fn (): array => ['owner' => $owner] + ReportVisibility::currentContext());
+        $row = (new SavedExplorationStore())->get($idSaved);
+        if ($row === null || (int) $row['idsite'] !== $idSite || !$visibility->canFetch($row, $idSite)) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedNotFound', [], 404);
+        }
+
+        $dimensions = new DimensionCatalog();
+        $metrics = new MetricCatalog();
+        $context = ReportVisibility::currentContext();
+        // a dashboard loads its widgets in parallel, Matomo's e-mail drops a report that fails: wait for a slot
+        $limits = (new LimitsProvider())->get();
+        $limits = $limits->withSlotWait(SavedReportTable::slotWait($limits, $context['runningTask']));
+        $definition = ExplorationDefinition::fromJson(
+            (string) json_encode(SavedStateDefinition::toDefinition($row['state'], $idSite, $dimensions, $metrics, $limits)),
+            $idSite,
+            $dimensions,
+            $metrics,
+            $limits
+        );
+        try {
+            $card = KpiCardSettings::isCard($row['state']) ? KpiCardSettings::fromState($row['state'], $definition->metricIds) : null;
+            return (new SavedReportTable(new Explorer($dimensions, $metrics, $limits), new ReportLevels($dimensions, $metrics, $limits), $dimensions, $metrics, $limits))
+                ->build($idSite, trim($period), trim($date), $definition, (string) $row['segment'], $segment, $idSubtable, $card);
+        } catch (ExplorationException $e) {
+            if (in_array($e->getTranslationKey(), ['FeinwerkDataExploration_ErrorPeriodNotSupported', 'FeinwerkDataExploration_ErrorPeriodTooLong'], true)) {
+                throw new SavedReportUnavailable($e->getTranslationKey(), $e->getParams());
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * A KPI card's numbers (2026-11-24): one metric of a saved exploration of kind "kpi" for one period, its
+     * comparison and its line, as the card on the dashboard shows them. Raw values: counts, money in the website's
+     * currency, rates as fractions, seconds.
+     *
+     * The number is the metric's total over the exploration's segment and text filters (its table's total row) for the
+     * period; with a period that includes today it covers the time so far (partial, until). The comparison follows the
+     * card's setting fwdeKpiCompare: previous (the day, week or month before), weekday (a day: 7 days before; a week or
+     * month: the one before) or average4 (a day: the same weekday 7, 14, 21 and 28 days before; a week or month: the
+     * four before), each cut at the same point when the number is partial; days before the website's first complete day
+     * of raw data and values without data (a rate without visits) are left out (used out of wanted). A range has no
+     * comparison. The line has the metric per day over the card's last 7 or 30 days, the comparison days marked.
+     *
+     * @param int $idSite the card's website
+     * @param 'day'|'week'|'month'|'range' $period one period of at most the plugin's limit (31 days by default)
+     * @param string $date a day (YYYY-MM-DD, today, yesterday) or for period=range "YYYY-MM-DD,YYYY-MM-DD"
+     * @param int $idSaved the card (getSavedExplorations: id of a row with kind "kpi")
+     * @param string $segment a Matomo segment: it narrows the card's own segment further (both apply)
+     * @return array{title: string, metric: string, metricName: string, unit: string, value: int|float|null, changeAs: string, partial: bool,
+     *     until: string|null, firstDay: string, lastDay: string, comparison: array|null, comparisonNote: string|null,
+     *     line: list<array{day: string, value: int|float|null, baseline: bool}>|null, lineNote: string|null,
+     *     lowerIsBetter: bool} comparison: kind, period, baseline, used, wanted, spans (firstDay, lastDay, value), change
+     *     (a fraction, null when the baseline is 0), absolute; changeAs the card's setting (percent or absolute); the
+     *     notes say why a part is missing
+     * @throws ExplorationException 404 when the card does not exist or the user may not see it, 400 when idSaved is
+     *                              not a KPI card, 503 when the database is busy
+     * @throws SavedReportUnavailable 400 when the period is refused or the exploration no longer resolves (a dimension
+     *                                gone, no metric left)
+     */
+    public function getKpiCard(int $idSite, string $period, string $date, int $idSaved, string $segment = ''): array
+    {
+        self::checkAccess($idSite);
+        $row = (new SavedExplorationStore())->get($idSaved);
+        if ($row === null || (int) $row['idsite'] !== $idSite || !(new ReportVisibility())->canFetch($row, $idSite)) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedNotFound', [], 404);
+        }
+        if (!KpiCardSettings::isCard($row['state'])) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorNotKpiCard', ['idSaved']);
+        }
+
+        $dimensions = new DimensionCatalog();
+        $metrics = new MetricCatalog();
+        $limits = (new LimitsProvider())->get();
+        // a dashboard loads its cards in parallel: wait for a slot as saved reports do
+        $limits = $limits->withSlotWait(SavedReportTable::slotWait($limits, ReportVisibility::currentContext()['runningTask']));
+        $definition = ExplorationDefinition::fromJson(
+            (string) json_encode(SavedStateDefinition::toDefinition($row['state'], $idSite, $dimensions, $metrics, $limits)),
+            $idSite,
+            $dimensions,
+            $metrics,
+            $limits
+        );
+        $settings = KpiCardSettings::fromState($row['state'], $definition->metricIds);
+        // the website's local time (Date::factory with a timezone converts UTC to it), cut to five minutes: the card's
+        // queries share their cache keys while today's results are kept (five minutes)
+        $local = Date::factory('now', Site::getTimezoneFor($idSite))->getTimestamp();
+        $now = gmdate('Y-m-d H:i:s', $local - $local % 300);
+        try {
+            return ['title' => (string) $row['name']] + (new KpiExplorer($dimensions, $metrics, $limits))
+                ->card($idSite, trim($period), trim($date), $definition, SavedReportTable::segment((string) $row['segment'], $segment), $settings, $now);
+        } catch (ExplorationException $e) {
+            if (in_array($e->getTranslationKey(), ['FeinwerkDataExploration_ErrorPeriodNotSupported', 'FeinwerkDataExploration_ErrorPeriodTooLong'], true)) {
+                throw new SavedReportUnavailable($e->getTranslationKey(), $e->getParams());
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * Changes the menu place of a saved exploration as a Matomo report: its owner, a super user, or an admin of the
+     * website for a shared exploration (Peter, 2026-11-24); the content stays the owner's.
+     *
+     * @param int $idSite the exploration's website
+     * @param int $idSaved the exploration (getSavedExplorations: id); only a table (kind "table", canPlace true) has a
+     *                     menu place, never a KPI card or a funnel
+     * @param string $menu the section of its own menu entry: General_Visitors, General_Actions, Referrers_Referrers,
+     *                     Goals_Ecommerce, Goals_Goals or FeinwerkDataExploration_Explorations; empty takes it out of
+     *                     the menu (it stays a report for widgets and e-mails)
+     * @return void
+     * @throws ExplorationException 400 for an unknown section (the message names "menu" and the allowed values) or for
+     *                              a KPI card or a funnel (the message names "idSaved"), 403
+     *                              when the user may not change it, 404 when the user cannot see it
+     */
+    public function setSavedExplorationMenu(int $idSite, int $idSaved, string $menu): void
+    {
+        self::checkAccess($idSite);
+        $row = self::visible($idSite, $idSaved);
+        if (!self::canDelete($row, $idSite)) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorSavedNotYours', [], 403);
+        }
+        if (!self::placeable($row['state'])) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorNotPlaceable',
+                ['idSaved', self::isFunnel($row['state']) ? SavedExplorationRules::KIND_FUNNEL : SavedExplorationRules::KIND_KPI]);
+        }
+        $menu = trim($menu);
+        SavedExplorationRules::checkMenu($menu, 'menu');
+        $state = $row['state'];
+        unset($state['fwdeMenu']);
+        if ($menu !== '') {
+            $state['fwdeMenu'] = $menu;
+        }
+        (new SavedExplorationStore())->update($idSaved, $row['name'], $state, $row['segment'], (bool) $row['shared']);
     }
 
     /**

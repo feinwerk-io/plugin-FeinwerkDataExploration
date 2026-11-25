@@ -87,6 +87,24 @@ class ConnectorInstallerTemplateTest extends TestCase
         self::assertStringNotContainsString('./console', $withMenu);
     }
 
+    /** The button carries its progress label; the folder name is code; after a stale click the page asks once more. */
+    public function test_progress_label_folder_as_code_and_the_click_again_note(): void
+    {
+        $install = $this->render(['installerState' => 'install']);
+        self::assertStringContainsString('data-fwci-busy="FeinwerkDataExploration_ConnectorInstallerInstalling"', $install);
+        self::assertStringNotContainsString('fwci__again', $install);
+        self::assertStringContainsString('data-fwci-busy="FeinwerkDataExploration_ConnectorInstallerActivating"', $this->render(['installerState' => 'activate']));
+
+        $again = $this->render(['installerState' => 'install', 'installerClickAgain' => true]);
+        self::assertStringContainsString('FeinwerkDataExploration_ConnectorInstallerClickAgain', $again);
+        self::assertSame(1, substr_count($again, 'fwci__run'), 'a fresh button');
+        self::assertStringContainsString('retry=1', $again, 'the next failure shows the reason');
+        self::assertStringContainsString('retry=0', $install);
+
+        $manual = $this->render(['installerState' => 'manual']);
+        self::assertStringContainsString('FeinwerkDataExploration_ConnectorInstallerManualStep2(<code>FeinwerkMarketplaceConnector</code>)', $manual);
+    }
+
     public function test_an_error_is_escaped_unless_matomo_marks_it_as_html(): void
     {
         $text = $this->render(['installerState' => 'install', 'installerError' => ['ok' => false, 'message' => '<script>x</script>', 'html' => false]]);

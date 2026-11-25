@@ -14,6 +14,8 @@ use Piwik\Option;
 use Piwik\Plugins\FeinwerkDataExploration\Feedback\PluginFeedback;
 use Piwik\Plugins\FeinwerkDataExploration\Reports\OpenInExploration;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationStore;
+use Piwik\Plugins\FeinwerkDataExploration\SavedReport\SavedReport;
+use Piwik\Plugins\FeinwerkDataExploration\SavedReport\SavedReports;
 
 class FeinwerkDataExploration extends \Piwik\Plugin
 {
@@ -28,7 +30,44 @@ class FeinwerkDataExploration extends \Piwik\Plugin
             'Db.getTablesInstalled' => 'getTablesInstalled',
             'UsersManager.deleteUser' => 'deleteUser',
             'SitesManager.deleteSite.end' => 'deleteSite',
+            // saved explorations as Matomo reports (2026-11-24)
+            'Report.addReports' => 'addSavedReports',
+            'Category.addSubcategories' => 'addSavedSubcategories',
+            'ScheduledReports.processReports' => 'filterSavedReports',
+            // KPI cards (2026-11-24): no graph over runs of weeks or months, which a card does not answer
+            'API.getReportMetadata.end' => ['function' => 'graphsOnlyForDays', 'after' => true],
         ];
+    }
+
+    /**
+     * The saved explorations as reports: one lister instance, which lists every saved exploration the request may see
+     * on the website Matomo names (SavedReport::configureReportMetadata(), configureWidgets()).
+     */
+    public function addSavedReports(&$instances)
+    {
+        $instances[] = SavedReport::unconfigured();
+    }
+
+    /** One menu entry per saved exploration placed in a section. */
+    public function addSavedSubcategories(&$subcategories)
+    {
+        $idSite = SavedReports::requestedSite();
+        if ($idSite < 1) {
+            return;
+        }
+        try {
+            foreach ((new SavedReports())->subcategoriesFor($idSite) as $subcategory) {
+                $subcategories[] = $subcategory;
+            }
+        } catch (\Throwable $e) {
+            // the menu never fails because of explorations
+        }
+    }
+
+    /** A scheduled e-mail keeps only the explorations its owner may still see. */
+    public function filterSavedReports(&$processedReports, $reportType, $outputType, $report)
+    {
+        (new SavedReports())->filterForOwner($processedReports, (array) $report);
     }
 
     public function install()
@@ -74,6 +113,7 @@ class FeinwerkDataExploration extends \Piwik\Plugin
         $files[] = 'plugins/FeinwerkDataExploration/javascripts/exploreAction.js';
         $files[] = 'plugins/FeinwerkDataExploration/javascripts/promo.js';
         $files[] = 'plugins/FeinwerkDataExploration/javascripts/promocard.js';
+        $files[] = 'plugins/FeinwerkDataExploration/javascripts/connectorinstaller.js';
     }
 
     /**
@@ -94,6 +134,7 @@ class FeinwerkDataExploration extends \Piwik\Plugin
     {
         $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/exploration.less';
         $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/promo.css';
+        $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/connectorinstaller.css';
         $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/feinwerklogo.css';
         $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/premium.css';
         $stylesheets[] = 'plugins/FeinwerkDataExploration/stylesheets/fwde-ui.css';
@@ -102,6 +143,12 @@ class FeinwerkDataExploration extends \Piwik\Plugin
     /**
      * The Vue app may use every key of the plugin's lang file.
      */
+    /** @see SavedReport::graphsOnlyForDays() */
+    public function graphsOnlyForDays(&$reports, $info): void
+    {
+        SavedReport::graphsOnlyForDays($reports, is_array($info) ? $info : []);
+    }
+
     public function getClientSideTranslationKeys(&$translationKeys)
     {
         $data = json_decode((string) file_get_contents(__DIR__ . '/lang/en.json'), true);
@@ -128,6 +175,8 @@ class FeinwerkDataExploration extends \Piwik\Plugin
             'General_ColumnNbVisits',
             // the comparison table's total row, the rest of a cut table and the donut's last slice
             'General_Total', 'General_Others',
+            // the metric list's e-commerce heading
+            'Goals_Ecommerce',
         ];
         // the chart orders weekdays by Matomo's own names
         for ($day = 1; $day <= 7; $day++) {

@@ -58,6 +58,15 @@ describe('formatMetric', () => {
     expect(formatMetric('nb_visits', 2138, formatters)).toBe('n2138');
     expect(formatMetric('sum_event_value', 3.75, formatters)).toBe('n3.75');
   });
+
+  it('formats goal, e-commerce and visit metrics by their unit (more metrics)', () => {
+    expect(formatMetric('goal_3_revenue', 12.5, formatters)).toBe('c12.5');
+    expect(formatMetric('goal_3_conversion_rate', 0.25, formatters)).toBe('p25');
+    expect(formatMetric('goal_ecommerceOrder_avg_order_revenue', 60, formatters)).toBe('c60');
+    expect(formatMetric('revenue_per_visit', 55, formatters)).toBe('c55');
+    expect(formatMetric('sum_visit_length', 3700, formatters)).toBe('d3700');
+    expect(formatMetric('goal_ecommerceOrder_items', 5, formatters)).toBe('n5');
+  });
 });
 
 describe('formatDuration', () => {

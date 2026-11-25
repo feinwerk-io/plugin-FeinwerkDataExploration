@@ -3,7 +3,8 @@
    Marketplace installer, then activate), activate (one button), console (files there, plugin administration off: the
    command), manual, php, wordpress (instructions, no button).
    installerError: Matomo's reason after a failed click (raw only where Matomo marks it as HTML). Matomo's own card and
-   button classes, so light and dark follow Matomo. #}
+   button classes, so light and dark follow Matomo. The status region (fwci__status) is filled by
+   javascripts/connectorinstaller.js after the click, for screen readers. #}
 {% extends 'admin.twig' %}
 
 {% set title %}{{ 'FeinwerkDataExploration_ConnectorInstallerTitle'|translate }}{% endset %}
@@ -14,6 +15,9 @@
         <h2 class="card-title">{{ title }}</h2>
         <p>{{ 'FeinwerkDataExploration_ConnectorInstallerIntro'|translate }}</p>
 
+        {% if installerClickAgain %}
+            <div class="alert alert-info fwci__again" role="status">{{ 'FeinwerkDataExploration_ConnectorInstallerClickAgain'|translate }}</div>
+        {% endif %}
         {% if installerError %}
             <div class="alert alert-danger fwci__error">
                 {% if installerError.html %}{{ installerError.message|raw }}{% else %}{{ installerError.message }}{% endif %}
@@ -27,10 +31,12 @@
                 <p>{{ 'FeinwerkDataExploration_ConnectorInstallerActivateText'|translate }}</p>
             {% endif %}
             <p>
-                <a class="btn fwci__run" href="{{ linkTo({'module': 'FeinwerkDataExploration', 'action': 'connectorInstallerRun', 'nonce': installerNonce}) }}">
+                <a class="btn fwci__run" href="{{ linkTo({'module': 'FeinwerkDataExploration', 'action': 'connectorInstallerRun', 'nonce': installerNonce, 'retry': installerClickAgain ? 1 : 0}) }}"
+                   data-fwci-busy="{{ (installerState == 'install' ? 'FeinwerkDataExploration_ConnectorInstallerInstalling' : 'FeinwerkDataExploration_ConnectorInstallerActivating')|translate }}">
                     {{ (installerState == 'install' ? 'FeinwerkDataExploration_ConnectorInstallerButton' : 'FeinwerkDataExploration_ConnectorInstallerButtonActivate')|translate }}
                 </a>
             </p>
+            <p class="fwci__status" role="status" data-fwci-status></p>
             <p class="fwci__note">{{ 'FeinwerkDataExploration_ConnectorInstallerPasswordNote'|translate }}</p>
         {% elseif installerState == 'console' %}
             <p>{{ 'FeinwerkDataExploration_ConnectorInstallerConsole'|translate }}</p>
@@ -44,16 +50,15 @@
             <p>{{ 'FeinwerkDataExploration_ConnectorInstallerPhp'|translate(installerPhpFloor) }}</p>
         {% elseif installerState == 'manual' %}
             <p>{{ 'FeinwerkDataExploration_ConnectorInstallerManual'|translate }}</p>
-            {# Matomo resets list styles: the numbers back, no colours #}
-            <ol class="fwci__steps" style="list-style: decimal; margin: 0 0 12px; padding-left: 1.5em;">
-                <li style="list-style: decimal; margin-bottom: 4px;">{{ 'FeinwerkDataExploration_ConnectorInstallerManualStep1'|translate }}
+            <ol class="fwci__steps">
+                <li>{{ 'FeinwerkDataExploration_ConnectorInstallerManualStep1'|translate }}
                     <a href="{{ installerLinks.marketplace }}" target="_blank" rel="noopener">plugins.matomo.org</a>,
                     <a href="{{ installerLinks.download }}" target="_blank" rel="noopener">plugins.feinwerk.io</a></li>
-                <li style="list-style: decimal; margin-bottom: 4px;">{{ 'FeinwerkDataExploration_ConnectorInstallerManualStep2'|translate }}</li>
+                <li>{{ 'FeinwerkDataExploration_ConnectorInstallerManualStep2'|translate('<code>FeinwerkMarketplaceConnector</code>')|raw }}</li>
                 {% if installerPluginsAdmin %}
-                <li style="list-style: decimal; margin-bottom: 4px;">{{ 'FeinwerkDataExploration_ConnectorInstallerManualStep3'|translate }}</li>
+                <li>{{ 'FeinwerkDataExploration_ConnectorInstallerManualStep3'|translate }}</li>
                 {% else %}
-                <li style="list-style: decimal; margin-bottom: 4px;">{{ 'FeinwerkDataExploration_ConnectorInstallerManualStep3Console'|translate }}
+                <li>{{ 'FeinwerkDataExploration_ConnectorInstallerManualStep3Console'|translate }}
                     <code>{{ installerConsoleCommand }}</code></li>
                 {% endif %}
             </ol>

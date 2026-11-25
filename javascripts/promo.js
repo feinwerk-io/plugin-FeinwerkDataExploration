@@ -12,11 +12,17 @@
  * wins", without the compact logo or session-only hiding in demo), fits the lines that copy showed, takes out demo
  * notices hidden this session, and takes the clicks on the x first (capture phase), so no load order loses them
  * (tests/js/run-promo-check.sh).
+ * Version 4 (2026-11-23): a line too short for its sentence drops the sentence entirely and keeps logo mark, link and x
+ * (Peter: "Compact: logo, link, x"; never a cut fragment), the link is never cut, the focus moves on after an x, and
+ * the admin home banner moves below Matomo's own notices (Peter: "Below Matomo's notices").
+ * Version 5 (2026-11-24, Conversions API's UI review): a compact line shows its sentence only when it fits whole, else
+ * none (a phone at 390 px showed "UTM-Builder und Nam..."); lines an older copy measured first are measured again
+ * (data-fwpromo-fit holds the version); after an x with nothing after it the focus goes to the control before it.
  */
 (function () {
     'use strict';
 
-    var VERSION = 3;
+    var VERSION = 5;
     if ((window.fwpromoKit || 0) >= VERSION) {
         return;
     }
@@ -52,6 +58,29 @@
         }
     }
 
+    // after an x the focus moves on to the next control of the page instead of falling back to its start
+    var FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), '
+        + 'textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    function focusAfter(node) {
+        if (!document.documentElement.contains(node)) {
+            return;
+        }
+        var all = document.querySelectorAll(FOCUSABLE);
+        for (var i = 0; i < all.length; i++) {
+            if (!node.contains(all[i]) && (node.compareDocumentPosition(all[i]) & 4) && all[i].offsetParent !== null) {
+                all[i].focus();
+                return;
+            }
+        }
+        // version 5: nothing after it, so the control before it (never the page start)
+        for (var j = all.length - 1; j >= 0; j--) {
+            if (!node.contains(all[j]) && (node.compareDocumentPosition(all[j]) & 2) && all[j].offsetParent !== null) {
+                all[j].focus();
+                return;
+            }
+        }
+    }
+
     function remove(notice) {
         // a context box that is the only content of its Matomo widget (data-fwpromo-widget="hide"): hide that widget as
         // well, so no gap stays behind; a box inside a report widget never takes the report with it
@@ -68,17 +97,36 @@
     // The tip line starts with the Feinwerk logo. A line too short for the logo's word mark next to the sentence, its
     // link and the x shows only the round mark (class fwpromo-line--compact); measured when the line shows and whenever
     // its width changes, so a narrow dashboard widget gets it as well as a phone.
+    // A line that leaves the sentence less than SENTENCE px drops it entirely (fwpromo-line--bare): logo mark, link and x
+    // stay, never a cut fragment such as a single letter (UI review 2026-11-23).
+    var SENTENCE = 120;
     function fit(line) {
         var logo = line.querySelector('.fwlogo');
         var text = line.querySelector('.fwpromo-line__text');
-        var link = line.querySelector('.fwpromo-line__link');
         if (!logo || !text) {
             return;
         }
-        line.classList.remove('fwpromo-line--compact');
-        if (text.clientWidth < 80 || logo.scrollWidth > logo.clientWidth + 1 || (link && link.scrollWidth > link.clientWidth + 1)) {
+        line.classList.remove('fwpromo-line--compact', 'fwpromo-line--bare');
+        if (text.clientWidth < 160 || logo.scrollWidth > logo.clientWidth + 1) {
             line.classList.add('fwpromo-line--compact');
         }
+        // version 5: measured with the compact logo, a compact line keeps its sentence only when it fits whole
+        if (text.clientWidth < SENTENCE
+            || (line.classList.contains('fwpromo-line--compact') && text.scrollWidth > text.clientWidth + 1)
+        ) {
+            line.classList.add('fwpromo-line--bare');
+        }
+    }
+
+    // The admin home banner comes through Template.beforeContent, which Matomo renders above its own notices (for
+    // example the HTTPS warning). It moves to right before the content, below them, still at the top of the page.
+    function placeBanner(notice) {
+        var content = document.getElementById('content');
+        if (placementOf(notice) !== 'adminHome' || !content || !content.parentNode || content.contains(notice)
+            || notice.nextElementSibling === content) {
+            return;
+        }
+        content.parentNode.insertBefore(notice, content);
     }
 
     var resizeObserver = typeof window.ResizeObserver === 'function'
@@ -90,10 +138,14 @@
         : null;
 
     function watch(notice) {
-        if (!notice.classList.contains('fwpromo-line') || notice.hasAttribute('data-fwpromo-fit')) {
+        // an older copy that measured the line first set a lower version (1): this copy measures it again and keeps
+        // it measured (its observer runs after the older one's, so its result stays)
+        if (!notice.classList.contains('fwpromo-line')
+            || parseInt(notice.getAttribute('data-fwpromo-fit') || '0', 10) >= VERSION
+        ) {
             return;
         }
-        notice.setAttribute('data-fwpromo-fit', '1');
+        notice.setAttribute('data-fwpromo-fit', String(VERSION));
         fit(notice);
         if (resizeObserver) {
             resizeObserver.observe(notice);
@@ -113,6 +165,7 @@
                 return;
             }
             shown[placementOf(notice)] = true;
+            placeBanner(notice);
             watch(notice);
         });
         Array.prototype.forEach.call(notices, function (notice) {
@@ -126,6 +179,7 @@
             }
             notice.setAttribute('data-fwpromo-ready', '1');
             shown[placement] = true;
+            placeBanner(notice);
             watch(notice);
         });
     }
@@ -133,7 +187,8 @@
     document.addEventListener('click', function (event) {
         var button = event.target && event.target.closest ? event.target.closest(DISMISS) : null;
         var notice = button ? button.closest(NOTICES) : null;
-        if (!notice) {
+        // an older copy (version 3 also listens in the capture phase) may have removed the notice already
+        if (!notice || !document.documentElement.contains(notice)) {
             return;
         }
         event.preventDefault();
@@ -145,6 +200,7 @@
         } catch (e) {
             // private mode or blocked storage: hidden on this page only
         }
+        focusAfter(notice);
         Array.prototype.forEach.call(document.querySelectorAll(NOTICES), function (other) {
             if (other.getAttribute('data-fwpromo-id') === id) {
                 remove(other);
