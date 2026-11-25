@@ -355,6 +355,18 @@
   max-width: 100%;
 }
 
+// narrow screens (UI review 2026-11-24): condition and value each on a full row, so the longest
+// condition of fr, es and it still leaves the value field its width
+@media (max-width: 480px) {
+  .fwde-filters__row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fwde-filters__field--operator .fwde-select {
+    width: 100%;
+  }
+}
+
 .fwde-filters__remove {
   position: absolute;
   top: 8px;
@@ -463,6 +475,61 @@
   width: 100%;
 }
 
+// Filter groups (2026-11-23): one group looks like the plain list; from two groups on each has a frame, a title and its
+// own switch, the switch between the groups above them. "Add group" and the count of conditions below the groups.
+.fwde-page fieldset.fwde-filters__group {
+  min-width: 0;
+  margin: 0 0 10px;
+  padding: 6px 10px 10px;
+  border: 1px solid @theme-color-border;
+  border-radius: 4px;
+}
+
+.fwde-page .fwde-filters__legend {
+  float: none;
+  width: auto;
+  margin: 0;
+  padding: 0 4px;
+  border: 0;
+  color: @theme-color-text;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fwde-filters__groups-match {
+  margin-bottom: 10px;
+}
+
+.fwde-filters__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.fwde-filters__count {
+  margin-left: auto;
+  color: @theme-color-text-light;
+  font-size: 13px;
+}
+
+// the reason "Add group" is off, as text (the disabled button's title reaches no keyboard)
+.fwde-filters__limit {
+  flex-basis: 100%;
+  margin: 0;
+  color: @theme-color-text-light;
+  font-size: 13px;
+}
+
+// the help of "matches regular expression" below the row
+.fwde-filters__help {
+  grid-column: ~"1 / -1";
+  margin: 0;
+  color: @theme-color-text-light;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 // Result card header
 
 .fwde-toolbar {
@@ -485,8 +552,28 @@
   }
 }
 
-.fwde-menu {
+.fwde-menu,
+.fwde-copybox {
   position: relative;
+}
+
+// the link to copy by hand when the browser refuses to copy (UI review 2026-11-23): below the copy button
+.fwde-page .fwde-menu__list.fwde-copylink {
+  width: 340px;
+  max-width: ~"calc(100vw - 32px)";
+  padding: 10px 12px;
+}
+
+.fwde-copylink__label {
+  display: block;
+  margin: 0;
+  color: @theme-color-text;
+  font-size: 13px;
+
+  span {
+    display: block;
+    margin-bottom: 6px;
+  }
 }
 
 .fwde-page .fwde-menu__list {
@@ -630,6 +717,14 @@
   border-top: 1px solid @theme-color-widget-border;
 }
 
+// what else goes with a deleted exploration (UI review 2026-11-24): a line of its own
+.fwde-savedialog__deletehint,
+.fwde-manage__deletehint {
+  flex-basis: 100%;
+  display: block;
+  color: @theme-color-text-light;
+}
+
 .fwde-main__stale {
   opacity: 0.5;
 }
@@ -640,6 +735,56 @@
   overflow-x: auto;
   border: 1px solid @theme-color-border-alternative;
   border-radius: 4px;
+}
+
+// A wide table shows a shadow on each side that hides columns (TableScroller.vue; UI review 2026-11-23: numbers were
+// cut at the card's edge with no cue and read as whole ones). Over the frame, not inside the scroller, so it stays put.
+.fwde-table__frame {
+  position: relative;
+}
+
+.fwde-table__frame::before,
+.fwde-table__frame::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  z-index: 3;
+  width: 20px;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.fwde-table__frame::before {
+  left: 1px;
+  border-radius: 3px 0 0 3px;
+  background: linear-gradient(to right, var(--fwde-edge-shadow), transparent);
+}
+
+.fwde-table__frame::after {
+  right: 1px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(to left, var(--fwde-edge-shadow), transparent);
+}
+
+.fwde-table__frame--more-left::before,
+.fwde-table__frame--more-right::after {
+  opacity: 1;
+}
+
+// Narrow screens: long dimension values give way first, so the first metric shows next to them
+@media (max-width: 600px) {
+  .fwde-table table.fwde-table__table td.fwde-table__label {
+    min-width: 4em;
+  }
+
+  .fwde-table .fwde-ellipsis {
+    max-width: 14em;
+  }
+
+  .fwde-table .fwde-ellipsis--long {
+    min-width: 7em;
+  }
 }
 
 .fwde-table__table {
@@ -708,6 +853,19 @@
   padding-right: 12px;
 }
 
+// narrow screens: tighter dimension cells, so the first metric shows next to two short dimensions (UI review 2026-11-23)
+@media (max-width: 600px) {
+  .fwde-table table.fwde-table__table td.fwde-table__dimension,
+  .fwde-table table.fwde-table__table th.fwde-table__dimension {
+    padding-right: 8px;
+  }
+
+  .fwde-table table.fwde-table__table td.fwde-table__dimension:first-child,
+  .fwde-table table.fwde-table__table th.fwde-table__dimension:first-child {
+    padding-left: 10px;
+  }
+}
+
 // Dimension values stay on one line and are shortened in the middle (the end of a URL stays visible, the full text in
 // the cell's title): the head shrinks with an ellipsis, the tail keeps its last characters
 .fwde-table table.fwde-table__table td.fwde-table__label {
@@ -763,6 +921,7 @@
   --fwde-divider: #8c97a3;
   --fwde-cell-line: #d5dde4;
   --fwde-cell-bar: rgba(87, 177, 255, 0.24);
+  --fwde-edge-shadow: rgba(0, 0, 0, 0.18);
 
   .inDarkMode({
     --fwde-head-1: #34505b;
@@ -771,6 +930,7 @@
     --fwde-divider: #7f949d;
     --fwde-cell-line: #33464d;
     --fwde-cell-bar: rgba(87, 177, 255, 0.28);
+    --fwde-edge-shadow: rgba(0, 0, 0, 0.6);
   });
 }
 
@@ -781,9 +941,21 @@
   width: 1%;
 }
 
-// a first dimension of short values is only as wide as they are; the second dimension takes the free width
+// The first of two dimensions is only as wide as its values, the second takes the free width: short values always,
+// long ones while the table has room (Peter, 2026-11-23: the second dimension sat far right next to few metrics). Long
+// values then stay on one line up to the usual 32em with an ellipsis, so the column knows their real width; when the
+// table no longer fits, the table drops the class and they shrink as before (TableScroller, scrollEdges.ts roomyAfter).
 .fwde-table table.fwde-table__table .fwde-table__dimension--fit {
   width: 1%;
+}
+
+.fwde-table table.fwde-table__table--natural td.fwde-table__dimension--fit .fwde-ellipsis--long .fwde-ellipsis__head {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: normal;
+  -webkit-line-clamp: unset;
 }
 
 .fwde-table table.fwde-table__table .fwde-table__dimension-last {
@@ -1594,4 +1766,176 @@
 
 .fwde-empty__message {
   margin: 0 0 10px;
+}
+
+// the footer under a saved exploration's report, on its menu page and in its dashboard widget (saved reports, 2026-11-24)
+.fwde-saved-footer {
+  margin: 8px 0 4px;
+
+  .fwde-saved-footer__open {
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+}
+
+// rows and pivot (2026-11-24): the pivot picker under the dimensions and the pivot's column groups
+.fwde-pivot-picker {
+  margin-top: 12px;
+}
+
+.fwde-pivot-picker__paused {
+  margin: 6px 0 0;
+  color: @theme-color-text-light;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.fwde-pivot-picker__limit {
+  margin-top: 8px;
+}
+
+// a long pivot value keeps its group at a readable width; the full value is in the tooltip
+.fwde-table table.fwde-compare__table thead th.fwde-pivot__group {
+  max-width: 16em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fwde-table table.fwde-compare__table thead th.fwde-pivot__group--total {
+  font-weight: bold;
+}
+
+// pivot cells hold one number each: in the middle of the row, as the labels (comparison cells keep their second line)
+.fwde-table table.fwde-compare__table .fwde-pivot__cell {
+  vertical-align: middle;
+}
+
+// KPI card (2026-11-24): a number checked daily on the dashboard; works down to a 280 px wide column
+.fwde-kpi {
+  --fwde-good: #2e7d32;
+  --fwde-bad: #c62828;
+  --fwde-spark: #4a90d9;
+  --fwde-spark-mark: #7a8794;
+
+  .inDarkMode({
+    --fwde-good: #81c784;
+    --fwde-bad: #ef9a9a;
+    --fwde-spark: #7db8f0;
+    --fwde-spark-mark: #9aa8b4;
+  });
+
+  padding: 4px 2px 0;
+}
+
+.fwde-kpi__title {
+  overflow: hidden;
+  color: @theme-color-text-light;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// the metric the card counts, under a title that does not name it (UI review 2026-11-24)
+.fwde-kpi__metric {
+  overflow: hidden;
+  color: @theme-color-text-light;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fwde-kpi__main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-top: 2px;
+}
+
+.fwde-kpi__value {
+  color: @theme-color-text;
+  font-size: 30px;
+  font-weight: bold;
+  line-height: 1.15;
+}
+
+.fwde-kpi__partial,
+.fwde-kpi__note {
+  color: @theme-color-text-light;
+  font-size: 12px;
+}
+
+.fwde-kpi__note {
+  margin: 4px 0 0;
+}
+
+.fwde-kpi__compare {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+.fwde-kpi__change {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.fwde-kpi__change--good {
+  color: var(--fwde-good);
+}
+
+.fwde-kpi__change--bad {
+  color: var(--fwde-bad);
+}
+
+.fwde-kpi__baseline {
+  color: @theme-color-text-light;
+}
+
+.fwde-kpi__spark {
+  display: block;
+  width: 100%;
+  height: 44px;
+  margin-top: 8px;
+}
+
+.fwde-kpi__line {
+  fill: none;
+  stroke: var(--fwde-spark);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.fwde-kpi__mark {
+  stroke: var(--fwde-spark-mark);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.fwde-kpi__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+// the save panel's choice of an exploration or a KPI card, and the card's settings (2026-11-24)
+.fwde-page .fwde-savedialog__kind,
+.fwde-page .fwde-savedialog__card {
+  margin-top: 16px;
+}
+
+.fwde-page .fwde-savedialog__card .fwde-field__label {
+  margin-top: 12px;
+}
+
+.fwde-page .fwde-savedialog__card .fwde-select {
+  width: 100%;
 }

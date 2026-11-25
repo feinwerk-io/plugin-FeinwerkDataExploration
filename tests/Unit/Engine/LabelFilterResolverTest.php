@@ -91,6 +91,28 @@ class LabelFilterResolverTest extends TestCase
         $this->assertSame(['values' => [''], 'includeNull' => true], $resolver->resolve($this->dimension('coded', 'country'), 'contains', 'unk', 1));
     }
 
+    /** Filter groups (2026-11-23): the negated edges return their positive matches, the query builder negates them */
+    public function testNotStartsWithAndNotEndsWithReturnThePositiveMatches(): void
+    {
+        $resolver = new LabelFilterResolver(fn () => ['1', '2', '3']);
+
+        $this->assertSame(['values' => ['1'], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'notStartsWith', 'MON', 1));
+        $this->assertSame(['values' => ['3'], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'notEndsWith', 'nesday', 1));
+        // the edges, not "contains": "day" is in every label but starts none, "tues" ends none
+        $this->assertSame(['values' => [], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'notStartsWith', 'DAY', 1));
+        $this->assertSame(['values' => [], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'notEndsWith', 'tues', 1));
+    }
+
+    public function testMatchesUsesTheOriginalPatternCaseInsensitive(): void
+    {
+        $resolver = new LabelFilterResolver(fn () => ['1', '2', '3']);
+
+        $this->assertSame(['values' => ['2'], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'matches', '^t', 1));
+        $this->assertSame(['values' => ['2', '3'], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'matches', 'UES|EDNES', 1));
+        // the pattern is not lowercased: "\D" (no digit) stays "\D", not "\d"
+        $this->assertSame(['values' => ['1', '2', '3'], 'includeNull' => false], $resolver->resolve($this->dimension('coded', 'weekday'), 'matches', '^\D', 1));
+    }
+
     private function dimension(string $id, string $labelKind): DimensionDefinition
     {
         return new DimensionDefinition(

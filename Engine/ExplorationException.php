@@ -19,7 +19,7 @@ use Piwik\Piwik;
  * gets no status, so the message stays in the body: Matomo's AjaxHelper replaces the body of an HTTP error with a
  * generic text when the page shows errors itself (statusFor()).
  */
-final class ExplorationException extends \Exception implements HttpCodeException
+class ExplorationException extends \Exception implements HttpCodeException
 {
     public function __construct(
         private readonly string $translationKey,

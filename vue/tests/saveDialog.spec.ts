@@ -79,9 +79,37 @@ describe('saving in the side panel (UI item 2)', () => {
     (panel()?.querySelector('.fwde-savedialog__deleteask') as HTMLElement).click();
     await settle();
     expect(document.activeElement).toBe(panel()?.querySelector('.fwde-savedialog__deleteyes'));
+    // UI review 2026-11-24 (F4): it says where else the exploration disappears
+    expect(panel()?.querySelector('.fwde-savedialog__delete')?.textContent)
+      .toContain('FeinwerkDataExploration_DeleteAlsoRemoves');
     (panel()?.querySelector('.fwde-savedialog__deleteno') as HTMLElement).click();
     await settle();
     expect(document.activeElement).toBe(panel()?.querySelector('.fwde-savedialog__deleteask'));
+  });
+
+  // saved reports (2026-11-24): where the exploration shows in Matomo's menu
+  it('offers the menu place and sends it with the save', async () => {
+    const wrapper = dialog({
+      menuSections: [
+        { id: 'Goals_Goals', name: 'Goals' },
+        { id: 'FeinwerkDataExploration_Explorations', name: 'Explorations' },
+      ],
+    });
+    await wrapper.find('.fwde-savedialog__toggle').trigger('click');
+    await settle();
+    const select = panel()?.querySelector('select.fwde-savedialog__menu') as HTMLSelectElement;
+    expect(Array.from(select.options).map((o) => [o.value, o.textContent])).toEqual([
+      ['', 'FeinwerkDataExploration_MenuNone'], ['Goals_Goals', 'Goals'],
+      ['FeinwerkDataExploration_Explorations', 'Explorations'],
+    ]);
+    expect(select.value).toBe('FeinwerkDataExploration_Explorations');
+    select.value = 'Goals_Goals';
+    select.dispatchEvent(new Event('change'));
+    (panel()?.querySelector('.fwde-savedialog__new') as HTMLElement).click();
+    await settle();
+    expect(wrapper.emitted('save')).toEqual([[{
+      name: 'Browser', shared: false, asNew: true, menu: 'Goals_Goals',
+    }]]);
   });
 
   it('saving emits once and a finished save closes the panel', async () => {
@@ -93,7 +121,10 @@ describe('saving in the side panel (UI item 2)', () => {
     input.dispatchEvent(new Event('input'));
     (panel()?.querySelector('.fwde-savedialog__new') as HTMLElement).click();
     await settle();
-    expect(wrapper.emitted('save')).toEqual([[{ name: 'Browsers by device', shared: false, asNew: true }]]);
+    // no menu sections (the funnel page): never a menu place
+    expect(wrapper.emitted('save')).toEqual([[{
+      name: 'Browsers by device', shared: false, asNew: true, menu: '',
+    }]]);
     await wrapper.setProps({ busy: true });
     await wrapper.setProps({ busy: false });
     await settle();

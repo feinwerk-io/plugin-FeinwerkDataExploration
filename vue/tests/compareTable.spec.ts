@@ -97,8 +97,8 @@ describe('comparison table', () => {
   it('the total row comes first and has no row menu', () => {
     const totalRow = table().findAll('tbody tr')[0];
     expect(totalRow.classes()).toContain('fwde-compare__total');
-    expect(totalRow.findComponent({ name: 'RowMenu' }).exists()).toBe(false);
-    expect(table().findAll('tbody tr')[1].findComponent({ name: 'RowMenu' }).exists()).toBe(true);
+    expect(totalRow.find('.fwde-rowmenu').exists()).toBe(false);
+    expect(table().findAll('tbody tr')[1].find('.fwde-rowmenu').exists()).toBe(true);
   });
 
   it('a failing column keeps the others', () => {

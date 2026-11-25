@@ -81,8 +81,11 @@ final class WidgetProps
         }
     }
 
-    /** Widgetize and other embeds show no notices; a failing check counts as embedded. */
-    private static function isEmbedded(): bool
+    /**
+     * Widgetize and other embeds show no notices, no feedback line and no link into the exploration (also the saved
+     * reports' footer and the KPI card, Controller); a failing check counts as embedded.
+     */
+    public static function isEmbedded(): bool
     {
         try {
             $module = trim(Common::getRequestVar('module', '', 'string')); // Matomo 6 does not trim

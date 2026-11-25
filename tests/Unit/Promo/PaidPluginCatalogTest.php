@@ -49,8 +49,8 @@ class PaidPluginCatalogTest extends TestCase
     }
 
     /**
-     * Like the connector: only plugins with a stable build for this Matomo (store, 2026-11-16). On Matomo 6 only the
-     * one-build plugins, betas and release candidates included; on an old Matomo 5 not the plugins with a higher floor.
+     * Like the connector: only plugins with a stable build for this Matomo (store, 2026-11-24: every paid plugin has one
+     * for Matomo 6, betas and release candidates included); on an old Matomo 5 not the plugins with a higher floor.
      */
     public function test_only_plugins_this_matomo_can_install(): void
     {
@@ -58,9 +58,9 @@ class PaidPluginCatalogTest extends TestCase
             return array_column(PaidPluginCatalog::notInstalled([], $version, 'en', self::key(), 'FeinwerkDataExploration'), 'slug');
         };
 
-        self::assertSame(['FeinwerkSentinelPro', 'FeinwerkEmailReportsPro'], $slugs('6.0.0-rc1'));
-        self::assertSame(['FeinwerkSentinelPro', 'FeinwerkEmailReportsPro'], $slugs('6.0.0-b6'));
-        self::assertSame(['FeinwerkSentinelPro', 'FeinwerkEmailReportsPro'], $slugs('6.1.0'));
+        self::assertCount(9, $slugs('6.0.0'));
+        self::assertCount(9, $slugs('6.0.0-rc1'));
+        self::assertSame(array_keys(PaidPluginCatalog::PLUGINS), $slugs('6.1.0'), 'store order');
         self::assertCount(9, $slugs('5.14.2'));
         self::assertNotContains('FeinwerkVisitJourney', $slugs('5.11.0'), 'needs 5.12.0');
         self::assertContains('FeinwerkVisitJourney', $slugs('5.12.0'));
@@ -82,7 +82,7 @@ class PaidPluginCatalogTest extends TestCase
         $all = array_column(PaidPluginCatalog::all('de', self::key(), 'FeinwerkSearchReport'), 'slug');
 
         self::assertSame(array_values(array_diff(array_keys(PaidPluginCatalog::PLUGINS), ['FeinwerkSearchReport'])), $all);
-        self::assertContains('FeinwerkAuthSaml', $all, 'no build for Matomo 6, shown anyway');
+        self::assertContains('FeinwerkAuthSaml', $all);
     }
 
     public function test_the_store_page_follows_the_viewers_language(): void

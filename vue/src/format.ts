@@ -2,6 +2,7 @@
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
+import { isMoney, isRate, isSeconds } from './metricMeta';
 
 export interface Formatters {
   number(v: number): string;
@@ -10,8 +11,6 @@ export interface Formatters {
   currency(v: number): string;
   duration(seconds: number): string;
 }
-
-const RATES = ['bounce_rate', 'conversion_rate'];
 
 /**
  * An hour as a time of day: Matomo's hour labels are bare numbers in some languages ("14" in
@@ -45,14 +44,15 @@ export function formatDay(value: string, language: string, full = false): string
   }
 }
 
+/** By the metric's unit: rates in percent, money in the website's currency, seconds as time. */
 export function formatMetric(metricId: string, value: number, f: Formatters): string {
-  if (RATES.includes(metricId)) {
+  if (isRate(metricId)) {
     return f.percent(Math.round(value * 10000) / 100);
   }
-  if (metricId === 'revenue') {
+  if (isMoney(metricId)) {
     return f.currency(value);
   }
-  if (metricId === 'avg_time_on_site') {
+  if (isSeconds(metricId)) {
     return f.duration(value);
   }
   return f.number(value);

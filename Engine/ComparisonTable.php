@@ -19,12 +19,6 @@ use Piwik\Plugins\FeinwerkDataExploration\Definition\Comparison;
  */
 final class ComparisonTable
 {
-    /** counts and sums: their rows add up to the column, so a share makes sense */
-    public const SHARE_METRICS = [
-        'nb_visits', 'nb_uniq_visitors', 'nb_actions', 'nb_conversions', 'revenue', 'nb_pageviews', 'nb_uniq_pageviews',
-        'nb_events', 'sum_event_value', 'nb_downloads', 'nb_outlinks', 'nb_searches',
-    ];
-
     public const KIND_SEGMENT = 'segment';
     public const KIND_PERIOD = 'period';
     public const KIND_BOTH = 'both';

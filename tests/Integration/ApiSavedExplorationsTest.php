@@ -125,6 +125,75 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
         $this->assertNotNull((new SavedExplorationStore())->get($other));
     }
 
+    /** saved reports (2026-11-24): the list carries the menu place and who may change it */
+    public function testListCarriesMenuAndCanPlace(): void
+    {
+        $this->as('anna', [1], [1]);
+        $this->api()->addSavedExploration(1, 'Placed', '{"fwdeDims":"browser","fwdeMetrics":"nb_visits","fwdeMenu":"Goals_Goals"}');
+        $this->api()->addSavedExploration(1, 'Older', self::STATE);
+
+        $listed = array_column($this->api()->getSavedExplorations(1), null, 'name');
+        $this->assertSame('Goals_Goals', $listed['Placed']['menu']);
+        $this->assertNull($listed['Older']['menu']);
+        $this->assertTrue($listed['Placed']['canPlace']);
+    }
+
+    /** Peter, 2026-11-24 ("B"): site admins may change a shared exploration's place, never its content */
+    public function testAdminPlacesASharedExploration(): void
+    {
+        $this->as('bert', [1], [1]);
+        $shared = $this->api()->addSavedExploration(1, 'Bert for all', self::STATE, '', 1)['id'];
+
+        FakeAccess::clearAccess(false, [1], [1], 'carla');
+        $this->assertTrue(array_column($this->api()->getSavedExplorations(1), null, 'name')['Bert for all']['canPlace']);
+        $this->api()->setSavedExplorationMenu(1, $shared, 'General_Visitors');
+        $stored = (new SavedExplorationStore())->get($shared);
+        $this->assertSame('General_Visitors', $stored['state']['fwdeMenu']);
+        $this->assertSame(['Bert for all', 'bert', true], [$stored['name'], $stored['login'], (bool) $stored['shared']]);
+
+        $this->api()->setSavedExplorationMenu(1, $shared, '');
+        $this->assertArrayNotHasKey('fwdeMenu', (new SavedExplorationStore())->get($shared)['state']);
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedMenu', fn () => $this->api()->setSavedExplorationMenu(1, $shared, 'Nowhere'));
+    }
+
+    /** UI review 2026-11-24 (F3): a KPI card never has a menu entry, so nobody may place it */
+    public function testCardsHaveNoMenuPlace(): void
+    {
+        $this->as('bert', [1], [1]);
+        $card = $this->api()->addSavedExploration(1, 'Bert card', '{"fwdeKind":"kpi","fwdeDims":"browser","fwdeMetrics":"nb_visits"}', '', 1)['id'];
+
+        $this->assertFalse(array_column($this->api()->getSavedExplorations(1), null, 'name')['Bert card']['canPlace']);
+        $this->assertRefused('FeinwerkDataExploration_ErrorNotPlaceable', fn () => $this->api()->setSavedExplorationMenu(1, $card, 'Goals_Goals'));
+        $this->assertArrayNotHasKey('fwdeMenu', (new SavedExplorationStore())->get($card)['state']);
+    }
+
+    /** release review 2026-11-25: a card stored with a menu key still lists no menu place */
+    public function testACardListsNoMenuPlace(): void
+    {
+        $this->as('bert', [1], [1]);
+        $this->api()->addSavedExploration(1, 'Bert card', '{"fwdeKind":"kpi","fwdeDims":"browser","fwdeMetrics":"nb_visits","fwdeMenu":"Goals_Goals"}', '', 1);
+        $this->assertNull(array_column($this->api()->getSavedExplorations(1), null, 'name')['Bert card']['menu']);
+    }
+
+    public function testAdminCannotPlaceAPrivateOne(): void
+    {
+        $this->as('bert', [1], [1]);
+        $private = $this->api()->addSavedExploration(1, 'Bert alone', self::STATE)['id'];
+
+        FakeAccess::clearAccess(false, [1], [1], 'carla');
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotFound', fn () => $this->api()->setSavedExplorationMenu(1, $private, 'Goals_Goals'), 404);
+    }
+
+    public function testViewUserCannotPlaceAnothersExploration(): void
+    {
+        $this->as('bert', [1], [1]);
+        $shared = $this->api()->addSavedExploration(1, 'Bert for all', self::STATE, '', 1)['id'];
+
+        $this->as('anna', [1]);
+        $this->assertFalse(array_column($this->api()->getSavedExplorations(1), null, 'name')['Bert for all']['canPlace']);
+        $this->assertRefused('FeinwerkDataExploration_ErrorSavedNotYours', fn () => $this->api()->setSavedExplorationMenu(1, $shared, 'Goals_Goals'), 403);
+    }
+
     public function testAnotherSitesExplorationIsNotFound(): void
     {
         $this->as('anna', [1, 2], [2]);

@@ -9,6 +9,8 @@
 
 namespace Piwik\Plugins\FeinwerkDataExploration\tests\Unit\Engine;
 
+use Piwik\Plugins\FeinwerkDataExploration\Engine\Explorer;
+use Piwik\Plugins\FeinwerkDataExploration\Catalog\MetricCatalog;
 use PHPUnit\Framework\TestCase;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\Comparison;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\ComparisonTable;
@@ -70,13 +72,29 @@ class ComparisonTableTest extends TestCase
         $this->assertSame('2027-01-02', ComparisonTable::shiftDate('2026-12-31', 2));
     }
 
+    /** counts and sums, also a goal's (more metrics, 2026-11-24): their rows add up to the column, so a share makes sense */
     public function testShareMetricsAreCountsAndSums(): void
     {
-        foreach (['nb_visits', 'nb_pageviews', 'revenue', 'sum_event_value', 'nb_conversions'] as $metric) {
-            $this->assertContains($metric, ComparisonTable::SHARE_METRICS);
+        foreach (['nb_visits', 'nb_pageviews', 'revenue', 'sum_event_value', 'nb_conversions', 'nb_uniq_visitors', 'goal_3_revenue',
+            'goal_3_nb_conversions', 'goal_ecommerceOrder_items', 'nb_visits_converted', 'sum_visit_length'] as $metric) {
+            $this->assertTrue(MetricCatalog::byId($metric)->hasShare(), $metric);
         }
-        foreach (['bounce_rate', 'conversion_rate', 'avg_time_on_site', 'nb_actions_per_visit', 'max_actions', 'avg_event_value'] as $metric) {
-            $this->assertNotContains($metric, ComparisonTable::SHARE_METRICS);
+        foreach (['bounce_rate', 'conversion_rate', 'avg_time_on_site', 'nb_actions_per_visit', 'max_actions', 'avg_event_value',
+            'revenue_per_visit', 'goal_3_conversion_rate', 'goal_ecommerceOrder_avg_order_revenue'] as $metric) {
+            $this->assertFalse(MetricCatalog::byId($metric)->hasShare(), $metric);
         }
+    }
+
+    /** a row missing in a column: 0 for counts and sums, nothing for rates and averages; whole numbers stay whole */
+    public function testMetricValueOfNewMetrics(): void
+    {
+        $this->assertSame(0, Explorer::metricValue('goal_3_nb_conversions', null));
+        $this->assertSame(0.0, Explorer::metricValue('goal_3_revenue', null));
+        $this->assertNull(Explorer::metricValue('revenue_per_visit', null));
+        $this->assertNull(Explorer::metricValue('goal_3_conversion_rate', null));
+        $this->assertSame(4, Explorer::metricValue('goal_3_nb_conversions', '4'));
+        $this->assertSame(30, Explorer::metricValue('sum_visit_length', '30'));
+        $this->assertSame(12.5, Explorer::metricValue('goal_ecommerceOrder_avg_order_revenue', '12.5'));
+        $this->assertSame(7, Explorer::metricValue('max_actions', '7'));
     }
 }

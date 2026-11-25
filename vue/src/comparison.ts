@@ -10,12 +10,6 @@ export interface StoreComparison {
   title: string;
 }
 
-/** Counts and sums: a share of the column total makes sense (ComparisonTable::SHARE_METRICS). */
-export const SHARE_METRICS = [
-  'nb_visits', 'nb_uniq_visitors', 'nb_actions', 'nb_conversions', 'revenue', 'nb_pageviews',
-  'nb_uniq_pageviews', 'nb_events', 'sum_event_value', 'nb_downloads', 'nb_outlinks', 'nb_searches',
-];
-
 type Row = Record<string, unknown>;
 
 /**
@@ -101,7 +95,7 @@ function rowKey(row: Row): string {
   }
   return typeof row.fwde_key === 'string'
     ? row.fwde_key
-    : `${row.label}\u0000${row.secondary_label ?? ''}`;
+    : `${row.label}\u0000${row.secondary_label ?? ''}\u0000${row.tertiary_label ?? ''}`;
 }
 
 /**

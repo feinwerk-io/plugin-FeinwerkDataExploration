@@ -27,7 +27,21 @@ final class Limits
         /** columns per metric when comparing, the own one included; ComparisonList::maxColumns() clamps it to 1..10 */
         public readonly int $maxCompareColumns = 4,
         /** lines of a line chart (trend and time dimensions); TrendExplorer::maxLines() clamps it to 1..10 */
-        public readonly int $maxTrendLines = 5
+        public readonly int $maxTrendLines = 5,
+        /**
+         * Seconds a call waits for a free slot (ConcurrencyGate) before it answers "busy": 0 for the page, which shows
+         * the message at once; saved reports wait (2026-11-24: a dashboard loads its widgets in parallel, Matomo's
+         * e-mail drops a report that fails).
+         */
+        public readonly int $slotWait = 0
     ) {
+    }
+
+    /** The same limits with another wait for a slot. */
+    public function withSlotWait(int $seconds): self
+    {
+        $values = get_object_vars($this);
+        $values['slotWait'] = max(0, $seconds);
+        return new self(...$values);
     }
 }

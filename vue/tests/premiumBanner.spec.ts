@@ -31,12 +31,17 @@ const props = (premium: PremiumProps|null) => ({
 });
 const banner = (overrides: Partial<PremiumProps> = {}) => mount(PremiumBanner, {
   props: props({
-    plugins: [inside, store], days: 30, demo: false, note: 'Your Matomo super user can install it.', ...overrides,
+    plugins: [inside, store],
+    days: 90,
+    pauseDays: 30,
+    demo: false,
+    note: 'Your Matomo super user can install it.',
+    ...overrides,
   }),
   attachTo: document.body,
 });
 
-describe('premium banner (promotion kit, rotation by promocard.js)', () => {
+describe('premium banner (promotion kit, a pausable place for promocard.js)', () => {
   afterEach(() => {
     while (document.body.firstChild) {
       document.body.removeChild(document.body.firstChild);
@@ -47,29 +52,43 @@ describe('premium banner (promotion kit, rotation by promocard.js)', () => {
     expect(mount(PremiumBanner, { props: props(null) }).find('.fwde-premium').exists()).toBe(false);
     expect(mount(PremiumBanner, {
       props: props({
-        plugins: [], days: 30, demo: false, note: '',
+        plugins: [], days: 90, pauseDays: 30, demo: false, note: '',
       }),
     }).find('.fwde-premium').exists()).toBe(false);
   });
 
-  it('is one rotation group of the kind banner that never hides the widget around it', () => {
+  // Peter, 2026-11-24: "Ein × blendet alles 30 Tage aus" (kit PageFilterReport d4ce520, "Pausable places"): any x
+  // empties the place for pauseDays, the closed plugin stays away for its days; demo mode keeps the plain rotation
+  it('is a pausable place of the kind banner, never a rotation group older kit copies would take', () => {
     const group = banner().find('div.fwde-premium');
-    expect(group.attributes('data-fwpromo-rotation')).toBe('banner');
-    // the whole exploration page is one Matomo widget: promocard.js hides it with this attribute once all are gone
+    expect([
+      group.attributes('data-fwpromo-pausable'),
+      group.attributes('data-fwpromo-pause'),
+      group.attributes('data-fwpromo-pause-days'),
+    ]).toEqual(['banner', 'fwde-banner', '30']);
+    // promocard.js 5 turns it into a rotation group once the pause is checked; up to version 4 never see it
+    expect(group.attributes('data-fwpromo-rotation')).toBeUndefined();
+    // the whole exploration page is one Matomo widget: promocard.js would hide it with this attribute
     expect(group.attributes('data-fwpromo-widget')).toBeUndefined();
   });
 
-  it('has one item per plugin with its dismissal id and days, the demo flag only in demo', () => {
+  it('keeps the plain rotation in demo mode: no pause, days 0, the demo flag', () => {
+    const group = banner({ days: 0, pauseDays: 0, demo: true }).find('div.fwde-premium');
+    expect(group.attributes('data-fwpromo-rotation')).toBe('banner');
+    expect(Object.keys(group.attributes()).filter((name) => name.startsWith('data-fwpromo-pause'))).toEqual([]);
+    expect(group.attributes('data-fwpromo-widget')).toBeUndefined();
+    expect(group.findAll('section.fwde-premium__item')
+      .map((item) => [item.attributes('data-fwpromo-days'), item.attributes('data-fwpromo-demo')]))
+      .toEqual([['0', '1'], ['0', '1']]);
+  });
+
+  it('has one item per plugin with its dismissal id and its own days, the demo flag only in demo', () => {
     const items = banner().findAll('section.fwde-premium__item');
     expect(items.map((item) => item.attributes('data-fwpromo-id')))
       .toEqual(['premium-FeinwerkSentinelPro', 'premium-FeinwerkSearchReport']);
-    expect(items.map((item) => item.attributes('data-fwpromo-days'))).toEqual(['30', '30']);
+    expect(items.map((item) => item.attributes('data-fwpromo-days'))).toEqual(['90', '90']);
     expect(items[0].attributes('data-fwpromo-demo')).toBeUndefined();
     expect(items[0].attributes('aria-label')).toBe('Recommended by Feinwerk');
-
-    const demo = banner({ days: 0, demo: true }).findAll('section.fwde-premium__item');
-    expect(demo.map((item) => [item.attributes('data-fwpromo-days'), item.attributes('data-fwpromo-demo')]))
-      .toEqual([['0', '1'], ['0', '1']]);
   });
 
   it('opens a store page in a new tab with the admin note, a page inside Matomo in the same tab', () => {
@@ -116,12 +135,12 @@ describe('premium banner (promotion kit, rotation by promocard.js)', () => {
     // what promocard.js does: hidden items go, then the empty group itself
     group.querySelectorAll('section').forEach((item) => item.remove());
     await wrapper.setProps(props({
-      plugins: [store], days: 30, demo: false, note: '',
+      plugins: [store], days: 90, pauseDays: 30, demo: false, note: '',
     }));
     expect(group.querySelectorAll('section')).toHaveLength(0);
     group.remove();
     await wrapper.setProps(props({
-      plugins: [inside], days: 30, demo: false, note: '',
+      plugins: [inside], days: 90, pauseDays: 30, demo: false, note: '',
     }));
     expect(() => wrapper.unmount()).not.toThrow();
   });

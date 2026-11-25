@@ -70,18 +70,42 @@
         </li>
       </ul>
     </div>
-    <button
-      type="button"
-      class="fwde-icon-button fwde-toolbar__copy"
-      :title="copyText"
-      :aria-label="copyText"
-      @click="copyLink"
+    <div
+      ref="copyBox"
+      class="fwde-copybox"
     >
-      <span
-        :class="copied ? 'icon-ok' : 'icon-content-copy'"
-        aria-hidden="true"
-      />
-    </button>
+      <button
+        type="button"
+        class="fwde-icon-button fwde-toolbar__copy"
+        :title="copyText"
+        :aria-label="copyText"
+        @click="copyLink"
+      >
+        <span
+          :class="copied ? 'icon-ok' : 'icon-content-copy'"
+          aria-hidden="true"
+        />
+      </button>
+      <!-- the browser refused to copy (no clipboard over http, a denied permission):
+           the link to copy by hand -->
+      <div
+        v-if="manualLink"
+        class="fwde-menu__list fwde-copylink"
+      >
+        <label class="fwde-copylink__label">
+          <span>{{ translate('FeinwerkDataExploration_CopyLinkByHand') }}</span>
+          <input
+            ref="manualInput"
+            class="browser-default fwde-input"
+            type="text"
+            readonly
+            :value="manualLink"
+            @focus="selectAll"
+            @keydown.escape.stop="closeManual"
+          />
+        </label>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -111,6 +135,8 @@ export default defineComponent({
   data() {
     return {
       copied: false,
+      /** the link shown for copying by hand when the browser refuses ('' = hidden) */
+      manualLink: '',
       timer: 0,
       exportOpen: false,
       formats: ['CSV', 'TSV'] as ('CSV'|'TSV')[],
@@ -166,6 +192,10 @@ export default defineComponent({
       this.$emit('limit', Number((event.target as HTMLSelectElement).value));
     },
     onDocumentClick(event: MouseEvent) {
+      const copyBox = this.$refs.copyBox as HTMLElement|undefined;
+      if (this.manualLink && copyBox && !copyBox.contains(event.target as Node)) {
+        this.manualLink = '';
+      }
       const menu = this.$refs.exportMenu as HTMLElement|undefined;
       if (this.exportOpen && menu && !menu.contains(event.target as Node)) {
         this.exportOpen = false;
@@ -174,16 +204,68 @@ export default defineComponent({
     onKeydown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         this.exportOpen = false;
+        this.manualLink = '';
       }
     },
+    /**
+     * The clipboard first; without it (Matomo over http) or when the browser refuses, the older
+     * copy command; when that fails too, the link selected in a field to copy by hand (UI review
+     * 2026-11-23: never a silent failure, the user would paste an old clipboard).
+     */
     copyLink() {
-      const done = () => {
-        this.copied = true;
-        window.clearTimeout(this.timer);
-        this.timer = window.setTimeout(() => { this.copied = false; }, 2500);
-      };
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(window.location.href).then(done).catch(() => undefined);
+      const url = window.location.href;
+      this.manualLink = '';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url)
+          .then(() => this.copiedNow())
+          .catch(() => this.copyWithCommand(url));
+        return;
+      }
+      this.copyWithCommand(url);
+    },
+    copyWithCommand(url: string) {
+      let copied = false;
+      if (typeof document.execCommand === 'function') {
+        const field = document.createElement('textarea');
+        field.value = url;
+        field.setAttribute('readonly', '');
+        field.style.position = 'fixed';
+        field.style.top = '-1000px';
+        document.body.appendChild(field);
+        field.select();
+        try {
+          copied = document.execCommand('copy');
+        } catch (e) {
+          copied = false;
+        }
+        document.body.removeChild(field);
+      }
+      if (copied) {
+        this.copiedNow();
+        return;
+      }
+      this.manualLink = url;
+      this.$nextTick(() => {
+        const input = this.$refs.manualInput as HTMLInputElement|undefined;
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      });
+    },
+    copiedNow() {
+      this.copied = true;
+      window.clearTimeout(this.timer);
+      this.timer = window.setTimeout(() => { this.copied = false; }, 2500);
+    },
+    selectAll(event: FocusEvent) {
+      (event.target as HTMLInputElement).select();
+    },
+    closeManual() {
+      this.manualLink = '';
+      const button = (this.$el as HTMLElement).querySelector<HTMLElement>('.fwde-toolbar__copy');
+      if (button) {
+        button.focus();
       }
     },
   },

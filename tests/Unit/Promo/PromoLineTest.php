@@ -162,6 +162,13 @@ class PromoLineTest extends TestCase
         self::assertSame(['https://plugins.matomo.org/FeinwerkMarketplaceConnector?mtm_campaign=plugin-promo&mtm_source=FeinwerkDataExploration&mtm_content=connector', true, '[FeinwerkDataExploration_PremiumAskSuperUser]'],
             [$admin['url'], $admin['external'], $admin['note']]);
         self::assertSame('[FeinwerkDataExploration_PromoConnectorLink]', $admin['link']);
+
+        // where this plugin's installer page is offered, the super user goes there (Peter, 2026-11-23: "Auf den Installer")
+        $installer = PromoLine::variables('connector', 'de', $translate, 'line', false, ['superUser' => true, 'marketplace' => true, 'installer' => true]);
+        self::assertSame(['index.php?module=FeinwerkDataExploration&action=connectorInstaller', false, ''],
+            [$installer['url'], $installer['external'], $installer['note']]);
+        $adminInstaller = PromoLine::variables('connector', 'en', $translate, 'line', false, ['superUser' => false, 'marketplace' => true, 'installer' => true]);
+        self::assertTrue($adminInstaller['external'], 'admins cannot use the installer');
     }
 
     /** Matomo for WordPress (Peter, 2026-11-17: "Dort nicht werben"): no connector message there, in demo too. */
@@ -183,7 +190,7 @@ class PromoLineTest extends TestCase
     /**
      * current()'s decisions, through lineFor(): WordPress and a super user without a usable Marketplace get no connector
      * message (Peter, 2026-11-17), a super user with one the Marketplace link, an admin plugins.matomo.org plus the note
-     * with Matomo's own word for the super user.
+     * who can install it.
      */
     public function test_the_line_for_each_kind_of_user(): void
     {
@@ -202,7 +209,7 @@ class PromoLineTest extends TestCase
         $admin = PromoLine::lineFor(['superUser' => false, 'marketplace' => false] + $env, $nothing, $translate, 'de');
         self::assertSame('connector', $admin['id']);
         self::assertStringStartsWith('https://plugins.matomo.org/FeinwerkMarketplaceConnector?', $admin['url']);
-        self::assertSame('FeinwerkDataExploration_PremiumAskSuperUser(Installation_SuperUser)', $admin['note']);
+        self::assertSame('FeinwerkDataExploration_PremiumAskSuperUser', $admin['note']);
 
         foreach ([
             'super user without a usable Marketplace' => ['marketplace' => false] + $env,

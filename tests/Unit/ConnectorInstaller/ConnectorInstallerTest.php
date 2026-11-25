@@ -132,6 +132,23 @@ class ConnectorInstallerTest extends TestCase
         })['html'], 'plain messages stay text');
     }
 
+    /**
+     * Files that do not fit this Matomo (e.g. an old connector after Matomo's major update) are not activated: Matomo's
+     * own plugin list offers no Activate for them, and activating would only load nothing. The install updates them.
+     */
+    public function test_files_that_do_not_fit_are_updated_not_activated(): void
+    {
+        $old = ['present' => true, 'compatible' => false] + self::READY;
+
+        self::assertSame(ConnectorInstaller::INSTALL, ConnectorInstaller::decide($old));
+        self::assertSame(ConnectorInstaller::MANUAL, ConnectorInstaller::decide(['marketplace' => false] + $old));
+        self::assertSame(ConnectorInstaller::MANUAL, ConnectorInstaller::decide(['pluginsAdmin' => false] + $old), 'no console step for files that do not fit');
+        self::assertFalse(ConnectorInstaller::usableFiles($old));
+        self::assertTrue(ConnectorInstaller::usableFiles(['present' => true, 'compatible' => true] + self::READY));
+        self::assertTrue(ConnectorInstaller::usableFiles(['present' => true] + self::READY), 'unknown counts as fitting');
+        self::assertSame(ConnectorInstaller::ACTIVATE, ConnectorInstaller::decide(['present' => true, 'compatible' => true] + self::READY));
+    }
+
     public function test_manual_links_carry_the_campaign_and_nothing_else(): void
     {
         self::assertSame([

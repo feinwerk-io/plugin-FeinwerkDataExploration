@@ -1,0 +1,52 @@
+/* Feinwerk kit: the connector installer page (templates/connectorInstaller.twig). Matomo's card and button classes do
+   the rest; theme variables with light fallbacks (also for Matomo below 5.12). */
+.fwci .fwci__steps {
+    list-style: decimal;
+    margin: 0 0 12px;
+    padding-left: 1.5em;
+}
+
+.fwci .fwci__steps li {
+    list-style: decimal;
+    margin-bottom: 4px;
+}
+
+/* Matomo's muted help text; #content outranks core's #content .card-content p (UI review 2026-11-24) */
+.fwci .fwci__note,
+#content .fwci p.fwci__note {
+    color: var(--theme-color-text-lighter, #666);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* the button and its progress label may wrap on a phone ("Der Connector wird installiert..." is wider than 360 px):
+   Matomo's .btn has a fixed height of one line (UI review 2026-11-24) */
+.fwci .fwci__run {
+    height: auto;
+    min-height: 36px;
+    max-width: 100%;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    line-height: 1.4;
+    white-space: normal;
+}
+
+/* after the click: a progress label, no second run; full contrast (no fade) */
+.fwci .fwci__run--busy,
+.fwci .fwci__run--busy:hover {
+    cursor: progress;
+    pointer-events: none;
+}
+
+/* the progress for screen readers (javascripts/connectorinstaller.js fills it after the click) */
+.fwci .fwci__status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

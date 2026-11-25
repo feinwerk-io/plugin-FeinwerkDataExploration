@@ -23,6 +23,7 @@
           <th>{{ translate('General_Name') }}</th>
           <th>{{ translate('FeinwerkDataExploration_ColumnOwner') }}</th>
           <th>{{ translate('FeinwerkDataExploration_ColumnChanged') }}</th>
+          <th v-if="menuSections.length">{{ translate('FeinwerkDataExploration_ShowInMenu') }}</th>
           <th>
             <span class="fwde-visually-hidden">
               {{ translate('FeinwerkDataExploration_RowActions') }}
@@ -42,10 +43,32 @@
           </td>
           <td>{{ item.owner }}</td>
           <td>{{ item.updated.slice(0, 10) }}</td>
+          <td v-if="menuSections.length">
+            <select
+              v-if="item.kind === 'table' && item.canPlace && place"
+              class="browser-default fwde-select fwde-manage__menu"
+              :aria-label="translate('FeinwerkDataExploration_ShowInMenu')"
+              :value="item.menu || ''"
+              :disabled="busy"
+              @change="changePlace(item, $event)"
+            >
+              <option value="">{{ translate('FeinwerkDataExploration_MenuNone') }}</option>
+              <option
+                v-for="section in menuSections"
+                :key="section.id"
+                :value="section.id"
+              >{{ section.name }}</option>
+            </select>
+            <span v-else-if="item.kind === 'table'">{{ sectionName(item.menu) }}</span>
+          </td>
           <td class="fwde-manage__actions">
             <template v-if="confirming === item.id">
               <span class="fwde-manage__confirm">
                 {{ translate('FeinwerkDataExploration_ManageSharedConfirm', item.name) }}
+                <span
+                  v-if="item.kind !== 'funnel'"
+                  class="fwde-manage__deletehint"
+                >{{ translate('FeinwerkDataExploration_DeleteAlsoRemoves') }}</span>
               </span>
               <button
                 type="button"
@@ -81,15 +104,21 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import { translate } from 'CoreHome';
-import { SavedExploration } from './api';
+import { MenuSection, SavedExploration } from './api';
 
 export default defineComponent({
   props: {
     saved: { type: Array as PropType<SavedExploration[]>, required: true },
     /** deletes one exploration; rejects with an Error whose message the dialog shows */
     remove: { type: Function as PropType<(id: number) => Promise<unknown>>, required: true },
+    /** changes a shared exploration's menu place (Peter, 2026-11-24: admins may) */
+    place: {
+      type: Function as PropType<(id: number, menu: string) => Promise<unknown>>,
+      default: null,
+    },
+    menuSections: { type: Array as PropType<MenuSection[]>, default: () => [] },
   },
-  emits: ['deleted'],
+  emits: ['deleted', 'placed'],
   data() {
     return {
       confirming: null as number|null,
@@ -105,8 +134,11 @@ export default defineComponent({
   methods: {
     translate,
     kindKey(item: SavedExploration): string {
-      return item.kind === 'funnel'
-        ? 'FeinwerkDataExploration_Funnel'
+      if (item.kind === 'funnel') {
+        return 'FeinwerkDataExploration_Funnel';
+      }
+      return item.kind === 'kpi'
+        ? 'FeinwerkDataExploration_SaveAsKpiCard'
         : 'FeinwerkDataExploration_FreeFormTable';
     },
     /**
@@ -123,6 +155,22 @@ export default defineComponent({
         if (target) {
           target.focus();
         }
+      });
+    },
+    sectionName(menu: string|null|undefined): string {
+      const section = this.menuSections.find((s) => s.id === menu);
+      return section ? section.name : translate('FeinwerkDataExploration_MenuNone');
+    },
+    changePlace(item: SavedExploration, event: Event) {
+      const menu = (event.target as HTMLSelectElement).value;
+      this.busy = true;
+      this.error = '';
+      this.place(item.id, menu).then(() => {
+        this.$emit('placed', item.id);
+      }).catch((e: unknown) => {
+        this.error = e instanceof Error ? e.message : String(e);
+      }).finally(() => {
+        this.busy = false;
       });
     },
     confirmDelete(item: SavedExploration) {

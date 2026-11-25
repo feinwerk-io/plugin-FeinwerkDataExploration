@@ -10,7 +10,9 @@
 namespace Piwik\Plugins\FeinwerkDataExploration\Engine;
 
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\DimensionCatalog;
+use Piwik\Plugins\FeinwerkDataExploration\Catalog\DimensionDefinition;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\MetricCatalog;
+use Piwik\Plugins\FeinwerkDataExploration\Catalog\MetricDefinition;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\ExplorationDefinition;
 
 /**
@@ -20,8 +22,8 @@ use Piwik\Plugins\FeinwerkDataExploration\Definition\ExplorationDefinition;
  */
 final class Additivity
 {
-    /** metrics that count something that can fall into several rows whatever the dimensions: the unit they count */
-    private const NEVER_ADDING_UP = ['nb_uniq_visitors' => 'visitor', 'nb_uniq_pageviews' => 'visit'];
+    /** what a distinct count counts (it can fall into several rows whatever the dimensions); "visit" otherwise */
+    private const DISTINCT_UNIT = ['nb_uniq_visitors' => 'visitor', 'nb_uniq_pageviews' => 'visit'];
 
     /**
      * The unit that can count in several rows ("visit" or "visitor"), null when the rows add up.
@@ -29,8 +31,8 @@ final class Additivity
     public static function overcountUnit(ExplorationDefinition $definition, DimensionCatalog $dimensions, MetricCatalog $metrics, int $idSite): ?string
     {
         foreach ($definition->metricIds as $id) {
-            if (isset(self::NEVER_ADDING_UP[$id])) {
-                return self::NEVER_ADDING_UP[$id];
+            if ($metrics->get($id)->aggregation === MetricDefinition::AGG_DISTINCT) {
+                return self::DISTINCT_UNIT[$id] ?? 'visit';
             }
         }
 
@@ -52,5 +54,22 @@ final class Additivity
             }
         }
         return null;
+    }
+
+    /**
+     * Whether a metric's cells add up across the values of a pivot dimension (rows and pivot, 2026-11-24), so the
+     * "Others" column of the rest is exact: a sum, and no visit counted under two values (an action pivot, or a time
+     * pivot read at the action time, counts a visit under each of its values unless the metric counts actions).
+     *
+     * @param string $pivotScope the scope of the pivot's queries (Explorer::pivotScope())
+     */
+    public static function addsUpAcross(DimensionDefinition $pivot, MetricDefinition $metric, string $pivotScope): bool
+    {
+        if (!$metric->addsUp()) {
+            return false;
+        }
+        $perAction = $pivot->scope === DimensionCatalog::SCOPE_ACTION
+            || ($pivotScope === DimensionCatalog::SCOPE_ACTION && $pivot->group === 'time');
+        return !$perAction || $metric->scope === MetricCatalog::SCOPE_ACTION;
     }
 }

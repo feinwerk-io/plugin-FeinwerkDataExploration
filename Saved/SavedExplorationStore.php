@@ -62,6 +62,18 @@ final class SavedExplorationStore
         return array_map([self::class, 'row'], $rows);
     }
 
+    /**
+     * Every saved exploration of the website, whoever owns it (saved reports, 2026-11-24: ReportVisibility decides who
+     * may see which).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function listAll(int $idSite): array
+    {
+        $rows = Db::fetchAll('SELECT * FROM `' . $this->table() . '` WHERE idsite = ? ORDER BY name ASC, idsaved ASC', [$idSite]);
+        return array_map([self::class, 'row'], $rows);
+    }
+
     /** @return array<string, mixed>|null */
     public function get(int $id): ?array
     {

@@ -2,8 +2,10 @@
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
+import { isInteger } from './metricMeta';
+import { LABEL_COLUMNS } from './labels';
 import {
-  canTrend, ChartModel, ChartOptions, ChartSeries, compareKeys, effectiveChartType, INTEGER_METRICS,
+  canTrend, ChartModel, ChartOptions, ChartSeries, compareKeys, effectiveChartType,
   niceScale,
   timeOrder,
 } from './chart';
@@ -42,7 +44,7 @@ function scaleOf(series: ChartSeries[], metric: string, tickCount: number) {
     Math.min(0, ...values),
     Math.max(0, ...values),
     tickCount,
-    INTEGER_METRICS.includes(metric),
+    isInteger(metric),
   );
 }
 
@@ -67,9 +69,9 @@ export function trendModel(rows: TrendRow[], metric: string, options: TrendOptio
   const categories = first.map((row) => timeLabel(String(row.time), hourLabels));
   const series: ChartSeries[] = ordered.map((lineRows) => {
     const head = lineRows[0];
-    const label = head.secondary_label === undefined || head.secondary_label === null
-      ? String(head.label)
-      : `${head.label} · ${head.secondary_label}`;
+    const label = LABEL_COLUMNS
+      .filter((column) => head[column] !== undefined && head[column] !== null)
+      .map((column) => String(head[column])).join(' · ');
     return {
       label,
       dashed: isOtherPeriod(head.fwde_kind),
@@ -98,6 +100,7 @@ export function trendModel(rows: TrendRow[], metric: string, options: TrendOptio
     omittedRows: comparing || !series.length ? 0 : Math.max(0, tableRows - series.length),
     omittedSeries: 0,
     incomplete: false,
+    gaps: false,
     scale: scaleOf(series, metric, tickCount),
   };
 }
@@ -135,6 +138,7 @@ export function compareTimeModel(
     omittedRows: 0,
     omittedSeries: 0,
     incomplete: false,
+    gaps: false,
     scale: scaleOf(series, metric, tickCount),
   };
 }

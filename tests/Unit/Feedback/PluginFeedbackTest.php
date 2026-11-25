@@ -80,7 +80,7 @@ class PluginFeedbackTest extends TestCase
     /** The funnel page asks its own question (spec 5); the store learns the topic with the release. */
     public function testFunnelIsATopic(): void
     {
-        $this->assertSame(['free_form_table', 'funnel'], PluginFeedback::TOPICS);
+        $this->assertSame(['free_form_table', 'funnel', 'saved_report', 'kpi_card'], PluginFeedback::TOPICS);
         $payload = PluginFeedback::payload('funnel', 'down', '1', '6', '', 'en');
         $this->assertSame('funnel', $payload['topic']);
         $this->assertSame(1, preg_match('/^[a-z_]{1,30}$/', $payload['topic']));

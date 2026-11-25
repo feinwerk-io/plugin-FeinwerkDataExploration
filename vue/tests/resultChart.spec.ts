@@ -376,3 +376,38 @@ describe('donut chart (design 2026-11-20)', () => {
   });
 });
 
+describe('ResultChart, lines of a time dimension (2026-11-24)', () => {
+  const days = ['2026-03-27', '2026-03-28', '2026-03-29'];
+  const timeChart = (state10: ReturnType<typeof parseState>, timeRows: ResultRow[], extra: Record<string, unknown> = {}) => mount(ResultChart, {
+    props: {
+      rows: timeRows,
+      state: state10,
+      catalog: CATALOG,
+      metric: state10.metrics[0],
+      actionScope: false,
+      currencySymbol: '$',
+      chartType: 'bar',
+      showTypeSwitch: false,
+      periodDays: days,
+      ...extra,
+    },
+  });
+
+  it('a result that reached the table\'s limit is complete when the chart got its own full rows', () => {
+    const state2 = parseState({ fwdeDims: 'date', fwdeMetrics: 'nb_visits', fwdeLimit: '10' }, CATALOG, LIMITS);
+    const ten = Array.from({ length: 10 }, (_, i) => ({ label: `2026-03-${String(10 + i)}`, nb_visits: i + 1 }));
+    expect(timeChart(state2, ten).text()).toContain('FeinwerkDataExploration_ChartIncomplete');
+    expect(timeChart(state2, ten, { rowLimit: 1000 }).text()).not.toContain('FeinwerkDataExploration_ChartIncomplete');
+  });
+
+  it('says that the lines leave out points without a value', () => {
+    const rate = parseState({ fwdeDims: 'date,browser', fwdeMetrics: 'bounce_rate' }, CATALOG, LIMITS);
+    const wrapper = timeChart(rate, [
+      { label: '2026-03-27', secondary_label: 'Desktop', bounce_rate: 0.5 },
+      { label: '2026-03-29', secondary_label: 'Desktop', bounce_rate: 0.25 },
+      { label: '2026-03-27', secondary_label: 'Smartphone', bounce_rate: 0.4 },
+    ]);
+    expect(wrapper.text()).toContain('FeinwerkDataExploration_ChartGaps');
+  });
+});
+

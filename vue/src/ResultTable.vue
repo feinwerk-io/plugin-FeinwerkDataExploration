@@ -5,8 +5,11 @@
 
 <template>
   <div class="fwde-table">
-    <div class="fwde-table__scroller">
-      <table class="dataTable fwde-table__table">
+    <TableScroller @layout="onLayout">
+      <table
+        class="dataTable fwde-table__table"
+        :class="{ 'fwde-table__table--natural': naturalFirst }"
+      >
         <thead>
           <tr>
             <th
@@ -20,7 +23,7 @@
                 label: !column.isMetric,
                 'fwde-table__dimension': !column.isMetric,
                 'fwde-table__dimension-last': column.key === lastDimension,
-                'fwde-table__dimension--fit': column.key === 'label' && firstDimensionFits,
+                'fwde-table__dimension--fit': column.key === 'label' && firstColumnFits,
               }"
               :aria-sort="ariaSort(column.key)"
             >
@@ -70,7 +73,7 @@
                   'fwde-table__label': true,
                   'fwde-table__dimension': true,
                   'fwde-table__dimension-last': column.key === lastDimension,
-                  'fwde-table__dimension--fit': column.key === 'label' && firstDimensionFits,
+                  'fwde-table__dimension--fit': column.key === 'label' && firstColumnFits,
                 }"
                 :title="String(row[column.key])"
               >
@@ -83,7 +86,7 @@
             <td class="fwde-table__menu">
               <RowMenu
                 :label="rowLabel(row)"
-                :can-break-down="state.dimensions.length === 1"
+                :can-break-down="state.dimensions.length < MAX_DIMENSIONS"
                 :visits-reason="visitsReason(row)"
                 :filter-reason="filterReason(row)"
                 @filter="$emit('row-filter', row)"
@@ -107,6 +110,7 @@
                   'fwde-table__label': true,
                   'fwde-table__dimension': true,
                   'fwde-table__dimension-last': column.key === lastDimension,
+                  'fwde-table__dimension--fit': column.key === 'label' && firstColumnFits,
                 }"
               >{{ column.key === 'label' ? translate('General_Others') : '' }}</td>
             </template>
@@ -142,7 +146,7 @@
           </tr>
         </tbody>
       </table>
-    </div>
+    </TableScroller>
     <p
       v-if="overcountKey"
       class="fwde-table__overcount"
@@ -160,6 +164,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import { Matomo, NumberFormatter, translate } from 'CoreHome';
+import { hasShare } from './metricMeta';
 import { Catalog, ExplorationState, OthersState } from './types';
 import { ResultRow } from './api';
 import {
@@ -167,10 +172,13 @@ import {
 } from './format';
 import { shouldSortClientSide, sortByLabel } from './sorting';
 import RowMenu from './RowMenu.vue';
+import TableScroller from './TableScroller.vue';
+import { roomyAfter, TableLayout } from './scrollEdges';
 import { canFilterTo } from './rows';
 import { barMaximum, cellBarWidth, headAndTail } from './cellBars';
+import { LABEL_COLUMNS } from './labels';
+import { MAX_DIMENSIONS } from './state';
 import { addsUp, overcountUnit } from './additivity';
-import { SHARE_METRICS } from './comparison';
 
 export interface Column {
   key: string;
@@ -179,7 +187,7 @@ export interface Column {
 }
 
 export default defineComponent({
-  components: { RowMenu },
+  components: { RowMenu, TableScroller },
   props: {
     rows: { type: Array as PropType<ResultRow[]>, required: true },
     state: { type: Object as PropType<ExplorationState>, required: true },
@@ -195,6 +203,15 @@ export default defineComponent({
     othersState: { type: String as PropType<OthersState>, default: 'idle' },
   },
   emits: ['sort', 'row-filter', 'row-breakdown', 'row-visits', 'others-calculate'],
+  data() {
+    return {
+      MAX_DIMENSIONS,
+      /** two dimensions: the first at its natural width while the table fits (Peter, 2026-11-23) */
+      roomy: true,
+      /** the scroller's last width; a shrunk table tries again only when it widens */
+      boxWidth: 0,
+    };
+  },
   computed: {
     /** "Others" only below a cut table whose rows add up (design 2026-11-20) */
     showOthers(): boolean {
@@ -222,7 +239,7 @@ export default defineComponent({
       const dimensionName = (id: string) => this.catalog.dimensions
         .find((d) => d.id === id)?.name || id;
       const columns: Column[] = this.state.dimensions.map((id, i) => ({
-        key: i === 0 ? 'label' : 'secondary_label',
+        key: LABEL_COLUMNS[i],
         label: dimensionName(id),
         isMetric: false,
       }));
@@ -245,14 +262,25 @@ export default defineComponent({
       return this.state.dimensions.length > 1
         && this.rows.every((row) => headAndTail(String(row.label))[1] === '');
     },
+    /**
+     * the first of two dimension columns is only as wide as its values: always for short values,
+     * for long ones while the table has room; the second dimension then takes the free width
+     */
+    firstColumnFits(): boolean {
+      return this.state.dimensions.length > 1 && (this.firstDimensionFits || this.roomy);
+    },
+    /** long first values shown on one line at their natural width (up to the usual 32em) */
+    naturalFirst(): boolean {
+      return this.state.dimensions.length > 1 && !this.firstDimensionFits && this.roomy;
+    },
     /** the key of the last dimension column: a line separates the dimensions from the metrics */
     lastDimension(): string {
-      return this.state.dimensions.length > 1 ? 'secondary_label' : 'label';
+      return LABEL_COLUMNS[this.state.dimensions.length - 1];
     },
     /** what each count's bar is measured against: the column's largest value (not the sorting) */
     barMaxima(): Record<string, number> {
       const maxima: Record<string, number> = {};
-      this.state.metrics.filter((id) => SHARE_METRICS.includes(id)).forEach((id) => {
+      this.state.metrics.filter((id) => hasShare(id)).forEach((id) => {
         maxima[id] = barMaximum(this.dataRows, [id]);
       });
       return maxima;
@@ -276,7 +304,17 @@ export default defineComponent({
       };
     },
   },
+  watch: {
+    // a new result tries the natural width again
+    rows() {
+      this.roomy = true;
+    },
+  },
   methods: {
+    onLayout(layout: TableLayout) {
+      this.roomy = roomyAfter(this.roomy, this.naturalFirst, layout, this.boxWidth);
+      this.boxWidth = layout.width;
+    },
     /** head (0) or tail (1) of a dimension value, shortened in the middle by the stylesheet */
     labelPart(value: unknown, part: 0|1): string {
       return headAndTail(String(value))[part];
@@ -294,9 +332,8 @@ export default defineComponent({
       return width === null ? null : { '--fwde-bar': `${width}%` };
     },
     rowLabel(row: ResultRow): string {
-      return row.secondary_label === undefined
-        ? String(row.label)
-        : `${row.label} · ${row.secondary_label}`;
+      return LABEL_COLUMNS.filter((column) => row[column] !== undefined)
+        .map((column) => String(row[column])).join(' · ');
     },
     filterReason(row: ResultRow): string {
       return canFilterTo(row) ? '' : translate('FeinwerkDataExploration_NoFilterForRow');

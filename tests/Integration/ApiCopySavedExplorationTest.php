@@ -100,6 +100,68 @@ class ApiCopySavedExplorationTest extends IntegrationTestCase
         $this->assertNotSame('', $result['message']);
     }
 
+    /** more metrics (2026-11-24): a goal's metrics name the goal by its id, wherever the state names a metric */
+    public function testPerGoalMetricsAreMappedByGoalName(): void
+    {
+        $this->as('anna', [1, 2, 3]);
+        $state = '{"fwdeDims":"browser","fwdeMetrics":"nb_visits,goal_1_nb_conversions,goal_1_revenue","fwdeSort":"goal_1_revenue",'
+            . '"fwdeChart":"goal_1_nb_conversions","fwdeFilters":"goal_1_revenue~gt~10|any:label~contains~goal_1_x;goal_1_nb_conversions~gte~1"}';
+        $id = $this->api()->addSavedExploration(1, 'Orders', $state)['id'];
+
+        $result = $this->api()->copySavedExploration(1, $id, [2, 3]);
+
+        $this->assertSame([2], $result['additionalData']['copied']);
+        $this->assertSame([['idSite' => 3, 'reason' => 'goal']], $result['additionalData']['skipped']);
+        $this->assertSame([
+            'fwdeDims' => 'browser', 'fwdeMetrics' => 'nb_visits,goal_2_nb_conversions,goal_2_revenue', 'fwdeSort' => 'goal_2_revenue',
+            'fwdeChart' => 'goal_2_nb_conversions',
+            // a text condition's value stays as it is
+            'fwdeFilters' => 'goal_2_revenue~gt~10|any:label~contains~goal_1_x;goal_2_nb_conversions~gte~1',
+        ], $this->onlySaved(2)['state']);
+    }
+
+    /** a KPI card's metric is mapped as the exploration's (2026-11-24) */
+    public function testCardMetricIsMappedByGoalName(): void
+    {
+        $this->as('anna', [1, 2, 3]);
+        $state = '{"fwdeKind":"kpi","fwdeDims":"browser","fwdeMetrics":"nb_visits,goal_1_revenue","fwdeKpiMetric":"goal_1_revenue",'
+            . '"fwdeKpiCompare":"previous"}';
+        $id = $this->api()->addSavedExploration(1, 'Revenue card', $state)['id'];
+
+        $this->api()->copySavedExploration(1, $id, [2, 3]);
+
+        $copy = $this->onlySaved(2)['state'];
+        $this->assertSame(['kpi', 'goal_2_revenue', 'previous'], [$copy['fwdeKind'], $copy['fwdeKpiMetric'], $copy['fwdeKpiCompare']]);
+    }
+
+    public function testEcommerceMetricsNeedAnEcommerceWebsite(): void
+    {
+        Fixture::createWebsite('2026-01-01 00:00:00', 1);  // site 4
+        $this->as('anna', [1, 2, 3, 4]);
+        $id = $this->api()->addSavedExploration(1, 'Shop', '{"fwdeDims":"browser","fwdeMetrics":"nb_visits,goal_ecommerceOrder_revenue"}')['id'];
+
+        $result = $this->api()->copySavedExploration(1, $id, [3, 4]);
+
+        $this->assertSame([4], $result['additionalData']['copied']);
+        $this->assertSame([['idSite' => 3, 'reason' => 'ecommerce']], $result['additionalData']['skipped']);
+        $this->assertStringContainsString(\Piwik\Piwik::translate('FeinwerkDataExploration_CopySkippedEcommerce',
+            [\Piwik\Site::getNameFor(3) . ' (3)', (string) \Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationRules::MAX_PER_USER_AND_SITE]),
+            $result['message']);
+    }
+
+    /** saved reports (2026-11-24): the menu place travels along; Ecommerce needs an e-commerce website */
+    public function testEcommercePlaceFallsBackToExplorations(): void
+    {
+        Fixture::createWebsite('2026-01-01 00:00:00', 1);  // site 4, e-commerce
+        $this->as('anna', [1, 2, 3, 4]);
+        $id = $this->api()->addSavedExploration(1, 'Shop', '{"fwdeDims":"browser","fwdeMetrics":"nb_visits","fwdeMenu":"Goals_Ecommerce"}')['id'];
+
+        $this->api()->copySavedExploration(1, $id, [2, 4]);
+
+        $this->assertSame('FeinwerkDataExploration_Explorations', $this->onlySaved(2)['state']['fwdeMenu']);
+        $this->assertSame('Goals_Ecommerce', $this->onlySaved(4)['state']['fwdeMenu']);
+    }
+
     public function testSitesWithoutAccessAreRefused(): void
     {
         $this->as('anna', [1, 2]);
@@ -173,6 +235,25 @@ class ApiCopySavedExplorationTest extends IntegrationTestCase
         $this->assertSame([2], $result['additionalData']['copied']);
         $this->assertSame([['idSite' => 3, 'reason' => 'dimension']], $result['additionalData']['skipped']);
         $this->assertSame('customDimension1,browser', $this->onlySaved(2)['state']['fwdeDims']);
+        $this->assertNull($this->onlySaved(3));
+    }
+
+    /** rows and pivot (2026-11-24): a custom pivot dimension is mapped as the row dimensions */
+    public function testCustomPivotDimensionIsMappedByNameOrTheSiteIsSkipped(): void
+    {
+        $dimensions = CustomDimensionsApi::getInstance();
+        $dimensions->configureNewCustomDimension(1, 'Customer type', 'visit', true);   // id 1 on site 1
+        $dimensions->configureNewCustomDimension(1, 'Page author', 'action', true);    // id 2 on site 1
+        $dimensions->configureNewCustomDimension(2, 'Page author', 'action', true);    // id 1 on site 2
+        $this->as('anna', [1, 2, 3]);
+        $id = $this->api()->addSavedExploration(1, 'Authors', '{"fwdeDims":"browser","fwdeMetrics":"nb_pageviews","fwdePivot":"customDimension2","fwdePivotLimit":"3"}')['id'];
+
+        $result = $this->api()->copySavedExploration(1, $id, [2, 3]);
+
+        $this->assertSame([2], $result['additionalData']['copied']);
+        $this->assertSame([['idSite' => 3, 'reason' => 'dimension']], $result['additionalData']['skipped']);
+        $this->assertSame('customDimension1', $this->onlySaved(2)['state']['fwdePivot']);
+        $this->assertSame('3', $this->onlySaved(2)['state']['fwdePivotLimit']);
         $this->assertNull($this->onlySaved(3));
     }
 

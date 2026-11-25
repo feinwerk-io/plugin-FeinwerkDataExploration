@@ -2,10 +2,9 @@
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
+import { LABEL_COLUMNS } from './labels';
 
 type Row = Record<string, unknown>;
-
-const LABEL_COLUMNS = ['label', 'secondary_label'];
 
 /** A sorted copy, by the visible label: case-insensitive, numbers in natural order. */
 export function sortByLabel<T extends Row>(

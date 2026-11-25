@@ -120,6 +120,8 @@ __webpack_require__.r(__webpack_exports__);
 // EXPORTS
 __webpack_require__.d(__webpack_exports__, "ExplorationPage", function() { return /* reexport */ ExplorationPage; });
 __webpack_require__.d(__webpack_exports__, "FunnelPage", function() { return /* reexport */ FunnelPage; });
+__webpack_require__.d(__webpack_exports__, "SavedReportFooter", function() { return /* reexport */ SavedReportFooter; });
+__webpack_require__.d(__webpack_exports__, "KpiCard", function() { return /* reexport */ KpiCard; });
 
 // CONCATENATED MODULE: ./node_modules/@vue/cli-service/lib/commands/build/setPublicPath.js
 // This file is imported into lib/wc client bundles.
@@ -140,7 +142,7 @@ if (typeof window !== 'undefined') {
 // EXTERNAL MODULE: external {"commonjs":"vue","commonjs2":"vue","root":"Vue"}
 var external_commonjs_vue_commonjs2_vue_root_Vue_ = __webpack_require__("8bbf");
 
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ExplorationPage.vue?vue&type=template&id=2ba52161
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ExplorationPage.vue?vue&type=template&id=e7d5373c
 
 const _hoisted_1 = {
   class: "fwde-page"
@@ -183,57 +185,53 @@ const _hoisted_13 = {
   class: "fwde-filtersummary"
 };
 const _hoisted_14 = {
-  key: 0,
-  class: "fwde-filtersummary__item fwde-filtersummary__match"
-};
-const _hoisted_15 = {
   class: "fwde-page__content"
 };
-const _hoisted_16 = {
+const _hoisted_15 = {
   class: "fwde-card fwde-main"
 };
-const _hoisted_17 = {
+const _hoisted_16 = {
   class: "fwde-card__header"
 };
-const _hoisted_18 = {
+const _hoisted_17 = {
   class: "fwde-card__heading"
 };
-const _hoisted_19 = {
+const _hoisted_18 = {
   class: "fwde-card__title"
 };
-const _hoisted_20 = {
+const _hoisted_19 = {
   key: 0,
   class: "fwde-card__changed"
 };
-const _hoisted_21 = {
+const _hoisted_20 = {
   key: 0,
   class: "fwde-card__chips"
 };
-const _hoisted_22 = {
+const _hoisted_21 = {
   class: "fwde-chip fwde-chip--period"
 };
-const _hoisted_23 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+const _hoisted_22 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
   class: "icon-calendar",
   "aria-hidden": "true"
 }, null, -1);
-const _hoisted_24 = {
+const _hoisted_23 = {
   class: "fwde-chip fwde-chip--segment"
 };
-const _hoisted_25 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+const _hoisted_24 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
   class: "icon-segment",
   "aria-hidden": "true"
 }, null, -1);
-const _hoisted_26 = {
+const _hoisted_25 = {
   class: "fwde-card__body"
 };
-const _hoisted_27 = {
+const _hoisted_26 = {
   key: 6,
   class: "pk-emptyDataTable fwde-empty"
 };
-const _hoisted_28 = {
+const _hoisted_27 = {
   class: "fwde-empty__message"
 };
-const _hoisted_29 = {
+const _hoisted_28 = {
   key: 7,
   class: "fwde-compare__hint"
 };
@@ -242,12 +240,14 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_Alert = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("Alert");
   const _component_SavedPicker = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SavedPicker");
   const _component_DimensionPicker = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("DimensionPicker");
+  const _component_PivotPicker = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("PivotPicker");
   const _component_MetricPicker = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("MetricPicker");
   const _component_FilterPanel = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("FilterPanel");
   const _component_ExplorationToolbar = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("ExplorationToolbar");
   const _component_SaveDialog = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SaveDialog");
   const _component_ResultChart = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("ResultChart");
   const _component_CompareTable = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("CompareTable");
+  const _component_PivotTable = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("PivotTable");
   const _component_ResultTable = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("ResultTable");
   const _component_FeedbackBar = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("FeedbackBar");
   const _component_PromoLine = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("PromoLine");
@@ -270,32 +270,36 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     login: _ctx.login,
     "can-copy": _ctx.canCopy,
     "can-manage": _ctx.canManage,
+    "menu-sections": _ctx.menuSections,
     onOpen: _ctx.openSaved,
     onDeleted: _cache[0] || (_cache[0] = $event => _ctx.loadSavedList())
-  }, null, 8, ["saved", "current", "login", "can-copy", "can-manage", "onOpen"])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("section", _hoisted_5, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("h3", _hoisted_6, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_Dimensions')) + " ", 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", _hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_MetricsCount', _ctx.state.dimensions.length, _ctx.MAX_DIMENSIONS)), 1)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_DimensionPicker, {
+  }, null, 8, ["saved", "current", "login", "can-copy", "can-manage", "menu-sections", "onOpen"])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("section", _hoisted_5, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("h3", _hoisted_6, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_Dimensions')) + " ", 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", _hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_MetricsCount', _ctx.state.dimensions.length, _ctx.MAX_DIMENSIONS)), 1)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_DimensionPicker, {
     ref: "dimensionPicker",
     catalog: _ctx.catalog,
     state: _ctx.state,
     onChange: _cache[1] || (_cache[1] = $event => _ctx.update({
       dimensions: $event
     }))
-  }, null, 8, ["catalog", "state"])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("section", _hoisted_8, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("h3", _hoisted_9, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_Metrics')) + " ", 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", _hoisted_10, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_MetricsCount', _ctx.state.metrics.length, 5)), 1)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_MetricPicker, {
+  }, null, 8, ["catalog", "state"]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_PivotPicker, {
     catalog: _ctx.catalog,
     state: _ctx.state,
-    goals: _ctx.goals,
+    comparing: _ctx.comparing,
+    onChange: _cache[2] || (_cache[2] = $event => _ctx.update($event))
+  }, null, 8, ["catalog", "state", "comparing"])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("section", _hoisted_8, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("h3", _hoisted_9, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_Metrics')) + " ", 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", _hoisted_10, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.metricsCount), 1)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_MetricPicker, {
+    catalog: _ctx.catalog,
+    state: _ctx.state,
     "action-scope": _ctx.actionScope,
-    onChange: _cache[2] || (_cache[2] = $event => _ctx.update({
+    onChange: _cache[3] || (_cache[3] = $event => _ctx.update({
       metrics: $event
-    })),
-    onGoal: _cache[3] || (_cache[3] = $event => _ctx.update({
-      idGoal: $event === '' ? null : Number($event)
     }))
-  }, null, 8, ["catalog", "state", "goals", "action-scope"])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("section", _hoisted_11, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("h3", _hoisted_12, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_Filters')), 1), _ctx.filterLines.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("ul", _hoisted_13, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.filterLines, (line, i) => {
+  }, null, 8, ["catalog", "state", "action-scope"])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("section", _hoisted_11, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("h3", _hoisted_12, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_Filters')), 1), _ctx.filterLines.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("ul", _hoisted_13, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.filterLines, (line, i) => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("li", {
       key: i,
-      class: "fwde-filtersummary__item"
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(line), 1);
-  }), 128)), _ctx.state.match === 'any' && _ctx.filterLines.length > 1 ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("li", _hoisted_14, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_FilterMatchAny')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+      class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(['fwde-filtersummary__item', {
+        'fwde-filtersummary__match': line.join
+      }])
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(line.text), 3);
+  }), 128))])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
     type: "button",
     class: "fwde-button fwde-filters__edit",
     "aria-haspopup": "dialog",
@@ -310,7 +314,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     state: _ctx.state,
     "action-scope": _ctx.actionScope,
     onApply: _cache[6] || (_cache[6] = $event => _ctx.update($event))
-  }, null, 8, ["open", "catalog", "state", "action-scope"])])], 8, _hoisted_3), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", _hoisted_15, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("section", _hoisted_16, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("header", _hoisted_17, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", _hoisted_18, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("h2", _hoisted_19, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.title), 1), _ctx.savedChanged ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", _hoisted_20, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedChanged')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_ExplorationToolbar, {
+  }, null, 8, ["open", "catalog", "state", "action-scope"])])], 8, _hoisted_3), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", _hoisted_14, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("section", _hoisted_15, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("header", _hoisted_16, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", _hoisted_17, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("h2", _hoisted_18, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.title), 1), _ctx.savedChanged ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", _hoisted_19, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedChanged')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_ExplorationToolbar, {
     class: "fwde-card__actions",
     state: _ctx.state,
     "max-rows": _ctx.maxRows,
@@ -331,10 +335,12 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "can-share": _ctx.canShare,
     busy: _ctx.saveBusy,
     error: _ctx.saveError,
+    "menu-sections": _ctx.menuSections,
+    metrics: _ctx.saveMetrics,
     onOpen: _cache[9] || (_cache[9] = $event => _ctx.saveError = ''),
     onSave: _ctx.saveExploration,
     onDelete: _ctx.deleteCurrent
-  }, null, 8, ["current", "suggested-name", "can-share", "busy", "error", "onSave", "onDelete"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]), _ctx.chips ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", _hoisted_21, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", _hoisted_22, [_hoisted_23, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.chips.period), 1)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", _hoisted_24, [_hoisted_25, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.chips.segment), 1)])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", _hoisted_26, [_ctx.showRawDataWarning ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_Alert, {
+  }, null, 8, ["current", "suggested-name", "can-share", "busy", "error", "menu-sections", "metrics", "onSave", "onDelete"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]), _ctx.chips ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", _hoisted_20, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", _hoisted_21, [_hoisted_22, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.chips.period), 1)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", _hoisted_23, [_hoisted_24, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.chips.segment), 1)])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", _hoisted_25, [_ctx.showRawDataWarning ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_Alert, {
     key: 0,
     severity: "warning"
   }, {
@@ -399,13 +405,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       default: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withCtx"])(() => [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(message), 1)]),
       _: 2
     }, 1024);
-  }), 128)), !_ctx.loading && !_ctx.error && _ctx.ownRows && !_ctx.ownRows.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", _hoisted_27, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("p", _hoisted_28, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.empty.message)), 1), _ctx.empty.editFilters ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
+  }), 128)), !_ctx.loading && !_ctx.error && _ctx.ownRows && !_ctx.ownRows.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", _hoisted_26, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("p", _hoisted_27, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.empty.message)), 1), _ctx.empty.editFilters ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
     key: 0,
     type: "button",
     class: "fwde-button fwde-empty__edit",
     "aria-haspopup": "dialog",
     onClick: _cache[13] || (_cache[13] = $event => _ctx.filtersOpen = true)
-  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_EditFilters')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.comparing && _ctx.compareHint && !_ctx.error && _ctx.ownRows && _ctx.ownRows.length && _ctx.view !== 'table' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", _hoisted_29, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.compareHint)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.showsTrend ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_EditFilters')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.comparing && _ctx.compareHint && !_ctx.error && _ctx.ownRows && _ctx.ownRows.length && _ctx.view !== 'table' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", _hoisted_28, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.compareHint)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.showsTrend ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
     key: 8
   }, [_ctx.trendError ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_Alert, {
     key: 0,
@@ -423,7 +429,8 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     }, 1024);
   }), 128))], 64)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), !_ctx.error && _ctx.ownRows && _ctx.ownRows.length && _ctx.view !== 'table' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_ResultChart, {
     key: 9,
-    rows: _ctx.ownRows,
+    rows: _ctx.fullRows && _ctx.fullRowsKey === _ctx.lastDefinition ? _ctx.fullRows : _ctx.ownRows,
+    "row-limit": _ctx.fullRows && _ctx.fullRowsKey === _ctx.lastDefinition ? _ctx.maxRows : 0,
     state: _ctx.state,
     catalog: _ctx.catalog,
     metric: _ctx.chartMetric,
@@ -440,6 +447,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "donut-reason": _ctx.donutReason,
     "others-value": _ctx.donutOthers,
     "others-note": _ctx.donutOthersNote,
+    "pivot-values": _ctx.pivotValues,
     class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
       'fwde-main__stale': _ctx.loading
     }),
@@ -449,7 +457,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onChartType: _cache[15] || (_cache[15] = $event => _ctx.update({
       chartType: $event
     }))
-  }, null, 8, ["rows", "state", "catalog", "metric", "action-scope", "currency-symbol", "hour-labels", "period-days", "chart-type", "show-type-switch", "trend-rows", "trend-loading", "max-lines", "compare-columns", "donut-reason", "others-value", "others-note", "class"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.comparing && !_ctx.error && _ctx.rows && _ctx.ownRows && _ctx.ownRows.length && _ctx.view !== 'chart' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_CompareTable, {
+  }, null, 8, ["rows", "row-limit", "state", "catalog", "metric", "action-scope", "currency-symbol", "hour-labels", "period-days", "chart-type", "show-type-switch", "trend-rows", "trend-loading", "max-lines", "compare-columns", "donut-reason", "others-value", "others-note", "pivot-values", "class"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.comparing && !_ctx.error && _ctx.rows && _ctx.ownRows && _ctx.ownRows.length && _ctx.view !== 'chart' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_CompareTable, {
     key: 10,
     rows: _ctx.rows,
     state: _ctx.state,
@@ -466,8 +474,23 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onRowFilter: _ctx.filterToRow,
     onRowBreakdown: _ctx.breakDownRow,
     onRowVisits: _ctx.showRowVisits
-  }, null, 8, ["rows", "state", "catalog", "columns", "column-errors", "action-scope", "currency-symbol", "visits-log-enabled", "class", "onSort", "onRowFilter", "onRowBreakdown", "onRowVisits"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), !_ctx.comparing && !_ctx.error && _ctx.rows && _ctx.rows.length && _ctx.view !== 'chart' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_ResultTable, {
+  }, null, 8, ["rows", "state", "catalog", "columns", "column-errors", "action-scope", "currency-symbol", "visits-log-enabled", "class", "onSort", "onRowFilter", "onRowBreakdown", "onRowVisits"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.pivoting && !_ctx.error && _ctx.rows && _ctx.ownRows && _ctx.ownRows.length && _ctx.view !== 'chart' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_PivotTable, {
     key: 11,
+    rows: _ctx.rows,
+    state: _ctx.state,
+    catalog: _ctx.catalog,
+    "action-scope": _ctx.actionScope,
+    "currency-symbol": _ctx.currencySymbol,
+    "visits-log-enabled": _ctx.visitsLogEnabled,
+    class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+      'fwde-main__stale': _ctx.loading
+    }),
+    onSort: _ctx.sortBy,
+    onRowFilter: _ctx.filterToRow,
+    onRowBreakdown: _ctx.breakDownRow,
+    onRowVisits: _ctx.showRowVisits
+  }, null, 8, ["rows", "state", "catalog", "action-scope", "currency-symbol", "visits-log-enabled", "class", "onSort", "onRowFilter", "onRowBreakdown", "onRowVisits"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), !_ctx.comparing && !_ctx.pivoting && !_ctx.error && _ctx.rows && _ctx.rows.length && _ctx.view !== 'chart' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_ResultTable, {
+    key: 12,
     rows: _ctx.rows,
     state: _ctx.state,
     catalog: _ctx.catalog,
@@ -486,13 +509,13 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     onRowVisits: _ctx.showRowVisits,
     onOthersCalculate: _ctx.calculateOthers
   }, null, 8, ["rows", "state", "catalog", "action-scope", "currency-symbol", "visits-log-enabled", "cut", "others", "others-state", "class", "onSort", "onRowFilter", "onRowBreakdown", "onRowVisits", "onOthersCalculate"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), !_ctx.error && _ctx.rows ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_FeedbackBar, {
-    key: 12,
+    key: 13,
     "id-site": _ctx.idSite,
     topic: "free_form_table",
     question: _ctx.translate('FeinwerkDataExploration_FeedbackQuestion_free_form_table'),
     feedback: _ctx.feedback
   }, null, 8, ["id-site", "question", "feedback"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), !_ctx.error && _ctx.rows ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_PromoLine, {
-    key: 13,
+    key: 14,
     promo: _ctx.promo,
     "dismiss-label": _ctx.translate('FeinwerkDataExploration_PromoDismiss')
   }, null, 8, ["promo", "dismiss-label"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_PremiumBanner, {
@@ -502,7 +525,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     "dismiss-label": _ctx.translate('FeinwerkDataExploration_PremiumDismiss')
   }, null, 8, ["premium", "label", "more-label", "dismiss-label"])])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
 }
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ExplorationPage.vue?vue&type=template&id=2ba52161
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ExplorationPage.vue?vue&type=template&id=e7d5373c
 
 // EXTERNAL MODULE: external "CoreHome"
 var external_CoreHome_ = __webpack_require__("19dc");
@@ -725,51 +748,52 @@ function showsRawDataWarning(rawDataFrom) {
   const parsed = external_CoreHome_["MatomoUrl"].parsed.value;
   return startsBefore(String(parsed.period), String(parsed.date), rawDataFrom, pageHints_today());
 }
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/DimensionPicker.vue?vue&type=template&id=4b07802a
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/DimensionPicker.vue?vue&type=template&id=87f3a9c4
 
-const DimensionPickervue_type_template_id_4b07802a_hoisted_1 = {
+const DimensionPickervue_type_template_id_87f3a9c4_hoisted_1 = {
   class: "fwde-picker"
 };
-const DimensionPickervue_type_template_id_4b07802a_hoisted_2 = {
+const DimensionPickervue_type_template_id_87f3a9c4_hoisted_2 = {
   class: "fwde-field__label"
 };
-const DimensionPickervue_type_template_id_4b07802a_hoisted_3 = ["aria-expanded", "onClick"];
-const DimensionPickervue_type_template_id_4b07802a_hoisted_4 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+const DimensionPickervue_type_template_id_87f3a9c4_hoisted_3 = ["aria-expanded", "onClick"];
+const DimensionPickervue_type_template_id_87f3a9c4_hoisted_4 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
   class: "icon-chevron-down",
   "aria-hidden": "true"
 }, null, -1);
-const DimensionPickervue_type_template_id_4b07802a_hoisted_5 = {
+const DimensionPickervue_type_template_id_87f3a9c4_hoisted_5 = {
   key: 0,
   class: "fwde-picker__panel"
 };
-function DimensionPickervue_type_template_id_4b07802a_render(_ctx, _cache, $props, $setup, $data, $options) {
+const DimensionPickervue_type_template_id_87f3a9c4_hoisted_6 = ["onClick"];
+function DimensionPickervue_type_template_id_87f3a9c4_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_SearchableList = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SearchableList");
-  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", DimensionPickervue_type_template_id_4b07802a_hoisted_1, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])([0, 1], slot => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", {
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", DimensionPickervue_type_template_id_87f3a9c4_hoisted_1, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.slots, slot => {
+    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", {
       key: slot,
       class: "fwde-picker__slot"
-    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", DimensionPickervue_type_template_id_4b07802a_hoisted_2, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(slot === 0 ? 'FeinwerkDataExploration_Dimension' : 'FeinwerkDataExploration_SecondDimension')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", DimensionPickervue_type_template_id_87f3a9c4_hoisted_2, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.SLOT_KEYS[slot])), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
       ref_for: true,
       ref: `current${slot}`,
       type: "button",
       class: "fwde-picker__current",
       "aria-expanded": _ctx.openSlot === slot ? 'true' : 'false',
       onClick: $event => _ctx.openSlot = _ctx.openSlot === slot ? null : slot
-    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.currentName(slot)), 1), DimensionPickervue_type_template_id_4b07802a_hoisted_4], 8, DimensionPickervue_type_template_id_4b07802a_hoisted_3), _ctx.openSlot === slot ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", DimensionPickervue_type_template_id_4b07802a_hoisted_5, [slot === 1 && _ctx.dimensions.length === 2 ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
+    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.currentName(slot)), 1), DimensionPickervue_type_template_id_87f3a9c4_hoisted_4], 8, DimensionPickervue_type_template_id_87f3a9c4_hoisted_3), _ctx.openSlot === slot ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", DimensionPickervue_type_template_id_87f3a9c4_hoisted_5, [slot > 0 && _ctx.dimensions.length > slot ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
       key: 0,
       type: "button",
       class: "btn-flat fwde-picker__none",
-      onClick: _cache[0] || (_cache[0] = $event => _ctx.choose(1, null))
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_NoSecondDimension')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_SearchableList, {
+      onClick: $event => _ctx.choose(slot, null)
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_NoSecondDimension')), 9, DimensionPickervue_type_template_id_87f3a9c4_hoisted_6)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_SearchableList, {
       items: _ctx.items(slot),
       selected: _ctx.dimensions[slot] ? [_ctx.dimensions[slot]] : [],
       "search-label": _ctx.translate('FeinwerkDataExploration_SearchDimensions'),
       onToggle: $event => _ctx.choose(slot, $event),
       onClose: $event => _ctx.close(slot)
     }, null, 8, ["items", "selected", "search-label", "onToggle", "onClose"])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
-  }), 64))]);
+  }), 128))]);
 }
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/DimensionPicker.vue?vue&type=template&id=4b07802a
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/DimensionPicker.vue?vue&type=template&id=87f3a9c4
 
 // CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/SearchableList.vue?vue&type=template&id=50597c1d
 
@@ -958,20 +982,364 @@ let instances = 0;
 SearchableListvue_type_script_lang_ts.render = SearchableListvue_type_template_id_50597c1d_render
 
 /* harmony default export */ var SearchableList = (SearchableListvue_type_script_lang_ts);
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/metricMeta.ts
+/*!
+ * Matomo - free/libre analytics platform
+ * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
+ */
+const META = {
+  nb_visits: ['count', 'sum'],
+  nb_uniq_visitors: ['count', 'distinct'],
+  nb_actions: ['count', 'sum'],
+  bounce_rate: ['rate', 'ratio'],
+  avg_time_on_site: ['seconds', 'average'],
+  nb_actions_per_visit: ['number', 'average'],
+  max_actions: ['count', 'max'],
+  sum_visit_length: ['seconds', 'sum'],
+  nb_conversions: ['count', 'sum'],
+  conversion_rate: ['rate', 'ratio'],
+  revenue: ['money', 'sum'],
+  nb_visits_converted: ['count', 'sum'],
+  revenue_per_visit: ['money', 'average'],
+  nb_pageviews: ['count', 'sum'],
+  nb_uniq_pageviews: ['count', 'distinct'],
+  nb_events: ['count', 'sum'],
+  sum_event_value: ['number', 'sum'],
+  avg_event_value: ['number', 'average'],
+  nb_downloads: ['count', 'sum'],
+  nb_outlinks: ['count', 'sum'],
+  nb_searches: ['count', 'sum']
+};
+const GOAL_METRICS = {
+  goal: {
+    nb_conversions: ['count', 'sum'],
+    conversion_rate: ['rate', 'ratio'],
+    revenue: ['money', 'sum']
+  },
+  ecommerceOrder: {
+    nb_conversions: ['count', 'sum'],
+    revenue: ['money', 'sum'],
+    items: ['count', 'sum'],
+    avg_order_revenue: ['money', 'average'],
+    conversion_rate: ['rate', 'ratio']
+  },
+  ecommerceAbandonedCart: {
+    nb_conversions: ['count', 'sum'],
+    revenue: ['money', 'sum']
+  }
+};
+const GOAL_ID = /^goal_(\d+|ecommerceOrder|ecommerceAbandonedCart)_([a-z_]+)$/;
+/** Unit and aggregation of a metric, null for an unknown id. */
+function metricMeta(id) {
+  let entry = META[id];
+  if (!entry) {
+    const match = id.match(GOAL_ID);
+    if (match) {
+      entry = GOAL_METRICS[/^\d+$/.test(match[1]) ? 'goal' : match[1]][match[2]];
+    }
+  }
+  return entry ? {
+    unit: entry[0],
+    aggregation: entry[1]
+  } : null;
+}
+/** A fraction from 0 to 1: shown and entered in percent. */
+function isRate(id) {
+  var _metricMeta;
+  return ((_metricMeta = metricMeta(id)) === null || _metricMeta === void 0 ? void 0 : _metricMeta.unit) === 'rate';
+}
+/** An amount in the website's currency. */
+function isMoney(id) {
+  var _metricMeta2;
+  return ((_metricMeta2 = metricMeta(id)) === null || _metricMeta2 === void 0 ? void 0 : _metricMeta2.unit) === 'money';
+}
+/** A duration in seconds: shown as time, entered in seconds. */
+function isSeconds(id) {
+  var _metricMeta3;
+  return ((_metricMeta3 = metricMeta(id)) === null || _metricMeta3 === void 0 ? void 0 : _metricMeta3.unit) === 'seconds';
+}
+/** Counts and sums: a share of the column total and a bar in the cell make sense. */
+function hasShare(id) {
+  var _metricMeta4;
+  const aggregation = (_metricMeta4 = metricMeta(id)) === null || _metricMeta4 === void 0 ? void 0 : _metricMeta4.aggregation;
+  return aggregation === 'sum' || aggregation === 'distinct';
+}
+/** A missing row or point counts 0 (counts and sums); rates, averages and maxima leave a gap. */
+function metricMeta_zeroForMissing(id) {
+  return hasShare(id);
+}
+/** Whole numbers (counts, seconds, maxima): an axis steps by whole numbers. */
+function isInteger(id) {
+  const meta = metricMeta(id);
+  return meta !== null && (meta.unit === 'count' || meta.unit === 'seconds' || meta.aggregation === 'max');
+}
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/labels.ts
+/*!
+ * Matomo - free/libre analytics platform
+ * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
+ */
+/** The label columns of the row dimensions, in order (ExplorationDefinition::LABEL_COLUMNS). */
+const LABEL_COLUMNS = ['label', 'secondary_label', 'tertiary_label'];
+/** The label columns of a table with that many row dimensions. */
+function labelColumns(dimensionCount) {
+  return LABEL_COLUMNS.slice(0, Math.max(1, Math.min(dimensionCount, LABEL_COLUMNS.length)));
+}
+/** The row metadata of the stored value behind each label column (Explorer::toDataTable). */
+const STORED_VALUES = ['fwde_value', 'fwde_value2', 'fwde_value3'];
+/** the heading of each dimension group in the dimension lists */
+const GROUP_KEYS = {
+  acquisition: 'FeinwerkDataExploration_GroupAcquisition',
+  visitor: 'FeinwerkDataExploration_GroupVisitor',
+  technology: 'FeinwerkDataExploration_GroupTechnology',
+  time: 'FeinwerkDataExploration_GroupTime',
+  visit: 'FeinwerkDataExploration_GroupVisit',
+  behaviour: 'FeinwerkDataExploration_GroupBehaviour',
+  custom: 'FeinwerkDataExploration_GroupCustom'
+};
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/filterGroups.ts
+
+
+/** conditions in all groups together (filter groups, 2026-11-23) */
+const MAX_FILTERS = 10;
+const MAX_GROUPS = 5;
+/** Long enough for a stored URL ("filter to this value" in the row menu). */
+const MAX_FILTER_TEXT = 1000;
+/** the longest regular expression of "matches" */
+const MAX_PATTERN = 200;
+/** in the order the filter panel offers them: each condition next to its negation */
+const TEXT_OPERATORS = ['contains', 'notContains', 'equals', 'notEquals', 'startsWith', 'notStartsWith', 'endsWith', 'notEndsWith', 'matches'];
+const NUMBER_OPERATORS = ['gt', 'gte', 'lt', 'lte'];
+function isValidFilter(filter, dimensionCount, metrics) {
+  if (TEXT_OPERATORS.includes(filter.operator)) {
+    const text = filter.value.trim();
+    const max = filter.operator === 'matches' ? MAX_PATTERN : MAX_FILTER_TEXT;
+    return labelColumns(dimensionCount).includes(filter.target) && text !== '' && text.length <= max;
+  }
+  if (NUMBER_OPERATORS.includes(filter.operator)) {
+    return metrics.includes(filter.target) && filter.value.trim() !== '' && Number.isFinite(Number(filter.value));
+  }
+  return false;
+}
+const GROUP_PREFIX = /^(all|any):/;
+/**
+ * One condition "target~operator~value" with the value URI-encoded; only the first two "~"
+ * separate.
+ */
+function parseCondition(entry) {
+  const first = entry.indexOf('~');
+  const second = first < 0 ? -1 : entry.indexOf('~', first + 1);
+  if (second < 0) {
+    return null;
+  }
+  try {
+    return {
+      target: entry.substring(0, first),
+      operator: entry.substring(first + 1, second),
+      value: decodeURIComponent(entry.substring(second + 1))
+    };
+  } catch (e) {
+    return null;
+  }
+}
+/**
+ * The filters of a link: groups joined by "|", each "[any:]condition;condition" ("all" without a
+ * prefix), fwdeMatch the switch between the groups. A value with neither "|" nor a prefix is a
+ * link from before filter groups: one group whose switch is fwdeMatch. Broken conditions, the
+ * groups they empty and what passes the limits are dropped.
+ */
+function parseFilterParam(value, match, dimensionCount, metrics) {
+  const raw = String(value || '');
+  const parts = raw === '' ? [] : raw.split('|');
+  const legacy = parts.length === 1 && !GROUP_PREFIX.test(parts[0]);
+  const filters = [];
+  const groupMatch = [];
+  parts.forEach(part => {
+    const prefix = part.match(GROUP_PREFIX);
+    let switchValue = prefix && prefix[1] === 'any' ? 'any' : 'all';
+    if (legacy) {
+      switchValue = match === 'any' ? 'any' : 'all';
+    }
+    if (groupMatch.length >= MAX_GROUPS) {
+      return;
+    }
+    const group = groupMatch.length;
+    let kept = 0;
+    (prefix ? part.substring(prefix[0].length) : part).split(';').forEach(entry => {
+      const condition = parseCondition(entry);
+      if (condition && filters.length < MAX_FILTERS && isValidFilter(condition, dimensionCount, metrics)) {
+        filters.push(Object.assign(Object.assign({}, condition), {}, {
+          value: condition.value.trim(),
+          group
+        }));
+        kept += 1;
+      }
+    });
+    if (kept) {
+      groupMatch.push(switchValue);
+    }
+  });
+  return {
+    filters,
+    groupMatch,
+    match: !legacy && groupMatch.length > 1 && match === 'any' ? 'any' : 'all'
+  };
+}
+/** The groups in order, each with its switch and its conditions. */
+function groupsOf(filters, groupMatch) {
+  const indexes = [...new Set(filters.map(f => f.group))].sort((a, b) => a - b);
+  return indexes.map(group => ({
+    match: groupMatch[group] === 'any' ? 'any' : 'all',
+    filters: filters.filter(f => f.group === group)
+  }));
+}
+/** fwdeFilters of the link (the new form only: an "any" group carries its prefix). */
+function filterParam(filters, groupMatch) {
+  return groupsOf(filters, groupMatch).map(group => (group.match === 'any' ? 'any:' : '') + group.filters.map(f => `${f.target}~${f.operator}~${encodeURIComponent(f.value)}`).join(';')).join('|');
+}
+/** fwdeMatch of the link: "any" only between two groups or more. */
+function matchParam(filters, match) {
+  return match === 'any' && groupsOf(filters, []).length > 1 ? 'any' : '';
+}
+/** The API's filterGroups (rates as fractions), null without filters. */
+function filterGroupsDefinition(state) {
+  if (!state.filters.length) {
+    return null;
+  }
+  return {
+    match: state.match,
+    groups: groupsOf(state.filters, state.groupMatch).map(group => ({
+      match: group.match,
+      filters: group.filters.map(f => {
+        let {
+          value
+        } = f;
+        if (NUMBER_OPERATORS.includes(f.operator)) {
+          // rates are shown and entered in percent, sent as fractions
+          value = isRate(f.target) ? Number(f.value) / 100 : Number(f.value);
+        }
+        return {
+          target: f.target,
+          operator: f.operator,
+          value
+        };
+      })
+    }))
+  };
+}
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/pivot.ts
+/** How many of the pivot's values become columns (ExplorationDefinition::PIVOT_LIMITS). */
+const PIVOT_LIMITS = [3, 5, 10];
+const PIVOT_DEFAULT_LIMIT = 5;
+/** pivot values times metrics (ExplorationDefinition::MAX_PIVOT_CELLS) */
+const MAX_PIVOT_CELLS = 60;
+/** dimensions that cannot be the pivot: too many values (they serve as row dimensions) */
+const NO_PIVOT = ['date', 'hour'];
+/** the pivot that shows all its seven values, in weekday order */
+const PIVOT_WEEKDAY = 'weekday';
+/** The columns per metric a pivot makes: Weekday its seven days, otherwise its limit. */
+function pivotColumns(pivot, limit) {
+  if (!pivot) {
+    return 0;
+  }
+  return pivot === PIVOT_WEEKDAY ? 7 : limit;
+}
+/** The pivot cells of a row: values times metrics (Others and Total not counted). */
+function pivotCells(state) {
+  return pivotColumns(state.pivot, state.pivotLimit) * state.metrics.length;
+}
+/** Whether two dimensions can be in one table: action dimensions need an action kind in common. */
+function commonActions(a, b) {
+  return !a || !b || !a.kinds.length || !b.kinds.length || a.kinds.some(kind => b.kinds.includes(kind));
+}
+/**
+ * The pivot of a link or saved exploration, as the server reads a saved state
+ * (SavedStateDefinition::pivot): dropped when its dimension is unknown, a row dimension, Date or
+ * Hour, or (Weekday) when its seven days pass the cell limit; a limit other than 3, 5 or 10 is 5,
+ * then the largest that keeps the cells within the limit.
+ */
+function parsePivot(rawPivot, rawLimit, dimensions, metricCount, catalog) {
+  const none = {
+    pivot: null,
+    pivotLimit: PIVOT_DEFAULT_LIMIT
+  };
+  const id = String(rawPivot || '');
+  if (!id || dimensions.includes(id) || NO_PIVOT.includes(id) || !catalog.dimensions.some(d => d.id === id)) {
+    return none;
+  }
+  if (id === PIVOT_WEEKDAY) {
+    return 7 * metricCount <= MAX_PIVOT_CELLS ? {
+      pivot: id,
+      pivotLimit: PIVOT_DEFAULT_LIMIT
+    } : none;
+  }
+  const asked = Number(rawLimit);
+  const limit = PIVOT_LIMITS.includes(asked) ? asked : PIVOT_DEFAULT_LIMIT;
+  const fitting = [...PIVOT_LIMITS].reverse().find(option => option <= limit && option * metricCount <= MAX_PIVOT_CELLS);
+  return fitting ? {
+    pivot: id,
+    pivotLimit: fitting
+  } : none;
+}
+/**
+ * Why a dimension cannot be the pivot (translation key), or null: a row dimension, Date or Hour,
+ * an action dimension without actions in common with the row dimensions, a Weekday whose seven
+ * days pass the cell limit.
+ */
+function pivotReasons(state, catalog) {
+  const rows = catalog.dimensions.filter(d => state.dimensions.includes(d.id));
+  const reasons = {};
+  catalog.dimensions.forEach(dimension => {
+    let reason = null;
+    if (state.dimensions.includes(dimension.id)) {
+      reason = 'FeinwerkDataExploration_ReasonAlreadyChosen';
+    } else if (NO_PIVOT.includes(dimension.id)) {
+      reason = 'FeinwerkDataExploration_ReasonPivotTime';
+    } else if (rows.some(row => !commonActions(row, dimension))) {
+      reason = 'FeinwerkDataExploration_ReasonNoCommonActions';
+    } else if (dimension.id === PIVOT_WEEKDAY && 7 * state.metrics.length > MAX_PIVOT_CELLS) {
+      reason = 'FeinwerkDataExploration_ReasonPivotCells';
+    }
+    reasons[dimension.id] = reason;
+  });
+  return reasons;
+}
+/** Why a number of pivot values cannot be chosen (translation key), or null. */
+function pivotLimitReasons(state) {
+  const reasons = {};
+  PIVOT_LIMITS.forEach(limit => {
+    reasons[limit] = limit * state.metrics.length > MAX_PIVOT_CELLS ? 'FeinwerkDataExploration_ReasonPivotCells' : null;
+  });
+  return reasons;
+}
+/** The pivot of a getExploration result: its total row's fwde_pivot, the rows without it. */
+function parsePivotResult(rows) {
+  const total = rows.find(row => row.fwde_total) || null;
+  const pivot = total ? total.fwde_pivot : undefined;
+  return {
+    dimension: pivot && pivot.dimension ? String(pivot.dimension) : null,
+    values: pivot && Array.isArray(pivot.values) ? pivot.values.map(value => ({
+      label: String(value.label),
+      value: value.value,
+      segment: value.segment || null
+    })) : [],
+    others: !!(pivot && pivot.others),
+    total,
+    rows: rows.filter(row => !row.fwde_total)
+  };
+}
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/state.ts
+
+
+
+// the filter rules live in filterGroups.ts (filter groups, 2026-11-23); the page imports them here
+
 const DEFAULT_DIMENSIONS = ['channelType'];
 const DEFAULT_METRICS = ['nb_visits', 'bounce_rate', 'nb_conversions'];
 const LIMIT_OPTIONS = [10, 25, 50, 100, 250, 500, 1000];
-const MAX_METRICS = 5;
-/** dimensions of the free plugin (ExplorationDefinition::MAX_DIMENSIONS) */
-const MAX_DIMENSIONS = 2;
-const MAX_FILTERS = 5;
-/** Long enough for a stored URL ("filter to this value" in the row menu). */
-const MAX_FILTER_TEXT = 1000;
-const TEXT_OPERATORS = ['contains', 'equals', 'notContains', 'notEquals', 'startsWith', 'endsWith'];
-const NUMBER_OPERATORS = ['gt', 'lt'];
-/** Shown in percent, sent to the API as fractions. */
-const RATE_METRICS = ['bounce_rate', 'conversion_rate'];
+/** ExplorationDefinition::MAX_METRICS (more metrics, 2026-11-24) */
+const MAX_METRICS = 10;
+/** row dimensions (ExplorationDefinition::MAX_DIMENSIONS; three since rows and pivot) */
+const MAX_DIMENSIONS = 3;
 const VIEWS = ['table', 'chart', 'both'];
 const CHART_TYPES = ['bar', 'trend', 'donut'];
 function knownIds(value, known, max) {
@@ -983,46 +1351,37 @@ function knownIds(value, known, max) {
   });
   return ids;
 }
-function labelTargets(dimensionCount) {
-  return dimensionCount === 2 ? ['label', 'secondary_label'] : ['label'];
-}
-function isValidFilter(filter, dimensionCount, metrics) {
-  if (TEXT_OPERATORS.includes(filter.operator)) {
-    const text = filter.value.trim();
-    return labelTargets(dimensionCount).includes(filter.target) && text !== '' && text.length <= MAX_FILTER_TEXT;
+/** the all-goals metrics an older link narrowed to one goal with fwdeGoal */
+const ALL_GOALS_METRICS = ['nb_conversions', 'conversion_rate', 'revenue'];
+/**
+ * The hash of a link from before more metrics (2026-11-24) with a goal chosen (fwdeGoal=N): the
+ * all-goals metrics become goal N's own metrics wherever the hash names metrics (list, sorting,
+ * chart, row filter targets), the same numbers. Unchanged when the website no longer has goal N:
+ * then the metrics stay "all goals".
+ */
+function withGoalMetrics(hash, metricIds) {
+  const goal = Number(hash.fwdeGoal);
+  if (!Number.isInteger(goal) || goal <= 0 || !metricIds.includes(`goal_${goal}_nb_conversions`)) {
+    return hash;
   }
-  if (NUMBER_OPERATORS.includes(filter.operator)) {
-    return metrics.includes(filter.target) && filter.value.trim() !== '' && Number.isFinite(Number(filter.value));
-  }
-  return false;
-}
-/** "target~operator~value;…" with the value URI-encoded; only the first two "~" separate. */
-function parseFilters(value, dimensionCount, metrics) {
-  const filters = [];
-  String(value || '').split(';').forEach(entry => {
-    const first = entry.indexOf('~');
-    const second = first < 0 ? -1 : entry.indexOf('~', first + 1);
-    if (second < 0 || filters.length >= MAX_FILTERS) {
-      return;
-    }
-    let text;
-    try {
-      text = decodeURIComponent(entry.substring(second + 1));
-    } catch (e) {
-      return;
-    }
-    const filter = {
-      target: entry.substring(0, first),
-      operator: entry.substring(first + 1, second),
-      value: text
-    };
-    if (isValidFilter(filter, dimensionCount, metrics)) {
-      filters.push(Object.assign(Object.assign({}, filter), {}, {
-        value: filter.value.trim()
-      }));
+  const map = id => ALL_GOALS_METRICS.includes(id) ? `goal_${goal}_${id}` : id;
+  const mapped = Object.assign({}, hash);
+  ['fwdeMetrics', 'fwdeSort', 'fwdeChart'].forEach(key => {
+    if (hash[key]) {
+      mapped[key] = String(hash[key]).split(',').map(map).join(',');
     }
   });
-  return filters;
+  if (hash.fwdeFilters) {
+    // groups by "|", an optional "all:"/"any:" prefix, conditions by ";": "target~operator~value"
+    mapped.fwdeFilters = String(hash.fwdeFilters).split('|').map(group => {
+      const prefix = (group.match(/^(all|any):/) || [''])[0];
+      return prefix + group.substring(prefix.length).split(';').map(condition => {
+        const cut = condition.indexOf('~');
+        return cut < 0 ? condition : map(condition.substring(0, cut)) + condition.substring(cut);
+      }).join(';');
+    }).join('|');
+  }
+  return mapped;
 }
 /** The count that fits a dimension's actions, e.g. pageviews for page URLs. */
 const KIND_METRICS = {
@@ -1047,9 +1406,10 @@ function defaultMetricsFor(dimensionId, catalog) {
 /**
  * The exploration state from the hash parameters; invalid parts fall back to valid values.
  */
-function parseState(hash, catalog, limits) {
+function parseState(rawHash, catalog, limits) {
   const dimensionIds = catalog.dimensions.map(d => d.id);
   const metricIds = catalog.metrics.map(m => m.id);
+  const hash = withGoalMetrics(rawHash, metricIds);
   let dimensions = knownIds(hash.fwdeDims, dimensionIds, MAX_DIMENSIONS);
   if (!dimensions.length) {
     dimensions = knownIds(DEFAULT_DIMENSIONS.join(','), dimensionIds, 2);
@@ -1062,24 +1422,26 @@ function parseState(hash, catalog, limits) {
     metrics = defaultMetricsFor(dimensions[0] || '', catalog);
   }
   const view = String(hash.fwdeView);
-  const goal = Number(hash.fwdeGoal);
   const limit = Number(hash.fwdeLimit);
-  const sortColumns = [...metrics, ...labelTargets(dimensions.length)];
+  const sortColumns = [...metrics, ...labelColumns(dimensions.length)];
   const sort = String(hash.fwdeSort || '');
-  return {
+  return Object.assign(Object.assign({
     dimensions,
     metrics,
-    idGoal: Number.isInteger(goal) && goal > 0 ? goal : null,
     sort: sortColumns.includes(sort) ? sort : metrics[0],
     sortOrder: hash.fwdeOrder === 'asc' ? 'asc' : 'desc',
-    limit: LIMIT_OPTIONS.includes(limit) && limit <= limits.maxRows ? limit : limits.defaultRows,
-    filters: parseFilters(hash.fwdeFilters, dimensions.length, metrics),
+    limit: LIMIT_OPTIONS.includes(limit) && limit <= limits.maxRows ? limit : limits.defaultRows
+  }, parseFilterParam(hash.fwdeFilters, hash.fwdeMatch, dimensions.length, metrics)), {}, {
     view: VIEWS.includes(view) ? view : null,
     chartMetric: metrics.includes(String(hash.fwdeChart)) ? String(hash.fwdeChart) : null,
-    chartType: CHART_TYPES.includes(hash.fwdeChartType) ? hash.fwdeChartType : null,
-    match: hash.fwdeMatch === 'any' ? 'any' : 'all'
-  };
+    chartType: CHART_TYPES.includes(hash.fwdeChartType) ? hash.fwdeChartType : null
+  }, parsePivot(hash.fwdePivot, hash.fwdePivotLimit, dimensions, metrics.length, catalog));
 }
+/**
+ * Every key toHashParams writes: the page reloads when one of them changes (a key missing here
+ * would change the link and nothing else).
+ */
+const STATE_HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder', 'fwdeLimit', 'fwdeFilters', 'fwdeView', 'fwdeChart', 'fwdeChartType', 'fwdeMatch', 'fwdePivot', 'fwdePivotLimit'];
 /**
  * All parameters, empty ones too: the hash is merged, so an omitted parameter would keep its old
  * value.
@@ -1088,63 +1450,61 @@ function toHashParams(state) {
   return {
     fwdeDims: state.dimensions.join(','),
     fwdeMetrics: state.metrics.join(','),
-    fwdeGoal: state.idGoal === null ? '' : String(state.idGoal),
+    // the older goal choice: always cleared, the goal's own metrics replace it
+    fwdeGoal: '',
     fwdeSort: state.sort,
     fwdeOrder: state.sortOrder,
     fwdeLimit: String(state.limit),
-    fwdeFilters: state.filters.map(f => `${f.target}~${f.operator}~${encodeURIComponent(f.value)}`).join(';'),
+    fwdeFilters: filterParam(state.filters, state.groupMatch),
     fwdeView: state.view || '',
     fwdeChart: state.chartMetric || '',
     fwdeChartType: state.chartType || '',
-    fwdeMatch: state.match === 'any' ? 'any' : ''
+    fwdeMatch: matchParam(state.filters, state.match),
+    fwdePivot: state.pivot || '',
+    fwdePivotLimit: state.pivot ? String(state.pivotLimit) : ''
   };
 }
 /**
- * The definition for FeinwerkDataExploration.getExploration.
+ * The definition for FeinwerkDataExploration.getExploration. While Matomo compares segments or
+ * periods the pivot stays in the state but is not sent (pivot and comparison are exclusive, the
+ * comparison wins).
  */
-function toDefinition(state) {
+function toDefinition(state, comparing = false) {
   const definition = {
     dimensions: state.dimensions,
     metrics: state.metrics,
     sort: state.sort,
     sortOrder: state.sortOrder,
-    limit: state.limit,
-    filters: state.filters.map(f => {
-      let {
-        value
-      } = f;
-      if (NUMBER_OPERATORS.includes(f.operator)) {
-        value = RATE_METRICS.includes(f.target) ? Number(f.value) / 100 : Number(f.value);
-      }
-      return {
-        target: f.target,
-        operator: f.operator,
-        value
-      };
-    })
+    limit: state.limit
   };
-  if (state.match === 'any') {
-    definition.match = 'any';
+  const filterGroups = filterGroupsDefinition(state);
+  if (filterGroups) {
+    definition.filterGroups = filterGroups;
   }
-  if (state.idGoal !== null) {
-    definition.idGoal = state.idGoal;
+  if (state.pivot && !comparing) {
+    definition.pivot = {
+      dimension: state.pivot,
+      limit: state.pivotLimit
+    };
   }
   return definition;
 }
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/availability.ts
 
+
 /**
- * Why a dimension cannot go into a slot (translation key), or null.
+ * Why a dimension cannot go into a slot (translation key), or null: it is in another slot or the
+ * pivot, or it is an action dimension without actions in common with another chosen one.
  */
 function dimensionReasons(state, catalog, slot) {
-  const otherId = state.dimensions[slot === 0 ? 1 : 0];
-  const other = catalog.dimensions.find(d => d.id === otherId);
+  const otherIds = state.dimensions.filter((_, i) => i !== slot);
+  const others = catalog.dimensions.filter(d => otherIds.includes(d.id) || d.id === state.pivot);
   const reasons = {};
   catalog.dimensions.forEach(dimension => {
     let reason = null;
-    if (dimension.id === otherId) {
+    if (otherIds.includes(dimension.id) || dimension.id === state.pivot) {
       reason = 'FeinwerkDataExploration_ReasonAlreadyChosen';
-    } else if (other && other.kinds.length && dimension.kinds.length && !dimension.kinds.some(kind => other.kinds.includes(kind))) {
+    } else if (others.some(other => !commonActions(other, dimension))) {
       reason = 'FeinwerkDataExploration_ReasonNoCommonActions';
     }
     reasons[dimension.id] = reason;
@@ -1157,12 +1517,16 @@ function dimensionReasons(state, catalog, slot) {
  * always 0.
  */
 function metricReasons(state, catalog) {
-  const actionDimensions = catalog.dimensions.filter(d => state.dimensions.includes(d.id) && d.kinds.length);
+  const actionDimensions = catalog.dimensions.filter(d => (state.dimensions.includes(d.id) || d.id === state.pivot) && d.kinds.length);
+  const columns = pivotColumns(state.pivot, state.pivotLimit);
   const reasons = {};
   catalog.metrics.forEach(metric => {
     let reason = null;
     if (!state.metrics.includes(metric.id) && state.metrics.length >= MAX_METRICS) {
       reason = 'FeinwerkDataExploration_ReasonMaxMetrics';
+    } else if (!state.metrics.includes(metric.id) && columns * (state.metrics.length + 1) > MAX_PIVOT_CELLS) {
+      // rows and pivot (2026-11-24): pivot values times metrics at most 60
+      reason = 'FeinwerkDataExploration_ReasonPivotCells';
     } else if (metric.kind !== null && actionDimensions.some(d => !d.kinds.includes(metric.kind))) {
       reason = 'FeinwerkDataExploration_ReasonMetricNeverMatches';
     }
@@ -1175,15 +1539,10 @@ function metricReasons(state, catalog) {
 
 
 
-const GROUP_KEYS = {
-  acquisition: 'FeinwerkDataExploration_GroupAcquisition',
-  visitor: 'FeinwerkDataExploration_GroupVisitor',
-  technology: 'FeinwerkDataExploration_GroupTechnology',
-  time: 'FeinwerkDataExploration_GroupTime',
-  visit: 'FeinwerkDataExploration_GroupVisit',
-  behaviour: 'FeinwerkDataExploration_GroupBehaviour',
-  custom: 'FeinwerkDataExploration_GroupCustom'
-};
+
+
+/** the label of each slot */
+const SLOT_KEYS = ['FeinwerkDataExploration_Dimension', 'FeinwerkDataExploration_SecondDimension', 'FeinwerkDataExploration_ThirdDimension'];
 /* harmony default export */ var DimensionPickervue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
   components: {
     SearchableList: SearchableList
@@ -1201,12 +1560,20 @@ const GROUP_KEYS = {
   emits: ['change'],
   data() {
     return {
-      openSlot: null
+      openSlot: null,
+      SLOT_KEYS
     };
   },
   computed: {
     dimensions() {
       return this.state.dimensions;
+    },
+    /** the chosen slots and one empty slot after them (rows and pivot: up to three) */
+    slots() {
+      const count = Math.min(MAX_DIMENSIONS, Math.max(2, this.dimensions.length + 1));
+      return Array.from({
+        length: count
+      }, (_, i) => i);
     }
   },
   methods: {
@@ -1228,10 +1595,10 @@ const GROUP_KEYS = {
       if (dimension) {
         return dimension.name;
       }
-      return Object(external_CoreHome_["translate"])(slot === 1 ? 'FeinwerkDataExploration_NoSecondDimension' : 'FeinwerkDataExploration_ChooseDimension');
+      return Object(external_CoreHome_["translate"])(slot > 0 ? 'FeinwerkDataExploration_NoSecondDimension' : 'FeinwerkDataExploration_ChooseDimension');
     },
     items(slot) {
-      const reasons = dimensionReasons(this.state, this.catalog, slot === 0 ? 0 : 1);
+      const reasons = dimensionReasons(this.state, this.catalog, slot);
       return this.catalog.dimensions.map(d => ({
         key: d.id,
         label: d.name,
@@ -1242,7 +1609,8 @@ const GROUP_KEYS = {
     choose(slot, id) {
       const dimensions = [...this.dimensions];
       if (id === null) {
-        dimensions.splice(1);
+        // "None" takes this slot and the ones after it away
+        dimensions.splice(slot);
       } else {
         dimensions[slot] = id;
       }
@@ -1257,59 +1625,46 @@ const GROUP_KEYS = {
 
 
 
-DimensionPickervue_type_script_lang_ts.render = DimensionPickervue_type_template_id_4b07802a_render
+DimensionPickervue_type_script_lang_ts.render = DimensionPickervue_type_template_id_87f3a9c4_render
 
 /* harmony default export */ var DimensionPicker = (DimensionPickervue_type_script_lang_ts);
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/MetricPicker.vue?vue&type=template&id=ea0a2164
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/MetricPicker.vue?vue&type=template&id=3bad9cc2
 
-const MetricPickervue_type_template_id_ea0a2164_hoisted_1 = {
+const MetricPickervue_type_template_id_3bad9cc2_hoisted_1 = {
   class: "fwde-picker"
 };
-const MetricPickervue_type_template_id_ea0a2164_hoisted_2 = {
-  key: 0,
-  class: "fwde-picker__goal"
-};
-const MetricPickervue_type_template_id_ea0a2164_hoisted_3 = ["for"];
-const MetricPickervue_type_template_id_ea0a2164_hoisted_4 = ["id", "value"];
-const MetricPickervue_type_template_id_ea0a2164_hoisted_5 = {
-  value: ""
-};
-const MetricPickervue_type_template_id_ea0a2164_hoisted_6 = ["value"];
-function MetricPickervue_type_template_id_ea0a2164_render(_ctx, _cache, $props, $setup, $data, $options) {
+function MetricPickervue_type_template_id_3bad9cc2_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_SearchableList = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SearchableList");
-  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", MetricPickervue_type_template_id_ea0a2164_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_SearchableList, {
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", MetricPickervue_type_template_id_3bad9cc2_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_SearchableList, {
     items: _ctx.items,
     selected: _ctx.state.metrics,
     multiple: true,
     "search-label": _ctx.translate('FeinwerkDataExploration_SearchMetrics'),
     onToggle: _ctx.toggle
-  }, null, 8, ["items", "selected", "search-label", "onToggle"]), _ctx.hasGoalMetric && _ctx.goals.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", MetricPickervue_type_template_id_ea0a2164_hoisted_2, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", {
-    class: "fwde-field__label",
-    for: _ctx.goalSelectId
-  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_Goal')), 9, MetricPickervue_type_template_id_ea0a2164_hoisted_3), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
-    id: _ctx.goalSelectId,
-    class: "browser-default fwde-select",
-    value: _ctx.state.idGoal === null ? '' : String(_ctx.state.idGoal),
-    onChange: _cache[0] || (_cache[0] = (...args) => _ctx.onGoalChange && _ctx.onGoalChange(...args))
-  }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("option", MetricPickervue_type_template_id_ea0a2164_hoisted_5, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_AllGoals')), 1), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.goals, goal => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
-      key: goal.id,
-      value: String(goal.id)
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(goal.name), 9, MetricPickervue_type_template_id_ea0a2164_hoisted_6);
-  }), 128))], 40, MetricPickervue_type_template_id_ea0a2164_hoisted_4)])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
+  }, null, 8, ["items", "selected", "search-label", "onToggle"])]);
 }
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/MetricPicker.vue?vue&type=template&id=ea0a2164
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/MetricPicker.vue?vue&type=template&id=3bad9cc2
 
 // CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/MetricPicker.vue?vue&type=script&lang=ts
 
 
 
 
-const SCOPE_KEYS = {
-  visit: 'FeinwerkDataExploration_MetricGroupVisits',
-  goal: 'FeinwerkDataExploration_MetricGroupGoals',
-  action: 'FeinwerkDataExploration_MetricGroupActions'
+const MetricPickervue_type_script_lang_ts_GROUP_KEYS = {
+  visits: 'FeinwerkDataExploration_MetricGroupVisits',
+  goals: 'FeinwerkDataExploration_MetricGroupGoals',
+  ecommerce: 'Goals_Ecommerce',
+  actions: 'FeinwerkDataExploration_MetricGroupActions'
 };
+const SCOPE_GROUPS = {
+  visit: 'visits',
+  goal: 'goals',
+  action: 'actions'
+};
+/** the list's order (more metrics, 2026-11-24): each goal's own heading follows "Goals" */
+const GROUP_ORDER = ['visits', 'goals', 'goal', 'ecommerce', 'actions'];
+/** the metrics of all goals together: the list says so */
+const MetricPickervue_type_script_lang_ts_ALL_GOALS_METRICS = ['nb_conversions', 'conversion_rate', 'revenue'];
 /* harmony default export */ var MetricPickervue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
   components: {
     SearchableList: SearchableList
@@ -1323,41 +1678,48 @@ const SCOPE_KEYS = {
       type: Object,
       required: true
     },
-    goals: {
-      type: Array,
-      required: true
-    },
     actionScope: {
       type: Boolean,
       required: true
     }
   },
-  emits: ['change', 'goal'],
-  data() {
-    return {
-      goalSelectId: `fwde-goal-${Math.random().toString(36).substring(2, 8)}`
-    };
-  },
+  emits: ['change'],
   computed: {
     items() {
       const reasons = metricReasons(this.state, this.catalog);
-      return this.catalog.metrics.map(m => ({
-        key: m.id,
-        label: this.actionScope && m.nameInActionScope ? m.nameInActionScope : m.name,
-        group: Object(external_CoreHome_["translate"])(SCOPE_KEYS[m.scope]),
-        reason: reasons[m.id],
-        description: m.description
-      }));
-    },
-    hasGoalMetric() {
-      return this.catalog.metrics.some(m => m.scope === 'goal' && this.state.metrics.includes(m.id));
+      const entries = this.catalog.metrics.map((m, index) => {
+        const group = m.group || SCOPE_GROUPS[m.scope];
+        let label = this.actionScope && m.nameInActionScope ? m.nameInActionScope : m.name;
+        let heading = Object(external_CoreHome_["translate"])(MetricPickervue_type_script_lang_ts_GROUP_KEYS[group]);
+        let rank = GROUP_ORDER.indexOf(group);
+        if (m.idGoal) {
+          // a goal's metric is named "<goal name>: <column>" (MetricDefinition::label): the goal
+          // becomes the heading, the search finds it there too
+          const cut = m.name.lastIndexOf(': ');
+          heading = Object(external_CoreHome_["translate"])('FeinwerkDataExploration_MetricGroupGoal', m.name.substring(0, cut));
+          label = m.name.substring(cut + 2);
+          rank = GROUP_ORDER.indexOf('goal');
+        } else if (MetricPickervue_type_script_lang_ts_ALL_GOALS_METRICS.includes(m.id)) {
+          label = Object(external_CoreHome_["translate"])('FeinwerkDataExploration_MetricAllGoals', label);
+        }
+        const item = {
+          key: m.id,
+          label,
+          group: heading,
+          reason: reasons[m.id],
+          description: m.description
+        };
+        return {
+          rank,
+          index,
+          item
+        };
+      });
+      return entries.sort((a, b) => a.rank - b.rank || a.index - b.index).map(e => e.item);
     }
   },
   methods: {
     translate: external_CoreHome_["translate"],
-    onGoalChange(event) {
-      this.$emit('goal', event.target.value);
-    },
     toggle(id) {
       const metrics = this.state.metrics.includes(id) ? this.state.metrics.filter(m => m !== id) : [...this.state.metrics, id];
       if (metrics.length) {
@@ -1372,17 +1734,17 @@ const SCOPE_KEYS = {
 
 
 
-MetricPickervue_type_script_lang_ts.render = MetricPickervue_type_template_id_ea0a2164_render
+MetricPickervue_type_script_lang_ts.render = MetricPickervue_type_template_id_3bad9cc2_render
 
 /* harmony default export */ var MetricPicker = (MetricPickervue_type_script_lang_ts);
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/FilterPanel.vue?vue&type=template&id=1808236d
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/FilterPanel.vue?vue&type=template&id=734baa9a
 
-const FilterPanelvue_type_template_id_1808236d_hoisted_1 = {
+const FilterPanelvue_type_template_id_734baa9a_hoisted_1 = {
   type: "submit",
   form: "fwde-filterpanel-form",
   class: "btn fwde-filters__apply"
 };
-function FilterPanelvue_type_template_id_1808236d_render(_ctx, _cache, $props, $setup, $data, $options) {
+function FilterPanelvue_type_template_id_734baa9a_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_FilterEditor = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("FilterEditor");
   const _component_SidePanel = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SidePanel");
   return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_SidePanel, {
@@ -1395,13 +1757,13 @@ function FilterPanelvue_type_template_id_1808236d_render(_ctx, _cache, $props, $
     footer: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withCtx"])(() => [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
       type: "button",
       class: "fwde-button fwde-filters__cancel",
-      onClick: _cache[3] || (_cache[3] = (...args) => _ctx.cancel && _ctx.cancel(...args))
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Cancel')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", FilterPanelvue_type_template_id_1808236d_hoisted_1, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Apply')), 1)]),
+      onClick: _cache[4] || (_cache[4] = (...args) => _ctx.cancel && _ctx.cancel(...args))
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Cancel')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", FilterPanelvue_type_template_id_734baa9a_hoisted_1, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Apply')), 1)]),
     default: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withCtx"])(() => [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("form", {
       id: "fwde-filterpanel-form",
       class: "fwde-filterpanel__form",
       novalidate: "",
-      onSubmit: _cache[2] || (_cache[2] = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withModifiers"])((...args) => _ctx.apply && _ctx.apply(...args), ["prevent"]))
+      onSubmit: _cache[3] || (_cache[3] = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withModifiers"])((...args) => _ctx.apply && _ctx.apply(...args), ["prevent"]))
     }, [_ctx.open ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_FilterEditor, {
       ref: "editor",
       key: _ctx.session,
@@ -1410,105 +1772,177 @@ function FilterPanelvue_type_template_id_1808236d_render(_ctx, _cache, $props, $
       "action-scope": _ctx.actionScope,
       "start-with-row": true,
       onChange: _cache[0] || (_cache[0] = $event => _ctx.draft.filters = $event),
-      onMatch: _cache[1] || (_cache[1] = $event => _ctx.draft.match = $event)
+      onMatch: _cache[1] || (_cache[1] = $event => _ctx.draft.match = $event),
+      onGroupMatch: _cache[2] || (_cache[2] = $event => _ctx.draft.groupMatch = $event)
     }, null, 8, ["catalog", "state", "action-scope"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 32)]),
     _: 1
   }, 8, ["open", "title", "close-label", "onUpdate:open"]);
 }
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/FilterPanel.vue?vue&type=template&id=1808236d
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/FilterPanel.vue?vue&type=template&id=734baa9a
 
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/FilterEditor.vue?vue&type=template&id=6b44a9c6
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/FilterEditor.vue?vue&type=template&id=3be98cd7
 
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_1 = {
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_1 = {
   class: "fwde-filters"
 };
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_2 = {
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_2 = {
+  key: 0,
+  class: "fwde-filters__legend"
+};
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_3 = {
   class: "fwde-filters__field fwde-filters__field--target"
 };
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_3 = {
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_4 = {
   class: "fwde-field__label"
 };
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_4 = ["value", "onChange"];
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_5 = ["value"];
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_6 = {
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_5 = ["value", "onChange"];
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_6 = ["value"];
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_7 = {
   class: "fwde-filters__field fwde-filters__field--operator"
 };
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_7 = {
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_8 = {
   class: "fwde-field__label"
 };
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_8 = ["value", "onChange"];
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_9 = ["value"];
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_10 = {
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_9 = ["value", "onChange"];
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_10 = ["value"];
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_11 = {
   class: "fwde-filters__field fwde-filters__field--value"
 };
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_11 = {
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_12 = {
   class: "fwde-field__label"
 };
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_12 = ["type", "step", "maxlength", "value", "onInput"];
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_13 = ["title", "onClick"];
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_14 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_13 = ["type", "step", "maxlength", "value", "aria-invalid", "aria-describedby", "onInput"];
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_14 = ["id"];
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_15 = ["id"];
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_16 = ["title", "onClick"];
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_17 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
   class: "icon-close",
   "aria-hidden": "true"
 }, null, -1);
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_15 = {
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_18 = {
   class: "fwde-visually-hidden"
 };
-const FilterEditorvue_type_template_id_6b44a9c6_hoisted_16 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_19 = ["disabled", "title", "onClick"];
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_20 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
   class: "icon-add",
   "aria-hidden": "true"
 }, null, -1);
-function FilterEditorvue_type_template_id_6b44a9c6_render(_ctx, _cache, $props, $setup, $data, $options) {
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_21 = {
+  class: "fwde-filters__actions"
+};
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_22 = ["disabled", "title"];
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_23 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+  class: "icon-add",
+  "aria-hidden": "true"
+}, null, -1);
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_24 = ["disabled", "title"];
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_25 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+  class: "icon-add",
+  "aria-hidden": "true"
+}, null, -1);
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_26 = {
+  key: 1,
+  class: "fwde-filters__count"
+};
+const FilterEditorvue_type_template_id_3be98cd7_hoisted_27 = {
+  key: 2,
+  class: "fwde-filters__limit"
+};
+function FilterEditorvue_type_template_id_3be98cd7_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_SegmentedSwitch = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SegmentedSwitch");
-  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", FilterEditorvue_type_template_id_6b44a9c6_hoisted_1, [_ctx.rows.length > 1 ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_SegmentedSwitch, {
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", FilterEditorvue_type_template_id_3be98cd7_hoisted_1, [_ctx.grouped ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_SegmentedSwitch, {
     key: 0,
-    class: "fwde-filters__match",
-    options: _ctx.matchOptions,
-    "model-value": _ctx.state.match,
-    label: _ctx.translate('FeinwerkDataExploration_FilterMatch'),
-    "onUpdate:modelValue": _cache[0] || (_cache[0] = $event => _ctx.$emit('match', $event))
-  }, null, 8, ["options", "model-value", "label"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.rows, (row, index) => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", {
-      key: row.id,
-      class: "fwde-filters__row"
-    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", FilterEditorvue_type_template_id_6b44a9c6_hoisted_2, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", FilterEditorvue_type_template_id_6b44a9c6_hoisted_3, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_FilterColumn')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
-      class: "browser-default fwde-select",
-      value: row.target,
-      onChange: $event => _ctx.setTarget(index, $event)
-    }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.targets, target => {
-      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
-        key: target.key,
-        value: target.key
-      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(target.label), 9, FilterEditorvue_type_template_id_6b44a9c6_hoisted_5);
-    }), 128))], 40, FilterEditorvue_type_template_id_6b44a9c6_hoisted_4)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", FilterEditorvue_type_template_id_6b44a9c6_hoisted_6, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", FilterEditorvue_type_template_id_6b44a9c6_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_FilterCondition')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
-      class: "browser-default fwde-select",
-      value: row.operator,
-      onChange: $event => _ctx.setOperator(index, $event)
-    }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.operatorsFor(row.target), operator => {
-      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
-        key: operator,
-        value: operator
-      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.OPERATOR_KEYS[operator])), 9, FilterEditorvue_type_template_id_6b44a9c6_hoisted_9);
-    }), 128))], 40, FilterEditorvue_type_template_id_6b44a9c6_hoisted_8)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", FilterEditorvue_type_template_id_6b44a9c6_hoisted_10, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", FilterEditorvue_type_template_id_6b44a9c6_hoisted_11, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_FilterValue')) + Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.unitSuffix(row.target)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("input", {
-      class: "browser-default fwde-input",
-      type: _ctx.isNumberTarget(row.target) ? 'number' : 'text',
-      step: _ctx.isNumberTarget(row.target) ? 'any' : undefined,
-      maxlength: _ctx.MAX_FILTER_TEXT,
-      value: row.value,
-      onInput: $event => _ctx.setValue(index, $event)
-    }, null, 40, FilterEditorvue_type_template_id_6b44a9c6_hoisted_12)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
-      type: "button",
-      class: "fwde-icon-button fwde-filters__remove",
-      title: _ctx.translate('FeinwerkDataExploration_RemoveFilter'),
-      onClick: $event => _ctx.remove(index)
-    }, [FilterEditorvue_type_template_id_6b44a9c6_hoisted_14, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", FilterEditorvue_type_template_id_6b44a9c6_hoisted_15, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_RemoveFilter')), 1)], 8, FilterEditorvue_type_template_id_6b44a9c6_hoisted_13)]);
-  }), 128)), _ctx.rows.length < _ctx.MAX_FILTERS ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
-    key: 1,
+    class: "fwde-filters__groups-match",
+    options: _ctx.groupsMatchOptions,
+    "model-value": _ctx.outer,
+    label: _ctx.translate('FeinwerkDataExploration_FilterGroupsMatch'),
+    "onUpdate:modelValue": _ctx.setOuter
+  }, null, 8, ["options", "model-value", "label", "onUpdate:modelValue"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.groups, group => {
+    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveDynamicComponent"])(_ctx.grouped ? 'fieldset' : 'div'), {
+      key: group.index,
+      class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(_ctx.grouped ? 'fwde-filters__group' : 'fwde-filters__list')
+    }, {
+      default: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withCtx"])(() => [_ctx.grouped ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("legend", FilterEditorvue_type_template_id_3be98cd7_hoisted_2, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_FilterGroup', group.number)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), group.rows.length > 1 ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_SegmentedSwitch, {
+        key: 1,
+        class: "fwde-filters__match",
+        options: _ctx.matchOptions,
+        "model-value": _ctx.groupSwitches[group.index] || 'all',
+        label: _ctx.translate('FeinwerkDataExploration_FilterMatch'),
+        "onUpdate:modelValue": $event => _ctx.setGroupMatch(group.index, $event)
+      }, null, 8, ["options", "model-value", "label", "onUpdate:modelValue"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(group.rows, ({
+        row,
+        index
+      }) => {
+        return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", {
+          key: row.id,
+          class: "fwde-filters__row"
+        }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", FilterEditorvue_type_template_id_3be98cd7_hoisted_3, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", FilterEditorvue_type_template_id_3be98cd7_hoisted_4, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_FilterColumn')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
+          class: "browser-default fwde-select",
+          value: row.target,
+          onChange: $event => _ctx.setTarget(index, $event)
+        }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.targets, target => {
+          return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
+            key: target.key,
+            value: target.key
+          }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(target.label), 9, FilterEditorvue_type_template_id_3be98cd7_hoisted_6);
+        }), 128))], 40, FilterEditorvue_type_template_id_3be98cd7_hoisted_5)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", FilterEditorvue_type_template_id_3be98cd7_hoisted_7, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", FilterEditorvue_type_template_id_3be98cd7_hoisted_8, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_FilterCondition')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
+          class: "browser-default fwde-select",
+          value: row.operator,
+          onChange: $event => _ctx.setOperator(index, $event)
+        }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.operatorsFor(row.target), operator => {
+          return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
+            key: operator,
+            value: operator
+          }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.OPERATOR_KEYS[operator])), 9, FilterEditorvue_type_template_id_3be98cd7_hoisted_10);
+        }), 128))], 40, FilterEditorvue_type_template_id_3be98cd7_hoisted_9)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", FilterEditorvue_type_template_id_3be98cd7_hoisted_11, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", FilterEditorvue_type_template_id_3be98cd7_hoisted_12, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_FilterValue')) + Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.unitSuffix(row.target)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("input", {
+          class: "browser-default fwde-input",
+          type: _ctx.isNumberTarget(row.target) ? 'number' : 'text',
+          step: _ctx.isNumberTarget(row.target) ? 'any' : undefined,
+          maxlength: row.operator === 'matches' ? _ctx.MAX_PATTERN : _ctx.MAX_FILTER_TEXT,
+          value: row.value,
+          "aria-invalid": row.problem ? 'true' : undefined,
+          "aria-describedby": _ctx.describedBy(row),
+          onInput: $event => _ctx.setValue(index, $event)
+        }, null, 40, FilterEditorvue_type_template_id_3be98cd7_hoisted_13)]), row.operator === 'matches' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", {
+          key: 0,
+          id: `fwde-filter-help-${row.id}`,
+          class: "fwde-filters__help"
+        }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_FilterPatternHelp')), 9, FilterEditorvue_type_template_id_3be98cd7_hoisted_14)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), row.problem ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", {
+          key: 1,
+          id: `fwde-filter-error-${row.id}`,
+          class: "fwde-filters__error"
+        }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.problemText(row)), 9, FilterEditorvue_type_template_id_3be98cd7_hoisted_15)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+          type: "button",
+          class: "fwde-icon-button fwde-filters__remove",
+          title: _ctx.translate('FeinwerkDataExploration_RemoveFilter'),
+          onClick: $event => _ctx.remove(index)
+        }, [FilterEditorvue_type_template_id_3be98cd7_hoisted_17, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", FilterEditorvue_type_template_id_3be98cd7_hoisted_18, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_RemoveFilter')), 1)], 8, FilterEditorvue_type_template_id_3be98cd7_hoisted_16)]);
+      }), 128)), _ctx.grouped ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
+        key: 2,
+        type: "button",
+        class: "fwde-button fwde-filters__add",
+        disabled: _ctx.atConditionLimit,
+        title: _ctx.atConditionLimit ? _ctx.conditionLimitText : undefined,
+        onClick: $event => _ctx.add(group.index)
+      }, [FilterEditorvue_type_template_id_3be98cd7_hoisted_20, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(" " + Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_FilterAddCondition')), 1)], 8, FilterEditorvue_type_template_id_3be98cd7_hoisted_19)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]),
+      _: 2
+    }, 1032, ["class"]);
+  }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", FilterEditorvue_type_template_id_3be98cd7_hoisted_21, [!_ctx.grouped ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
+    key: 0,
     type: "button",
     class: "fwde-button fwde-filters__add",
-    onClick: _cache[1] || (_cache[1] = (...args) => _ctx.add && _ctx.add(...args))
-  }, [FilterEditorvue_type_template_id_6b44a9c6_hoisted_16, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(" " + Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_AddFilter')), 1)])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
+    disabled: _ctx.atConditionLimit,
+    title: _ctx.atConditionLimit ? _ctx.conditionLimitText : undefined,
+    onClick: _cache[0] || (_cache[0] = $event => _ctx.add(_ctx.groups.length ? _ctx.groups[0].index : 0))
+  }, [FilterEditorvue_type_template_id_3be98cd7_hoisted_23, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(" " + Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_AddFilter')), 1)], 8, FilterEditorvue_type_template_id_3be98cd7_hoisted_22)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+    type: "button",
+    class: "fwde-button fwde-filters__add-group",
+    disabled: _ctx.atGroupLimit,
+    title: _ctx.atGroupLimit ? _ctx.groupLimitText : undefined,
+    onClick: _cache[1] || (_cache[1] = (...args) => _ctx.addGroup && _ctx.addGroup(...args))
+  }, [FilterEditorvue_type_template_id_3be98cd7_hoisted_25, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(" " + Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_FilterAddGroup')), 1)], 8, FilterEditorvue_type_template_id_3be98cd7_hoisted_24), _ctx.rows.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", FilterEditorvue_type_template_id_3be98cd7_hoisted_26, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.countText), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.atGroupLimit ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", FilterEditorvue_type_template_id_3be98cd7_hoisted_27, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.groupLimitText), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)])]);
 }
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/FilterEditor.vue?vue&type=template&id=6b44a9c6
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/FilterEditor.vue?vue&type=template&id=3be98cd7
 
 // CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/SegmentedSwitch.vue?vue&type=template&id=3a173bc2
 
@@ -1634,6 +2068,8 @@ SegmentedSwitchvue_type_script_lang_ts.render = SegmentedSwitchvue_type_template
 /* harmony default export */ var SegmentedSwitch = (SegmentedSwitchvue_type_script_lang_ts);
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/filterSummary.ts
 
+
+
 /** the condition's text per operator (the filter editor's choices and the summary) */
 const OPERATOR_KEYS = {
   contains: 'FeinwerkDataExploration_OperatorContains',
@@ -1642,13 +2078,18 @@ const OPERATOR_KEYS = {
   notEquals: 'FeinwerkDataExploration_OperatorNotEquals',
   startsWith: 'FeinwerkDataExploration_OperatorStartsWith',
   endsWith: 'FeinwerkDataExploration_OperatorEndsWith',
+  notStartsWith: 'FeinwerkDataExploration_OperatorNotStartsWith',
+  notEndsWith: 'FeinwerkDataExploration_OperatorNotEndsWith',
+  matches: 'FeinwerkDataExploration_OperatorMatches',
   gt: 'FeinwerkDataExploration_OperatorGt',
-  lt: 'FeinwerkDataExploration_OperatorLt'
+  gte: 'FeinwerkDataExploration_OperatorGte',
+  lt: 'FeinwerkDataExploration_OperatorLt',
+  lte: 'FeinwerkDataExploration_OperatorLte'
 };
 /**
  * The columns a filter can test, by the names the table shows: the dimensions ("label",
- * "secondary_label"), then the metrics (next to an action dimension by their "with this action"
- * name).
+ * "secondary_label", "tertiary_label"), then the metrics (next to an action dimension by their
+ * "with this action" name).
  */
 function filterTargets(state, catalog, actionScope) {
   const name = id => {
@@ -1656,7 +2097,7 @@ function filterTargets(state, catalog, actionScope) {
     return ((_catalog$dimensions$f = catalog.dimensions.find(d => d.id === id)) === null || _catalog$dimensions$f === void 0 ? void 0 : _catalog$dimensions$f.name) || id;
   };
   const targets = state.dimensions.map((id, i) => ({
-    key: i === 0 ? 'label' : 'secondary_label',
+    key: LABEL_COLUMNS[i],
     label: name(id)
   }));
   state.metrics.forEach(id => {
@@ -1679,15 +2120,54 @@ function filterSummary(state, catalog, actionScope, translate) {
     const condition = translate(OPERATOR_KEYS[filter.operator] || filter.operator);
     const isMetric = state.metrics.includes(filter.target);
     let value = isMetric ? String(filter.value) : `"${filter.value}"`;
-    if (RATE_METRICS.includes(filter.target)) {
+    if (isRate(filter.target)) {
       value += ' %';
-    } else if (filter.target === 'avg_time_on_site') {
+    } else if (isSeconds(filter.target)) {
       value += ' s';
     }
     return `${labels[filter.target] || filter.target} ${condition} ${value}`;
   });
 }
+/**
+ * The applied filters for the left column (filter groups, 2026-11-23): one group reads as before
+ * (a line per condition, "Match any" below from two on); from two groups on one line per group,
+ * its conditions joined by "and" or "or", and a line "and" / "or" between the groups.
+ */
+function filterSummaryLines(state, catalog, actionScope, translate) {
+  const texts = filterSummary(state, catalog, actionScope, translate);
+  const groups = groupsOf(state.filters, state.groupMatch);
+  const join = match => translate(match === 'any' ? 'FeinwerkDataExploration_FilterJoinOr' : 'FeinwerkDataExploration_FilterJoinAnd');
+  if (groups.length < 2) {
+    const lines = texts.map(text => ({
+      text,
+      join: false
+    }));
+    if (groups.length === 1 && groups[0].match === 'any' && texts.length > 1) {
+      lines.push({
+        text: translate('FeinwerkDataExploration_FilterMatchAny'),
+        join: true
+      });
+    }
+    return lines;
+  }
+  const lines = [];
+  groups.forEach((group, i) => {
+    if (i > 0) {
+      lines.push({
+        text: join(state.match),
+        join: true
+      });
+    }
+    const conditionTexts = group.filters.map(filter => texts[state.filters.indexOf(filter)]);
+    lines.push({
+      text: conditionTexts.join(` ${join(group.match)} `),
+      join: false
+    });
+  });
+  return lines;
+}
 // CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/FilterEditor.vue?vue&type=script&lang=ts
+
 
 
 
@@ -1722,22 +2202,31 @@ function nextRowId() {
       default: false
     }
   },
-  emits: ['change', 'match'],
+  emits: ['change', 'match', 'groupMatch'],
   data() {
     return {
       rows: [],
+      /** each group's switch, by group index */
+      groupSwitches: [],
+      /** the switch between the groups */
+      outer: 'all',
       timer: 0,
       OPERATOR_KEYS: OPERATOR_KEYS,
       MAX_FILTERS: MAX_FILTERS,
-      MAX_FILTER_TEXT: MAX_FILTER_TEXT
+      MAX_FILTER_TEXT: MAX_FILTER_TEXT,
+      MAX_PATTERN: MAX_PATTERN
     };
   },
   created() {
     this.rows = this.state.filters.map(f => Object.assign(Object.assign({}, f), {}, {
-      id: nextRowId()
+      id: nextRowId(),
+      touched: true,
+      problem: ''
     }));
+    this.groupSwitches = (this.state.groupMatch || []).slice();
+    this.outer = this.state.match;
     if (this.startWithRow && !this.rows.length) {
-      this.add();
+      this.add(0);
     }
   },
   beforeUnmount() {
@@ -1753,8 +2242,48 @@ function nextRowId() {
         label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_FilterMatchAny')
       }];
     },
+    groupsMatchOptions() {
+      return [{
+        value: 'all',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_FilterGroupsMatchAll')
+      }, {
+        value: 'any',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_FilterGroupsMatchAny')
+      }];
+    },
     targets() {
       return filterTargets(this.state, this.catalog, this.actionScope);
+    },
+    /** the groups in order, each with its rows and their index in this.rows */
+    groups() {
+      // no array spread in .vue files: Matomo 5's Jest compiles them with an old tslib
+      const indexes = Array.from(new Set(this.rows.map(row => row.group))).sort((a, b) => a - b);
+      return indexes.map((group, i) => ({
+        index: group,
+        number: i + 1,
+        rows: this.rows.map((row, index) => ({
+          row,
+          index
+        })).filter(entry => entry.row.group === group)
+      }));
+    },
+    grouped() {
+      return this.groups.length > 1;
+    },
+    atConditionLimit() {
+      return this.rows.length >= MAX_FILTERS;
+    },
+    atGroupLimit() {
+      return this.groups.length >= MAX_GROUPS || this.atConditionLimit;
+    },
+    countText() {
+      return Object(external_CoreHome_["translate"])('FeinwerkDataExploration_FilterConditionCount', this.rows.length, MAX_FILTERS);
+    },
+    conditionLimitText() {
+      return Object(external_CoreHome_["translate"])('FeinwerkDataExploration_FilterLimitConditions', MAX_FILTERS);
+    },
+    groupLimitText() {
+      return this.groups.length >= MAX_GROUPS ? Object(external_CoreHome_["translate"])('FeinwerkDataExploration_FilterLimitGroups', MAX_GROUPS) : this.conditionLimitText;
     }
   },
   methods: {
@@ -1764,10 +2293,10 @@ function nextRowId() {
     },
     /** Rates are entered in percent like the table shows them, the visit duration in seconds. */
     unitSuffix(target) {
-      if (RATE_METRICS.includes(target)) {
+      if (isRate(target)) {
         return ` (${Object(external_CoreHome_["translate"])('FeinwerkDataExploration_UnitPercent')})`;
       }
-      if (target === 'avg_time_on_site') {
+      if (isSeconds(target)) {
         return ` (${Object(external_CoreHome_["translate"])('FeinwerkDataExploration_UnitSeconds')})`;
       }
       return '';
@@ -1775,16 +2304,68 @@ function nextRowId() {
     operatorsFor(target) {
       return this.isNumberTarget(target) ? NUMBER_OPERATORS : TEXT_OPERATORS;
     },
-    add() {
-      this.rows.push({
+    problemText(row) {
+      return row.problem === 'FeinwerkDataExploration_FilterPatternTooLong' ? Object(external_CoreHome_["translate"])(row.problem, MAX_PATTERN) : Object(external_CoreHome_["translate"])(row.problem);
+    },
+    describedBy(row) {
+      const ids = [row.operator === 'matches' ? `fwde-filter-help-${row.id}` : '', row.problem ? `fwde-filter-error-${row.id}` : ''].filter(id => id !== '');
+      return ids.length ? ids.join(' ') : undefined;
+    },
+    add(group) {
+      if (this.atConditionLimit) {
+        return;
+      }
+      if (this.groupSwitches[group] === undefined) {
+        this.groupSwitches[group] = 'all';
+      }
+      // the new row goes after the last row of its group, so the rows stay in group order
+      let at = this.rows.length;
+      this.rows.forEach((row, index) => {
+        if (row.group === group) {
+          at = index + 1;
+        }
+      });
+      this.rows.splice(at, 0, {
         id: nextRowId(),
         target: 'label',
         operator: 'contains',
-        value: ''
+        value: '',
+        group,
+        touched: false,
+        problem: ''
+      });
+    },
+    addGroup() {
+      if (this.atGroupLimit) {
+        return;
+      }
+      const group = this.rows.reduce((max, row) => Math.max(max, row.group + 1), 0);
+      this.groupSwitches[group] = 'all';
+      this.add(group);
+      // the focus goes to the new group's first field
+      this.$nextTick(() => {
+        const groups = this.$el.querySelectorAll('.fwde-filters__group');
+        const last = groups[groups.length - 1];
+        const select = last ? last.querySelector('select') : null;
+        if (select) {
+          select.focus();
+        }
       });
     },
     remove(index) {
+      const {
+        group
+      } = this.rows[index];
       this.rows.splice(index, 1);
+      if (!this.rows.some(row => row.group === group)) {
+        // the group is gone: the later groups move up, their switches with them
+        this.rows.forEach(row => {
+          if (row.group > group) {
+            row.group -= 1;
+          }
+        });
+        this.groupSwitches.splice(group, 1);
+      }
       this.emitNow();
       // the focus stays in the editor (the removed button took it along): the next row, the one
       // before, or "Add filter"
@@ -1801,6 +2382,8 @@ function nextRowId() {
     setTarget(index, event) {
       const row = this.rows[index];
       row.target = event.target.value;
+      row.touched = true;
+      row.problem = '';
       if (!this.operatorsFor(row.target).includes(row.operator)) {
         [row.operator] = this.operatorsFor(row.target);
         row.value = '';
@@ -1809,30 +2392,88 @@ function nextRowId() {
     },
     setOperator(index, event) {
       this.rows[index].operator = event.target.value;
+      this.rows[index].touched = true;
+      this.rows[index].problem = '';
       this.emitNow();
     },
     setValue(index, event) {
-      this.rows[index].value = event.target.value;
+      const row = this.rows[index];
+      row.value = event.target.value;
+      row.touched = true;
+      row.problem = '';
       window.clearTimeout(this.timer);
       this.timer = window.setTimeout(() => this.emitNow(), DEBOUNCE_MS);
+    },
+    setGroupMatch(group, value) {
+      this.groupSwitches[group] = value;
+      this.emitNow();
+    },
+    setOuter(value) {
+      this.outer = value;
+      this.$emit('match', value);
+    },
+    /**
+     * Marks every row the user changed but left without a usable value, says what is missing and
+     * moves the focus there (the panel's Apply, UI review 2026-11-23). An untouched empty row (the
+     * starter row, or one just added) is no filter yet and passes. A regular expression is checked
+     * for its length only: its syntax is the database's, the server checks it (final review,
+     * 2026-11-24). Returns true when nothing is missing.
+     */
+    checkComplete() {
+      this.rows.forEach(row => {
+        const filter = {
+          target: row.target,
+          operator: row.operator,
+          value: row.value.trim()
+        };
+        const usable = isValidFilter(filter, this.state.dimensions.length, this.state.metrics);
+        const meant = row.touched || row.value.trim() !== '';
+        let problem = '';
+        if (row.operator === 'matches' && filter.value.length > MAX_PATTERN) {
+          problem = 'FeinwerkDataExploration_FilterPatternTooLong';
+        } else if (!usable && meant) {
+          problem = this.isNumberTarget(row.target) ? 'FeinwerkDataExploration_FilterNeedsNumber' : 'FeinwerkDataExploration_FilterNeedsValue';
+        }
+        row.problem = problem;
+      });
+      const first = this.rows.findIndex(row => row.problem !== '');
+      if (first < 0) {
+        return true;
+      }
+      this.$nextTick(() => {
+        const inputs = this.$el.querySelectorAll('.fwde-filters__field--value input');
+        if (inputs[first]) {
+          inputs[first].focus();
+        }
+      });
+      return false;
     },
     /** hands over what is typed now, without waiting for the typing pause (the panel's Apply) */
     flush() {
       this.emitNow();
     },
+    /**
+     * The usable conditions with their groups numbered from 0 in order (a group left without a
+     * usable condition drops out), and the switch of each.
+     */
     emitNow() {
       window.clearTimeout(this.timer);
-      const valid = this.rows.map(({
-        target,
-        operator,
-        value
-      }) => ({
-        target,
-        operator,
-        value: value.trim()
+      const valid = this.rows.map(row => ({
+        target: row.target,
+        operator: row.operator,
+        value: row.value.trim(),
+        group: row.group
       })).filter(f => isValidFilter(f, this.state.dimensions.length, this.state.metrics));
-      if (JSON.stringify(valid) !== JSON.stringify(this.state.filters)) {
-        this.$emit('change', valid);
+      const kept = Array.from(new Set(valid.map(f => f.group))).sort((a, b) => a - b);
+      const filters = valid.map(f => Object.assign(Object.assign({}, f), {}, {
+        group: kept.indexOf(f.group)
+      }));
+      const groupMatch = kept.map(group => this.groupSwitches[group] || 'all');
+      if (JSON.stringify(filters) !== JSON.stringify(this.state.filters)) {
+        this.$emit('change', filters);
+      }
+      if (JSON.stringify(groupMatch) !== JSON.stringify(this.state.groupMatch)) {
+        this.$emit('groupMatch', groupMatch);
       }
     }
   }
@@ -1843,7 +2484,7 @@ function nextRowId() {
 
 
 
-FilterEditorvue_type_script_lang_ts.render = FilterEditorvue_type_template_id_6b44a9c6_render
+FilterEditorvue_type_script_lang_ts.render = FilterEditorvue_type_template_id_3be98cd7_render
 
 /* harmony default export */ var FilterEditor = (FilterEditorvue_type_script_lang_ts);
 // CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/SidePanel.vue?vue&type=template&id=a0e94194
@@ -2116,7 +2757,8 @@ SidePanelvue_type_script_lang_ts.render = SidePanelvue_type_template_id_a0e94194
       session: 0,
       draft: {
         filters: [],
-        match: 'all'
+        match: 'all',
+        groupMatch: []
       }
     };
   },
@@ -2124,7 +2766,8 @@ SidePanelvue_type_script_lang_ts.render = SidePanelvue_type_template_id_a0e94194
     draftState() {
       return Object.assign(Object.assign({}, this.state), {}, {
         filters: this.draft.filters,
-        match: this.draft.match
+        match: this.draft.match,
+        groupMatch: this.draft.groupMatch
       });
     }
   },
@@ -2145,18 +2788,26 @@ SidePanelvue_type_script_lang_ts.render = SidePanelvue_type_template_id_a0e94194
     reset() {
       this.draft = {
         filters: this.state.filters.map(filter => Object.assign({}, filter)),
-        match: this.state.match
+        match: this.state.match,
+        groupMatch: this.state.groupMatch.slice()
       };
       this.session += 1;
     },
     apply() {
       const editor = this.$refs.editor;
+      // a filter left half done stays in the panel with what is missing (UI review 2026-11-23)
+      if (editor && editor.checkComplete && !editor.checkComplete()) {
+        return;
+      }
       if (editor && editor.flush) {
         editor.flush();
       }
+      // the switch between the groups matters from two groups on
+      const groupCount = this.draft.groupMatch.length;
       this.$emit('apply', {
         filters: this.draft.filters,
-        match: this.draft.match
+        groupMatch: this.draft.groupMatch,
+        match: groupCount > 1 ? this.draft.match : 'all'
       });
       this.$emit('update:open', false);
     },
@@ -2176,7 +2827,7 @@ SidePanelvue_type_script_lang_ts.render = SidePanelvue_type_template_id_a0e94194
 
 
 
-FilterPanelvue_type_script_lang_ts.render = FilterPanelvue_type_template_id_1808236d_render
+FilterPanelvue_type_script_lang_ts.render = FilterPanelvue_type_template_id_734baa9a_render
 
 /* harmony default export */ var FilterPanel = (FilterPanelvue_type_script_lang_ts);
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/viewChips.ts
@@ -2219,162 +2870,167 @@ function emptyState(filterCount) {
     editFilters: false
   };
 }
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ResultTable.vue?vue&type=template&id=24e8b3eb
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ResultTable.vue?vue&type=template&id=82588702
 
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_1 = {
+const ResultTablevue_type_template_id_82588702_hoisted_1 = {
   class: "fwde-table"
 };
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_2 = {
-  class: "fwde-table__scroller"
-};
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_3 = {
-  class: "dataTable fwde-table__table"
-};
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_4 = ["aria-sort"];
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_5 = ["title", "onClick"];
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_6 = {
+const ResultTablevue_type_template_id_82588702_hoisted_2 = ["aria-sort"];
+const ResultTablevue_type_template_id_82588702_hoisted_3 = ["title", "onClick"];
+const ResultTablevue_type_template_id_82588702_hoisted_4 = {
   class: "fwde-table__menu"
 };
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_7 = {
+const ResultTablevue_type_template_id_82588702_hoisted_5 = {
   class: "fwde-visually-hidden"
 };
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_8 = ["title"];
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_9 = {
+const ResultTablevue_type_template_id_82588702_hoisted_6 = ["title"];
+const ResultTablevue_type_template_id_82588702_hoisted_7 = {
   class: "fwde-ellipsis__head"
 };
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_10 = {
+const ResultTablevue_type_template_id_82588702_hoisted_8 = {
   class: "fwde-ellipsis__tail"
 };
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_11 = {
+const ResultTablevue_type_template_id_82588702_hoisted_9 = {
   class: "fwde-table__menu"
 };
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_12 = ["title"];
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_13 = ["colspan"];
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_14 = {
+const ResultTablevue_type_template_id_82588702_hoisted_10 = ["title"];
+const ResultTablevue_type_template_id_82588702_hoisted_11 = ["colspan"];
+const ResultTablevue_type_template_id_82588702_hoisted_12 = {
   key: 0,
   class: "fwde-table__others-loading"
 };
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_15 = {
+const ResultTablevue_type_template_id_82588702_hoisted_13 = {
   key: 0,
   class: "fwde-table__others-failed"
 };
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_16 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", {
+const ResultTablevue_type_template_id_82588702_hoisted_14 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", {
   class: "fwde-table__menu"
 }, null, -1);
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_17 = {
+const ResultTablevue_type_template_id_82588702_hoisted_15 = {
   key: 0,
   class: "fwde-table__overcount"
 };
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_18 = {
+const ResultTablevue_type_template_id_82588702_hoisted_16 = {
   class: "fwde-table__footer"
 };
-const ResultTablevue_type_template_id_24e8b3eb_hoisted_19 = {
+const ResultTablevue_type_template_id_82588702_hoisted_17 = {
   key: 1,
   class: "fwde-table__limit"
 };
-function ResultTablevue_type_template_id_24e8b3eb_render(_ctx, _cache, $props, $setup, $data, $options) {
+function ResultTablevue_type_template_id_82588702_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_RowMenu = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("RowMenu");
-  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ResultTablevue_type_template_id_24e8b3eb_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", ResultTablevue_type_template_id_24e8b3eb_hoisted_2, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("table", ResultTablevue_type_template_id_24e8b3eb_hoisted_3, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("thead", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tr", null, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.columns, column => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("th", {
-      key: column.key,
-      class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
-        sortable: true,
-        columnSorted: _ctx.state.sort === column.key,
-        'fwde-table__number': column.isMetric,
-        'fwde-table__metric': column.isMetric,
-        label: !column.isMetric,
-        'fwde-table__dimension': !column.isMetric,
-        'fwde-table__dimension-last': column.key === _ctx.lastDimension,
-        'fwde-table__dimension--fit': column.key === 'label' && _ctx.firstDimensionFits
-      }),
-      "aria-sort": _ctx.ariaSort(column.key)
-    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
-      type: "button",
-      class: "fwde-table__sort",
-      title: _ctx.translate('FeinwerkDataExploration_SortBy', column.label),
-      onClick: $event => _ctx.$emit('sort', column.key)
-    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(column.label), 1), _ctx.state.sort === column.key ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", {
-      key: 0,
-      class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(`sortIcon ${_ctx.state.sortOrder}`),
-      "aria-hidden": "true"
-    }, null, 2)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 8, ResultTablevue_type_template_id_24e8b3eb_hoisted_5)], 10, ResultTablevue_type_template_id_24e8b3eb_hoisted_4);
-  }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", ResultTablevue_type_template_id_24e8b3eb_hoisted_6, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultTablevue_type_template_id_24e8b3eb_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_RowActions')), 1)])])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tbody", null, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.sortedRows, (row, index) => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("tr", {
-      key: index
-    }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.columns, column => {
-      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
-        key: column.key
-      }, [column.isMetric ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
-        key: 0,
+  const _component_TableScroller = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("TableScroller");
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ResultTablevue_type_template_id_82588702_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_TableScroller, {
+    onLayout: _ctx.onLayout
+  }, {
+    default: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withCtx"])(() => [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("table", {
+      class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(["dataTable fwde-table__table", {
+        'fwde-table__table--natural': _ctx.naturalFirst
+      }])
+    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("thead", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tr", null, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.columns, column => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("th", {
+        key: column.key,
         class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
-          'fwde-table__number': true,
-          'fwde-table__metric': true,
-          'fwde-cellbar': _ctx.barStyle(column.key, row) !== null
+          sortable: true,
+          columnSorted: _ctx.state.sort === column.key,
+          'fwde-table__number': column.isMetric,
+          'fwde-table__metric': column.isMetric,
+          label: !column.isMetric,
+          'fwde-table__dimension': !column.isMetric,
+          'fwde-table__dimension-last': column.key === _ctx.lastDimension,
+          'fwde-table__dimension--fit': column.key === 'label' && _ctx.firstColumnFits
         }),
-        style: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeStyle"])(_ctx.barStyle(column.key, row) || undefined)
-      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.format(column.key, row[column.key])), 7)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
-        key: 1,
+        "aria-sort": _ctx.ariaSort(column.key)
+      }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+        type: "button",
+        class: "fwde-table__sort",
+        title: _ctx.translate('FeinwerkDataExploration_SortBy', column.label),
+        onClick: $event => _ctx.$emit('sort', column.key)
+      }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(column.label), 1), _ctx.state.sort === column.key ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", {
+        key: 0,
+        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(`sortIcon ${_ctx.state.sortOrder}`),
+        "aria-hidden": "true"
+      }, null, 2)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 8, ResultTablevue_type_template_id_82588702_hoisted_3)], 10, ResultTablevue_type_template_id_82588702_hoisted_2);
+    }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", ResultTablevue_type_template_id_82588702_hoisted_4, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultTablevue_type_template_id_82588702_hoisted_5, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_RowActions')), 1)])])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tbody", null, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.sortedRows, (row, index) => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("tr", {
+        key: index
+      }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.columns, column => {
+        return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+          key: column.key
+        }, [column.isMetric ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+          key: 0,
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+            'fwde-table__number': true,
+            'fwde-table__metric': true,
+            'fwde-cellbar': _ctx.barStyle(column.key, row) !== null
+          }),
+          style: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeStyle"])(_ctx.barStyle(column.key, row) || undefined)
+        }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.format(column.key, row[column.key])), 7)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+          key: 1,
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+            label: true,
+            'fwde-table__label': true,
+            'fwde-table__dimension': true,
+            'fwde-table__dimension-last': column.key === _ctx.lastDimension,
+            'fwde-table__dimension--fit': column.key === 'label' && _ctx.firstColumnFits
+          }),
+          title: String(row[column.key])
+        }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(_ctx.ellipsisClasses(row[column.key]))
+        }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultTablevue_type_template_id_82588702_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.labelPart(row[column.key], 0)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultTablevue_type_template_id_82588702_hoisted_8, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.labelPart(row[column.key], 1)), 1)], 2)], 10, ResultTablevue_type_template_id_82588702_hoisted_6))], 64);
+      }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", ResultTablevue_type_template_id_82588702_hoisted_9, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_RowMenu, {
+        label: _ctx.rowLabel(row),
+        "can-break-down": _ctx.state.dimensions.length < _ctx.MAX_DIMENSIONS,
+        "visits-reason": _ctx.visitsReason(row),
+        "filter-reason": _ctx.filterReason(row),
+        onFilter: $event => _ctx.$emit('row-filter', row),
+        onBreakdown: $event => _ctx.$emit('row-breakdown', row),
+        onVisits: $event => _ctx.$emit('row-visits', row)
+      }, null, 8, ["label", "can-break-down", "visits-reason", "filter-reason", "onFilter", "onBreakdown", "onVisits"])])]);
+    }), 128)), _ctx.showOthers ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("tr", {
+      key: 0,
+      class: "fwde-table__others",
+      title: _ctx.translate('FeinwerkDataExploration_OthersTitle')
+    }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.dimensionColumns, column => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+        key: column.key,
         class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
           label: true,
           'fwde-table__label': true,
           'fwde-table__dimension': true,
           'fwde-table__dimension-last': column.key === _ctx.lastDimension,
-          'fwde-table__dimension--fit': column.key === 'label' && _ctx.firstDimensionFits
-        }),
-        title: String(row[column.key])
-      }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
-        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(_ctx.ellipsisClasses(row[column.key]))
-      }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultTablevue_type_template_id_24e8b3eb_hoisted_9, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.labelPart(row[column.key], 0)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultTablevue_type_template_id_24e8b3eb_hoisted_10, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.labelPart(row[column.key], 1)), 1)], 2)], 10, ResultTablevue_type_template_id_24e8b3eb_hoisted_8))], 64);
-    }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", ResultTablevue_type_template_id_24e8b3eb_hoisted_11, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_RowMenu, {
-      label: _ctx.rowLabel(row),
-      "can-break-down": _ctx.state.dimensions.length === 1,
-      "visits-reason": _ctx.visitsReason(row),
-      "filter-reason": _ctx.filterReason(row),
-      onFilter: $event => _ctx.$emit('row-filter', row),
-      onBreakdown: $event => _ctx.$emit('row-breakdown', row),
-      onVisits: $event => _ctx.$emit('row-visits', row)
-    }, null, 8, ["label", "can-break-down", "visits-reason", "filter-reason", "onFilter", "onBreakdown", "onVisits"])])]);
-  }), 128)), _ctx.showOthers ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("tr", {
-    key: 0,
-    class: "fwde-table__others",
-    title: _ctx.translate('FeinwerkDataExploration_OthersTitle')
-  }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.dimensionColumns, column => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
-      key: column.key,
-      class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
-        label: true,
-        'fwde-table__label': true,
-        'fwde-table__dimension': true,
-        'fwde-table__dimension-last': column.key === _ctx.lastDimension
-      })
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(column.key === 'label' ? _ctx.translate('General_Others') : ''), 3);
-  }), 128)), _ctx.others && _ctx.othersState === 'done' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
-    key: 0
-  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.metricColumns, column => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
-      key: column.key,
-      class: "fwde-table__number fwde-table__metric"
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.formatRest(column.key, _ctx.others[column.key])), 1);
-  }), 128)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
-    key: 1,
-    class: "fwde-table__others-action",
-    colspan: _ctx.metricColumns.length
-  }, [_ctx.othersState === 'loading' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", ResultTablevue_type_template_id_24e8b3eb_hoisted_14, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_LoadingData')), 1)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
-    key: 1
-  }, [_ctx.othersState === 'failed' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", ResultTablevue_type_template_id_24e8b3eb_hoisted_15, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_OthersFailed')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
-    type: "button",
-    class: "fwde-button fwde-table__others-calculate",
-    onClick: _cache[0] || (_cache[0] = $event => _ctx.$emit('others-calculate'))
-  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_OthersCalculate')), 1)], 64))], 8, ResultTablevue_type_template_id_24e8b3eb_hoisted_13)), ResultTablevue_type_template_id_24e8b3eb_hoisted_16], 8, ResultTablevue_type_template_id_24e8b3eb_hoisted_12)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)])])]), _ctx.overcountKey ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", ResultTablevue_type_template_id_24e8b3eb_hoisted_17, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.overcountKey)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("p", ResultTablevue_type_template_id_24e8b3eb_hoisted_18, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.rowCountKey(_ctx.dataRows.length), _ctx.formatNumber(_ctx.dataRows.length))), 1), _ctx.dataRows.length >= _ctx.state.limit ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", ResultTablevue_type_template_id_24e8b3eb_hoisted_19, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_LimitReached')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
+          'fwde-table__dimension--fit': column.key === 'label' && _ctx.firstColumnFits
+        })
+      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(column.key === 'label' ? _ctx.translate('General_Others') : ''), 3);
+    }), 128)), _ctx.others && _ctx.othersState === 'done' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+      key: 0
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.metricColumns, column => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+        key: column.key,
+        class: "fwde-table__number fwde-table__metric"
+      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.formatRest(column.key, _ctx.others[column.key])), 1);
+    }), 128)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+      key: 1,
+      class: "fwde-table__others-action",
+      colspan: _ctx.metricColumns.length
+    }, [_ctx.othersState === 'loading' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", ResultTablevue_type_template_id_82588702_hoisted_12, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_LoadingData')), 1)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+      key: 1
+    }, [_ctx.othersState === 'failed' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", ResultTablevue_type_template_id_82588702_hoisted_13, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_OthersFailed')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+      type: "button",
+      class: "fwde-button fwde-table__others-calculate",
+      onClick: _cache[0] || (_cache[0] = $event => _ctx.$emit('others-calculate'))
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_OthersCalculate')), 1)], 64))], 8, ResultTablevue_type_template_id_82588702_hoisted_11)), ResultTablevue_type_template_id_82588702_hoisted_14], 8, ResultTablevue_type_template_id_82588702_hoisted_10)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)])], 2)]),
+    _: 1
+  }, 8, ["onLayout"]), _ctx.overcountKey ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", ResultTablevue_type_template_id_82588702_hoisted_15, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.overcountKey)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("p", ResultTablevue_type_template_id_82588702_hoisted_16, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.rowCountKey(_ctx.dataRows.length), _ctx.formatNumber(_ctx.dataRows.length))), 1), _ctx.dataRows.length >= _ctx.state.limit ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", ResultTablevue_type_template_id_82588702_hoisted_17, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_LimitReached')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
 }
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ResultTable.vue?vue&type=template&id=24e8b3eb
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ResultTable.vue?vue&type=template&id=82588702
 
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/format.ts
 /*!
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
-const RATES = ['bounce_rate', 'conversion_rate'];
+
 /**
  * An hour as a time of day: Matomo's hour labels are bare numbers in some languages ("14" in
  * English with a 24-hour clock), which do not read as a time; those become "14:00". Labels such
@@ -2409,14 +3065,15 @@ function formatDay(value, language, full = false) {
     return value;
   }
 }
+/** By the metric's unit: rates in percent, money in the website's currency, seconds as time. */
 function formatMetric(metricId, value, f) {
-  if (RATES.includes(metricId)) {
+  if (isRate(metricId)) {
     return f.percent(Math.round(value * 10000) / 100);
   }
-  if (metricId === 'revenue') {
+  if (isMoney(metricId)) {
     return f.currency(value);
   }
-  if (metricId === 'avg_time_on_site') {
+  if (isSeconds(metricId)) {
     return f.duration(value);
   }
   return f.number(value);
@@ -2438,7 +3095,7 @@ function rowCountKey(count) {
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
-const LABEL_COLUMNS = ['label', 'secondary_label'];
+
 /** A sorted copy, by the visible label: case-insensitive, numbers in natural order. */
 function sortByLabel(rows, column, order, locale) {
   const direction = order === 'asc' ? 1 : -1;
@@ -2622,57 +3279,201 @@ function RowMenuvue_type_template_id_3a25e4fc_render(_ctx, _cache, $props, $setu
 RowMenuvue_type_script_lang_ts.render = RowMenuvue_type_template_id_3a25e4fc_render
 
 /* harmony default export */ var RowMenu = (RowMenuvue_type_script_lang_ts);
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/TableScroller.vue?vue&type=template&id=4d66cb14
+
+function TableScrollervue_type_template_id_4d66cb14_render(_ctx, _cache, $props, $setup, $data, $options) {
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", {
+    class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(["fwde-table__frame", {
+      'fwde-table__frame--more-left': _ctx.edges.left,
+      'fwde-table__frame--more-right': _ctx.edges.right
+    }])
+  }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", {
+    ref: "scroller",
+    class: "fwde-table__scroller",
+    onScrollPassive: _cache[0] || (_cache[0] = (...args) => _ctx.measure && _ctx.measure(...args))
+  }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderSlot"])(_ctx.$slots, "default")], 544)], 2);
+}
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/TableScroller.vue?vue&type=template&id=4d66cb14
+
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/scrollEdges.ts
+/*!
+ * Matomo - free/libre analytics platform
+ * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
+ */
+/**
+ * Which sides of a box hide content, from its scroll position and widths (pixels). A pixel of
+ * rounding counts as nothing hidden, so a table that just fits shows no shadow.
+ */
+function scrollEdges(scrollLeft, clientWidth, scrollWidth) {
+  const hidden = scrollWidth - clientWidth;
+  if (hidden <= 1) {
+    return {
+      left: false,
+      right: false
+    };
+  }
+  return {
+    left: scrollLeft > 1,
+    right: scrollLeft < hidden - 1
+  };
+}
+/**
+ * Whether a table with two dimensions shows its first one at its natural width (as wide as its
+ * longest value, so the second sits right next to it and takes the free width; Peter, 2026-11-23)
+ * or lets long values shrink (the look when room is short). A table that does not fit in natural
+ * width shrinks; one that shrank tries the natural width again only when its box gets wider, so
+ * the two never alternate.
+ */
+function roomyAfter(roomy, natural, layout, lastWidth) {
+  if (layout.overflow && natural) {
+    return false;
+  }
+  if (!roomy && layout.width > lastWidth + 1) {
+    return true;
+  }
+  return roomy;
+}
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/TableScroller.vue?vue&type=script&lang=ts
+
+
+/* harmony default export */ var TableScrollervue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
+  emits: ['layout'],
+  data() {
+    return {
+      edges: {
+        left: false,
+        right: false
+      },
+      /** the last layout reported ("overflow|width") */
+      reported: '',
+      observer: null
+    };
+  },
+  mounted() {
+    window.addEventListener('resize', this.measure);
+    if (typeof ResizeObserver !== 'undefined') {
+      this.observer = new ResizeObserver(() => this.measure());
+      const scroller = this.$refs.scroller;
+      this.observer.observe(scroller);
+      if (scroller.firstElementChild) {
+        this.observer.observe(scroller.firstElementChild);
+      }
+    }
+    this.measure();
+  },
+  updated() {
+    this.measure();
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.measure);
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+  },
+  methods: {
+    measure() {
+      const scroller = this.$refs.scroller;
+      if (!scroller) {
+        return;
+      }
+      const next = scrollEdges(scroller.scrollLeft, scroller.clientWidth, scroller.scrollWidth);
+      if (next.left !== this.edges.left || next.right !== this.edges.right) {
+        this.edges = next;
+      }
+      const layout = {
+        overflow: scroller.scrollWidth - scroller.clientWidth > 1,
+        width: scroller.clientWidth
+      };
+      const key = `${layout.overflow}|${layout.width}`;
+      if (key !== this.reported) {
+        this.reported = key;
+        this.$emit('layout', layout);
+      }
+    }
+  }
+}));
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/TableScroller.vue?vue&type=script&lang=ts
+ 
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/TableScroller.vue
+
+
+
+TableScrollervue_type_script_lang_ts.render = TableScrollervue_type_template_id_4d66cb14_render
+
+/* harmony default export */ var TableScroller = (TableScrollervue_type_script_lang_ts);
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/rows.ts
+
 
 /**
  * The value a filter on the row's dimension matches: the stored value the API sends for
  * dimensions filtered on it (the label is URL- and HTML-decoded), else the label.
  */
-function filterValue(row, dimension) {
-  const stored = dimension === 1 ? row.fwde_value : row.fwde_value2;
+function filterValue(row, index) {
+  const stored = row[STORED_VALUES[index]];
   if (stored !== undefined && stored !== null) {
     return String(stored);
   }
-  return String(dimension === 1 ? row.label : row.secondary_label);
+  return String(row[LABEL_COLUMNS[index]]);
+}
+/** The label columns the row has, in order: one per row dimension. */
+function rowLabelIndexes(row, dimensionCount) {
+  return LABEL_COLUMNS.map((_, i) => i).filter(i => i === 0 || i < dimensionCount && row[LABEL_COLUMNS[i]] !== undefined);
+}
+/** The row's dimension values as "equals" conditions of the given group. */
+function rowConditions(state, row, group) {
+  return rowLabelIndexes(row, state.dimensions.length).map(i => ({
+    target: LABEL_COLUMNS[i],
+    operator: 'equals',
+    value: filterValue(row, i),
+    group
+  }));
 }
 /**
- * The filters after "filter to this row": the row's dimension values as "equals" filters, in
- * place of filters on the same columns; the oldest filters give way when more than five.
+ * The conditions of one "all" list after "filter to this row": the row's dimension values as
+ * "equals" conditions, in place of conditions on the same columns; the oldest give way at the
+ * limit.
  */
 function filtersForRow(state, row) {
-  const added = [{
-    target: 'label',
-    operator: 'equals',
-    value: filterValue(row, 1)
-  }];
-  if (state.dimensions.length > 1 && row.secondary_label !== undefined) {
-    added.push({
-      target: 'secondary_label',
-      operator: 'equals',
-      value: filterValue(row, 2)
-    });
-  }
+  const added = rowConditions(state, row, 0);
   const targets = added.map(f => f.target);
-  const kept = state.filters.filter(f => !targets.includes(f.target));
+  const kept = state.filters.filter(f => !targets.includes(f.target)).map(f => Object.assign(Object.assign({}, f), {}, {
+    group: 0
+  }));
   return [...kept, ...added].slice(-MAX_FILTERS);
 }
 /**
- * The filters and match after "filter to this value" or "break down": with "match all" the row
- * joins the filters (filtersForRow); with "match any" another filter would widen the table, so the
- * row's own filters replace them and the match goes back to "all".
+ * The filters after "filter to this value" or "break down" (filter groups, 2026-11-23): one "all"
+ * list (or one condition) takes the row in (filtersForRow); with groups joined by "all", or one
+ * "any" group, the row becomes a group of its own: "(A or B) and the row"; with groups joined by
+ * "any", or when a new group would pass the limits, the row's conditions replace the filters
+ * (another group would widen the table).
  */
 function rowFilterState(state, row) {
-  // one filter matches the same with "all" or "any" (the switch shows only from two on): keep it
-  if (state.match !== 'any' || state.filters.length < 2) {
+  const groups = groupsOf(state.filters, state.groupMatch);
+  const oneList = groups.length === 1 && (groups[0].match === 'all' || groups[0].filters.length < 2);
+  if (groups.length === 0 || oneList) {
     return {
       filters: filtersForRow(state, row),
+      groupMatch: ['all'],
+      match: 'all'
+    };
+  }
+  const added = rowConditions(state, row, groups.length);
+  const fits = groups.length < MAX_GROUPS && state.filters.length + added.length <= MAX_FILTERS;
+  if (state.match === 'all' && fits) {
+    // the groups renumbered in order, the row's group after them
+    const filters = groups.flatMap((group, i) => group.filters.map(f => Object.assign(Object.assign({}, f), {}, {
+      group: i
+    })));
+    return {
+      filters: [...filters, ...added],
+      groupMatch: [...groups.map(group => group.match), 'all'],
       match: 'all'
     };
   }
   return {
-    filters: filtersForRow(Object.assign(Object.assign({}, state), {}, {
-      filters: []
-    }), row),
+    filters: rowConditions(state, row, 0),
+    groupMatch: ['all'],
     match: 'all'
   };
 }
@@ -2684,10 +3485,7 @@ function canFilterTo(row) {
   if (row.fwde_no_value) {
     return false;
   }
-  const values = [filterValue(row, 1)];
-  if (row.secondary_label !== undefined) {
-    values.push(filterValue(row, 2));
-  }
+  const values = rowLabelIndexes(row, LABEL_COLUMNS.length).map(i => filterValue(row, i));
   return values.every(value => value.length <= MAX_FILTER_TEXT);
 }
 /** The visits of a row within the page's segment, or null when the row has no segment. */
@@ -2768,20 +3566,25 @@ function headAndTail(label, tail = 14) {
   return [chars.slice(0, chars.length - tail).join('').replace(/ $/, '\u00a0'), chars.slice(chars.length - tail).join('').replace(/^ /, '\u00a0')];
 }
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/additivity.ts
+
 /**
  * Whether the rows of a table add up to its total (design 2026-11-20): every counted unit of
  * every chosen metric belongs to exactly one row. Only then an "Others" row and a donut are exact;
  * otherwise the table shows a hint. The same rule as Engine/Additivity.php.
  */
-const NEVER_ADDING_UP = {
+/** what a distinct count counts (it can fall into several rows whatever the dimensions) */
+const DISTINCT_UNIT = {
   nb_uniq_visitors: 'visitor',
   nb_uniq_pageviews: 'visit'
 };
 /** The unit that can count in several rows, null when the rows add up. */
 function overcountUnit(state, catalog) {
-  const never = state.metrics.find(id => NEVER_ADDING_UP[id]);
-  if (never) {
-    return NEVER_ADDING_UP[never];
+  const distinct = state.metrics.find(id => {
+    var _metricMeta;
+    return ((_metricMeta = metricMeta(id)) === null || _metricMeta === void 0 ? void 0 : _metricMeta.aggregation) === 'distinct';
+  });
+  if (distinct) {
+    return DISTINCT_UNIT[distinct] || 'visit';
   }
   const dimensions = state.dimensions.map(id => catalog.dimensions.find(d => d.id === id));
   const metrics = state.metrics.map(id => catalog.metrics.find(m => m.id === id));
@@ -2796,9 +3599,460 @@ function overcountUnit(state, catalog) {
 function addsUp(state, catalog) {
   return overcountUnit(state, catalog) === null;
 }
+/**
+ * Whether a count of the table can add up to more than its Total across the pivot's values (rows
+ * and pivot, 2026-11-24): a distinct count, or a visit count under a pivot that a visit can have
+ * several values of (an action dimension, or a time dimension read at the action time). Rates and
+ * averages never add up and need no hint. The same rule as Additivity::addsUpAcross.
+ */
+function pivotOvercounts(state, catalog) {
+  const pivot = catalog.dimensions.find(d => d.id === state.pivot);
+  if (!pivot) {
+    return false;
+  }
+  const dimensions = state.dimensions.map(id => catalog.dimensions.find(d => d.id === id));
+  const metrics = state.metrics.map(id => catalog.metrics.find(m => m.id === id));
+  const actionTable = pivot.scope === 'action' || dimensions.some(d => (d === null || d === void 0 ? void 0 : d.scope) === 'action') || metrics.some(m => (m === null || m === void 0 ? void 0 : m.scope) === 'action');
+  const perAction = pivot.scope === 'action' || actionTable && pivot.group === 'time';
+  return state.metrics.some(id => {
+    const meta = metricMeta(id);
+    if ((meta === null || meta === void 0 ? void 0 : meta.aggregation) === 'distinct') {
+      return true;
+    }
+    if (meta && meta.aggregation !== 'sum') {
+      return false;
+    }
+    const metric = catalog.metrics.find(m => m.id === id);
+    return perAction && !!metric && metric.scope !== 'action';
+  });
+}
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ResultTable.vue?vue&type=script&lang=ts
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* harmony default export */ var ResultTablevue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
+  components: {
+    RowMenu: RowMenu,
+    TableScroller: TableScroller
+  },
+  props: {
+    rows: {
+      type: Array,
+      required: true
+    },
+    state: {
+      type: Object,
+      required: true
+    },
+    catalog: {
+      type: Object,
+      required: true
+    },
+    actionScope: {
+      type: Boolean,
+      required: true
+    },
+    currencySymbol: {
+      type: String,
+      required: true
+    },
+    /** Matomo's visits log is on for this site */
+    visitsLogEnabled: {
+      type: Boolean,
+      default: false
+    },
+    /** rows were cut (row limit reached or a number filter): the exact rest can be asked for */
+    cut: {
+      type: Boolean,
+      default: false
+    },
+    /** the exact rest by metric id ("Others", on demand), null until calculated */
+    others: {
+      type: Object,
+      default: null
+    },
+    othersState: {
+      type: String,
+      default: 'idle'
+    }
+  },
+  emits: ['sort', 'row-filter', 'row-breakdown', 'row-visits', 'others-calculate'],
+  data() {
+    return {
+      MAX_DIMENSIONS: MAX_DIMENSIONS,
+      /** two dimensions: the first at its natural width while the table fits (Peter, 2026-11-23) */
+      roomy: true,
+      /** the scroller's last width; a shrunk table tries again only when it widens */
+      boxWidth: 0
+    };
+  },
+  computed: {
+    /** "Others" only below a cut table whose rows add up (design 2026-11-20) */
+    showOthers() {
+      // the server may find no rest after all (a final answer without values): then no row
+      const noRest = this.othersState === 'done' && !this.others;
+      return this.cut && !noRest && addsUp(this.state, this.catalog);
+    },
+    dimensionColumns() {
+      return this.columns.filter(column => !column.isMetric);
+    },
+    metricColumns() {
+      return this.columns.filter(column => column.isMetric);
+    },
+    /** why the rows can add up to more than the total (design 2026-11-20), '' when they add up */
+    overcountKey() {
+      const unit = overcountUnit(this.state, this.catalog);
+      if (!unit) {
+        return '';
+      }
+      return unit === 'visitor' ? 'FeinwerkDataExploration_OvercountHintVisitor' : 'FeinwerkDataExploration_OvercountHintVisit';
+    },
+    columns() {
+      const dimensionName = id => {
+        var _this$catalog$dimensi;
+        return ((_this$catalog$dimensi = this.catalog.dimensions.find(d => d.id === id)) === null || _this$catalog$dimensi === void 0 ? void 0 : _this$catalog$dimensi.name) || id;
+      };
+      const columns = this.state.dimensions.map((id, i) => ({
+        key: LABEL_COLUMNS[i],
+        label: dimensionName(id),
+        isMetric: false
+      }));
+      this.state.metrics.forEach(id => {
+        const metric = this.catalog.metrics.find(m => m.id === id);
+        const label = metric && this.actionScope && metric.nameInActionScope ? metric.nameInActionScope : (metric === null || metric === void 0 ? void 0 : metric.name) || id;
+        columns.push({
+          key: id,
+          label,
+          isMetric: true
+        });
+      });
+      return columns;
+    },
+    /**
+     * With two dimensions and only short values in the first one, the first column is only as
+     * wide as its values: the free width goes behind the second dimension, so both dimensions stay
+     * together on the left (Peter, 2026-11-17). A first dimension with long values (page URLs)
+     * keeps the free width, it needs it.
+     */
+    firstDimensionFits() {
+      return this.state.dimensions.length > 1 && this.rows.every(row => headAndTail(String(row.label))[1] === '');
+    },
+    /**
+     * the first of two dimension columns is only as wide as its values: always for short values,
+     * for long ones while the table has room; the second dimension then takes the free width
+     */
+    firstColumnFits() {
+      return this.state.dimensions.length > 1 && (this.firstDimensionFits || this.roomy);
+    },
+    /** long first values shown on one line at their natural width (up to the usual 32em) */
+    naturalFirst() {
+      return this.state.dimensions.length > 1 && !this.firstDimensionFits && this.roomy;
+    },
+    /** the key of the last dimension column: a line separates the dimensions from the metrics */
+    lastDimension() {
+      return LABEL_COLUMNS[this.state.dimensions.length - 1];
+    },
+    /** what each count's bar is measured against: the column's largest value (not the sorting) */
+    barMaxima() {
+      const maxima = {};
+      this.state.metrics.filter(id => hasShare(id)).forEach(id => {
+        maxima[id] = barMaximum(this.dataRows, [id]);
+      });
+      return maxima;
+    },
+    /** the rows without a total row: one stays from a comparison until the new result arrives */
+    dataRows() {
+      return this.rows.filter(row => !row.fwde_total);
+    },
+    sortedRows() {
+      if (!shouldSortClientSide(this.dataRows.length, this.state.limit, this.state.sort)) {
+        return this.dataRows;
+      }
+      return sortByLabel(this.dataRows, this.state.sort, this.state.sortOrder, external_CoreHome_["Matomo"].language);
+    },
+    formatters() {
+      return {
+        number: v => external_CoreHome_["NumberFormatter"].formatNumber(v, 2, 0),
+        percent: v => external_CoreHome_["NumberFormatter"].formatPercent(v, 2, 0),
+        currency: v => external_CoreHome_["NumberFormatter"].formatCurrency(v, this.currencySymbol, 2, 2),
+        duration: v => formatDuration(v)
+      };
+    }
+  },
+  watch: {
+    // a new result tries the natural width again
+    rows() {
+      this.roomy = true;
+    }
+  },
+  methods: {
+    onLayout(layout) {
+      this.roomy = roomyAfter(this.roomy, this.naturalFirst, layout, this.boxWidth);
+      this.boxWidth = layout.width;
+    },
+    /** head (0) or tail (1) of a dimension value, shortened in the middle by the stylesheet */
+    labelPart(value, part) {
+      return headAndTail(String(value))[part];
+    },
+    /** a long value (with a tail) may shrink when the table runs out of room; a short one never */
+    ellipsisClasses(value) {
+      return {
+        'fwde-ellipsis': true,
+        'fwde-ellipsis--long': headAndTail(String(value))[1] !== ''
+      };
+    },
+    /** the cell's bar behind a count or sum; null for rates, averages and empty values */
+    barStyle(metricId, row) {
+      if (!(metricId in this.barMaxima)) {
+        return null;
+      }
+      const width = cellBarWidth(row[metricId], this.barMaxima[metricId]);
+      return width === null ? null : {
+        '--fwde-bar': `${width}%`
+      };
+    },
+    rowLabel(row) {
+      return LABEL_COLUMNS.filter(column => row[column] !== undefined).map(column => String(row[column])).join(' · ');
+    },
+    filterReason(row) {
+      return canFilterTo(row) ? '' : Object(external_CoreHome_["translate"])('FeinwerkDataExploration_NoFilterForRow');
+    },
+    visitsReason(row) {
+      if (!this.visitsLogEnabled) {
+        return Object(external_CoreHome_["translate"])('FeinwerkDataExploration_VisitsLogDisabled');
+      }
+      return row.segment ? '' : Object(external_CoreHome_["translate"])('FeinwerkDataExploration_NoVisitsForRow');
+    },
+    translate: external_CoreHome_["translate"],
+    rowCountKey: rowCountKey,
+    formatNumber(value) {
+      return external_CoreHome_["NumberFormatter"].formatNumber(value, 0, 0);
+    },
+    format(metricId, value) {
+      return formatMetric(metricId, Number(value), this.formatters);
+    },
+    /** a rate or average of an empty rest has no value: an empty cell, not "0 %" */
+    formatRest(metricId, value) {
+      return value === null || value === undefined ? '' : this.format(metricId, value);
+    },
+    ariaSort(key) {
+      if (this.state.sort !== key) {
+        return 'none';
+      }
+      return this.state.sortOrder === 'asc' ? 'ascending' : 'descending';
+    }
+  }
+}));
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ResultTable.vue?vue&type=script&lang=ts
+ 
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ResultTable.vue
+
+
+
+ResultTablevue_type_script_lang_ts.render = ResultTablevue_type_template_id_82588702_render
+
+/* harmony default export */ var ResultTable = (ResultTablevue_type_script_lang_ts);
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/CompareTable.vue?vue&type=template&id=955e3b2c
+
+const CompareTablevue_type_template_id_955e3b2c_hoisted_1 = {
+  class: "fwde-table fwde-compare"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_2 = ["colspan", "aria-sort"];
+const CompareTablevue_type_template_id_955e3b2c_hoisted_3 = ["title", "onClick"];
+const CompareTablevue_type_template_id_955e3b2c_hoisted_4 = {
+  class: "fwde-table__menu",
+  rowspan: "2"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_5 = {
+  class: "fwde-visually-hidden"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_6 = ["title"];
+const CompareTablevue_type_template_id_955e3b2c_hoisted_7 = ["data-name"];
+const CompareTablevue_type_template_id_955e3b2c_hoisted_8 = {
+  class: "fwde-compare__segment"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_9 = {
+  key: 0,
+  class: "fwde-compare__period"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_10 = {
+  key: 0,
+  class: "fwde-compare__total"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_11 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", {
+  class: "fwde-table__menu"
+}, null, -1);
+const CompareTablevue_type_template_id_955e3b2c_hoisted_12 = ["title"];
+const CompareTablevue_type_template_id_955e3b2c_hoisted_13 = {
+  class: "fwde-ellipsis__head"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_14 = {
+  class: "fwde-ellipsis__tail"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_15 = {
+  class: "fwde-compare__value"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_16 = {
+  key: 0,
+  class: "fwde-compare__extra"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_17 = {
+  class: "fwde-table__menu"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_18 = {
+  key: 0,
+  class: "fwde-table__overcount"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_19 = {
+  class: "fwde-table__footer"
+};
+const CompareTablevue_type_template_id_955e3b2c_hoisted_20 = {
+  key: 1,
+  class: "fwde-table__limit"
+};
+function CompareTablevue_type_template_id_955e3b2c_render(_ctx, _cache, $props, $setup, $data, $options) {
+  const _component_RowMenu = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("RowMenu");
+  const _component_TableScroller = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("TableScroller");
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", CompareTablevue_type_template_id_955e3b2c_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_TableScroller, {
+    onLayout: _ctx.onLayout
+  }, {
+    default: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withCtx"])(() => [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("table", {
+      class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(["dataTable fwde-table__table fwde-compare__table", {
+        'fwde-table__table--natural': _ctx.naturalFirst
+      }])
+    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("thead", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tr", null, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.dimensionColumns, dimension => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("th", {
+        key: dimension.key,
+        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+          label: true,
+          'fwde-table__dimension': true,
+          'fwde-table__dimension-last': dimension.key === _ctx.lastDimension,
+          'fwde-table__dimension--fit': dimension.key === 'label' && _ctx.firstColumnFits
+        }),
+        rowspan: "2"
+      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(dimension.label), 3);
+    }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.metricColumns, metric => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("th", {
+        key: metric.key,
+        colspan: _ctx.columns.length,
+        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+          'fwde-compare__group': true,
+          sortable: true,
+          columnSorted: _ctx.state.sort === metric.key
+        }),
+        "aria-sort": _ctx.ariaSort(metric.key)
+      }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+        type: "button",
+        class: "fwde-table__sort",
+        title: _ctx.translate('FeinwerkDataExploration_SortBy', metric.label),
+        onClick: $event => _ctx.$emit('sort', metric.key)
+      }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(metric.label), 1), _ctx.state.sort === metric.key ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", {
+        key: 0,
+        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(`sortIcon ${_ctx.state.sortOrder}`),
+        "aria-hidden": "true"
+      }, null, 2)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 8, CompareTablevue_type_template_id_955e3b2c_hoisted_3)], 10, CompareTablevue_type_template_id_955e3b2c_hoisted_2);
+    }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", CompareTablevue_type_template_id_955e3b2c_hoisted_4, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", CompareTablevue_type_template_id_955e3b2c_hoisted_5, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_RowActions')), 1)])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tr", null, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.metricColumns, metric => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+        key: metric.key
+      }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.columns, (column, n) => {
+        return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("th", {
+          key: `${metric.key}-${n}`,
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+            'fwde-table__number': true,
+            'fwde-compare__column': true,
+            'fwde-compare__group-start': n === 0
+          }),
+          title: column.title
+        }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(_ctx.dotClasses(n)),
+          "data-name": _ctx.dotName(n),
+          "aria-hidden": "true"
+        }, null, 10, CompareTablevue_type_template_id_955e3b2c_hoisted_7), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", CompareTablevue_type_template_id_955e3b2c_hoisted_8, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(column.segmentTitle || column.title), 1), column.periodTitle ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", CompareTablevue_type_template_id_955e3b2c_hoisted_9, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(column.periodTitle), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 10, CompareTablevue_type_template_id_955e3b2c_hoisted_6);
+      }), 128))], 64);
+    }), 128))])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tbody", null, [_ctx.total ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("tr", CompareTablevue_type_template_id_955e3b2c_hoisted_10, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.dimensionColumns, dimension => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+        key: dimension.key,
+        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+          label: true,
+          'fwde-table__label': true,
+          'fwde-table__dimension': true,
+          'fwde-table__dimension-last': dimension.key === _ctx.lastDimension,
+          'fwde-table__dimension--fit': dimension.key === 'label' && _ctx.firstColumnFits
+        })
+      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(dimension.key === 'label' ? _ctx.total.label : ''), 3);
+    }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.metricColumns, metric => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+        key: metric.key
+      }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.columns, (column, n) => {
+        return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+          key: `${metric.key}-${n}`,
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+            'fwde-table__number': true,
+            'fwde-compare__cell': true,
+            'fwde-compare__group-start': n === 0
+          })
+        }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.columnErrors[n] ? '' : _ctx.value(_ctx.total, metric.key, n)), 3);
+      }), 128))], 64);
+    }), 128)), CompareTablevue_type_template_id_955e3b2c_hoisted_11])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.sortedRows, (row, index) => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("tr", {
+        key: index
+      }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.dimensionColumns, dimension => {
+        return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+          key: dimension.key,
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+            label: true,
+            'fwde-table__label': true,
+            'fwde-table__dimension': true,
+            'fwde-table__dimension-last': dimension.key === _ctx.lastDimension,
+            'fwde-table__dimension--fit': dimension.key === 'label' && _ctx.firstColumnFits
+          }),
+          title: String(row[dimension.key])
+        }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(_ctx.ellipsisClasses(row[dimension.key]))
+        }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", CompareTablevue_type_template_id_955e3b2c_hoisted_13, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.labelPart(row[dimension.key], 0)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", CompareTablevue_type_template_id_955e3b2c_hoisted_14, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.labelPart(row[dimension.key], 1)), 1)], 2)], 10, CompareTablevue_type_template_id_955e3b2c_hoisted_12);
+      }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.metricColumns, metric => {
+        return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+          key: metric.key
+        }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.columns, (column, n) => {
+          return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+            key: `${metric.key}-${n}`,
+            class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+              'fwde-table__number': true,
+              'fwde-compare__cell': true,
+              'fwde-compare__group-start': n === 0,
+              'fwde-cellbar': _ctx.barStyle(row, metric.key, n) !== null
+            }),
+            style: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeStyle"])(_ctx.barStyle(row, metric.key, n) || undefined)
+          }, [!_ctx.columnErrors[n] ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+            key: 0
+          }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", CompareTablevue_type_template_id_955e3b2c_hoisted_15, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.value(row, metric.key, n)), 1), _ctx.extra(row, metric.key, column, n) ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", CompareTablevue_type_template_id_955e3b2c_hoisted_16, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.extra(row, metric.key, column, n)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 64)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 6);
+        }), 128))], 64);
+      }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", CompareTablevue_type_template_id_955e3b2c_hoisted_17, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_RowMenu, {
+        label: _ctx.rowLabel(row),
+        "can-break-down": _ctx.state.dimensions.length < _ctx.MAX_DIMENSIONS,
+        "visits-reason": _ctx.visitsReason(row),
+        "filter-reason": _ctx.filterReason(row),
+        onFilter: $event => _ctx.$emit('row-filter', row),
+        onBreakdown: $event => _ctx.$emit('row-breakdown', row),
+        onVisits: $event => _ctx.$emit('row-visits', row)
+      }, null, 8, ["label", "can-break-down", "visits-reason", "filter-reason", "onFilter", "onBreakdown", "onVisits"])])]);
+    }), 128))])], 2)]),
+    _: 1
+  }, 8, ["onLayout"]), _ctx.overcountKey ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", CompareTablevue_type_template_id_955e3b2c_hoisted_18, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.overcountKey)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("p", CompareTablevue_type_template_id_955e3b2c_hoisted_19, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.rowCountKey(_ctx.dataRows.length), _ctx.formatNumber(_ctx.dataRows.length))), 1), _ctx.dataRows.length >= _ctx.state.limit ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", CompareTablevue_type_template_id_955e3b2c_hoisted_20, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_LimitReached')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
+}
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/CompareTable.vue?vue&type=template&id=955e3b2c
+
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/comparison.ts
-/** Counts and sums: a share of the column total makes sense (ComparisonTable::SHARE_METRICS). */
-const SHARE_METRICS = ['nb_visits', 'nb_uniq_visitors', 'nb_actions', 'nb_conversions', 'revenue', 'nb_pageviews', 'nb_uniq_pageviews', 'nb_events', 'sum_event_value', 'nb_downloads', 'nb_outlinks', 'nb_searches'];
 /**
  * The table's columns in Matomo's order (periods outer, segments inner), at most maxColumns; cut
  * tells the page to show the limit hint. A segment Matomo has no name for (its title is
@@ -2868,11 +4122,11 @@ function changeKey(metric, n) {
 }
 /** The total row, or the row's keys from the API (labels are not unique, e.g. "Unknown"). */
 function rowKey(row) {
-  var _row$secondary_label;
+  var _row$secondary_label, _row$tertiary_label;
   if (row.fwde_total) {
     return '\u0000total';
   }
-  return typeof row.fwde_key === 'string' ? row.fwde_key : `${row.label}\u0000${(_row$secondary_label = row.secondary_label) !== null && _row$secondary_label !== void 0 ? _row$secondary_label : ''}`;
+  return typeof row.fwde_key === 'string' ? row.fwde_key : `${row.label}\u0000${(_row$secondary_label = row.secondary_label) !== null && _row$secondary_label !== void 0 ? _row$secondary_label : ''}\u0000${(_row$tertiary_label = row.tertiary_label) !== null && _row$tertiary_label !== void 0 ? _row$tertiary_label : ''}`;
 }
 /**
  * The rows with the response's first comparison column (…__c1) as column n, matched by the rows'
@@ -2937,394 +4191,12 @@ function requestColumns(indices, request, latest, onColumn, onError) {
     });
   }), Promise.resolve());
 }
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ResultTable.vue?vue&type=script&lang=ts
-
-
-
-
-
-
-
-
-
-/* harmony default export */ var ResultTablevue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
-  components: {
-    RowMenu: RowMenu
-  },
-  props: {
-    rows: {
-      type: Array,
-      required: true
-    },
-    state: {
-      type: Object,
-      required: true
-    },
-    catalog: {
-      type: Object,
-      required: true
-    },
-    actionScope: {
-      type: Boolean,
-      required: true
-    },
-    currencySymbol: {
-      type: String,
-      required: true
-    },
-    /** Matomo's visits log is on for this site */
-    visitsLogEnabled: {
-      type: Boolean,
-      default: false
-    },
-    /** rows were cut (row limit reached or a number filter): the exact rest can be asked for */
-    cut: {
-      type: Boolean,
-      default: false
-    },
-    /** the exact rest by metric id ("Others", on demand), null until calculated */
-    others: {
-      type: Object,
-      default: null
-    },
-    othersState: {
-      type: String,
-      default: 'idle'
-    }
-  },
-  emits: ['sort', 'row-filter', 'row-breakdown', 'row-visits', 'others-calculate'],
-  computed: {
-    /** "Others" only below a cut table whose rows add up (design 2026-11-20) */
-    showOthers() {
-      // the server may find no rest after all (a final answer without values): then no row
-      const noRest = this.othersState === 'done' && !this.others;
-      return this.cut && !noRest && addsUp(this.state, this.catalog);
-    },
-    dimensionColumns() {
-      return this.columns.filter(column => !column.isMetric);
-    },
-    metricColumns() {
-      return this.columns.filter(column => column.isMetric);
-    },
-    /** why the rows can add up to more than the total (design 2026-11-20), '' when they add up */
-    overcountKey() {
-      const unit = overcountUnit(this.state, this.catalog);
-      if (!unit) {
-        return '';
-      }
-      return unit === 'visitor' ? 'FeinwerkDataExploration_OvercountHintVisitor' : 'FeinwerkDataExploration_OvercountHintVisit';
-    },
-    columns() {
-      const dimensionName = id => {
-        var _this$catalog$dimensi;
-        return ((_this$catalog$dimensi = this.catalog.dimensions.find(d => d.id === id)) === null || _this$catalog$dimensi === void 0 ? void 0 : _this$catalog$dimensi.name) || id;
-      };
-      const columns = this.state.dimensions.map((id, i) => ({
-        key: i === 0 ? 'label' : 'secondary_label',
-        label: dimensionName(id),
-        isMetric: false
-      }));
-      this.state.metrics.forEach(id => {
-        const metric = this.catalog.metrics.find(m => m.id === id);
-        const label = metric && this.actionScope && metric.nameInActionScope ? metric.nameInActionScope : (metric === null || metric === void 0 ? void 0 : metric.name) || id;
-        columns.push({
-          key: id,
-          label,
-          isMetric: true
-        });
-      });
-      return columns;
-    },
-    /**
-     * With two dimensions and only short values in the first one, the first column is only as
-     * wide as its values: the free width goes behind the second dimension, so both dimensions stay
-     * together on the left (Peter, 2026-11-17). A first dimension with long values (page URLs)
-     * keeps the free width, it needs it.
-     */
-    firstDimensionFits() {
-      return this.state.dimensions.length > 1 && this.rows.every(row => headAndTail(String(row.label))[1] === '');
-    },
-    /** the key of the last dimension column: a line separates the dimensions from the metrics */
-    lastDimension() {
-      return this.state.dimensions.length > 1 ? 'secondary_label' : 'label';
-    },
-    /** what each count's bar is measured against: the column's largest value (not the sorting) */
-    barMaxima() {
-      const maxima = {};
-      this.state.metrics.filter(id => SHARE_METRICS.includes(id)).forEach(id => {
-        maxima[id] = barMaximum(this.dataRows, [id]);
-      });
-      return maxima;
-    },
-    /** the rows without a total row: one stays from a comparison until the new result arrives */
-    dataRows() {
-      return this.rows.filter(row => !row.fwde_total);
-    },
-    sortedRows() {
-      if (!shouldSortClientSide(this.dataRows.length, this.state.limit, this.state.sort)) {
-        return this.dataRows;
-      }
-      return sortByLabel(this.dataRows, this.state.sort, this.state.sortOrder, external_CoreHome_["Matomo"].language);
-    },
-    formatters() {
-      return {
-        number: v => external_CoreHome_["NumberFormatter"].formatNumber(v, 2, 0),
-        percent: v => external_CoreHome_["NumberFormatter"].formatPercent(v, 2, 0),
-        currency: v => external_CoreHome_["NumberFormatter"].formatCurrency(v, this.currencySymbol, 2, 2),
-        duration: v => formatDuration(v)
-      };
-    }
-  },
-  methods: {
-    /** head (0) or tail (1) of a dimension value, shortened in the middle by the stylesheet */
-    labelPart(value, part) {
-      return headAndTail(String(value))[part];
-    },
-    /** a long value (with a tail) may shrink when the table runs out of room; a short one never */
-    ellipsisClasses(value) {
-      return {
-        'fwde-ellipsis': true,
-        'fwde-ellipsis--long': headAndTail(String(value))[1] !== ''
-      };
-    },
-    /** the cell's bar behind a count or sum; null for rates, averages and empty values */
-    barStyle(metricId, row) {
-      if (!(metricId in this.barMaxima)) {
-        return null;
-      }
-      const width = cellBarWidth(row[metricId], this.barMaxima[metricId]);
-      return width === null ? null : {
-        '--fwde-bar': `${width}%`
-      };
-    },
-    rowLabel(row) {
-      return row.secondary_label === undefined ? String(row.label) : `${row.label} · ${row.secondary_label}`;
-    },
-    filterReason(row) {
-      return canFilterTo(row) ? '' : Object(external_CoreHome_["translate"])('FeinwerkDataExploration_NoFilterForRow');
-    },
-    visitsReason(row) {
-      if (!this.visitsLogEnabled) {
-        return Object(external_CoreHome_["translate"])('FeinwerkDataExploration_VisitsLogDisabled');
-      }
-      return row.segment ? '' : Object(external_CoreHome_["translate"])('FeinwerkDataExploration_NoVisitsForRow');
-    },
-    translate: external_CoreHome_["translate"],
-    rowCountKey: rowCountKey,
-    formatNumber(value) {
-      return external_CoreHome_["NumberFormatter"].formatNumber(value, 0, 0);
-    },
-    format(metricId, value) {
-      return formatMetric(metricId, Number(value), this.formatters);
-    },
-    /** a rate or average of an empty rest has no value: an empty cell, not "0 %" */
-    formatRest(metricId, value) {
-      return value === null || value === undefined ? '' : this.format(metricId, value);
-    },
-    ariaSort(key) {
-      if (this.state.sort !== key) {
-        return 'none';
-      }
-      return this.state.sortOrder === 'asc' ? 'ascending' : 'descending';
-    }
-  }
-}));
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ResultTable.vue?vue&type=script&lang=ts
- 
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ResultTable.vue
-
-
-
-ResultTablevue_type_script_lang_ts.render = ResultTablevue_type_template_id_24e8b3eb_render
-
-/* harmony default export */ var ResultTable = (ResultTablevue_type_script_lang_ts);
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/CompareTable.vue?vue&type=template&id=0f6d4ced
-
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_1 = {
-  class: "fwde-table fwde-compare"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_2 = {
-  class: "fwde-table__scroller"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_3 = {
-  class: "dataTable fwde-table__table fwde-compare__table"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_4 = ["colspan", "aria-sort"];
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_5 = ["title", "onClick"];
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_6 = {
-  class: "fwde-table__menu",
-  rowspan: "2"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_7 = {
-  class: "fwde-visually-hidden"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_8 = ["title"];
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_9 = ["data-name"];
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_10 = {
-  class: "fwde-compare__segment"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_11 = {
-  key: 0,
-  class: "fwde-compare__period"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_12 = {
-  key: 0,
-  class: "fwde-compare__total"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_13 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", {
-  class: "fwde-table__menu"
-}, null, -1);
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_14 = ["title"];
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_15 = {
-  class: "fwde-ellipsis__head"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_16 = {
-  class: "fwde-ellipsis__tail"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_17 = {
-  class: "fwde-compare__value"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_18 = {
-  key: 0,
-  class: "fwde-compare__extra"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_19 = {
-  class: "fwde-table__menu"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_20 = {
-  key: 0,
-  class: "fwde-table__overcount"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_21 = {
-  class: "fwde-table__footer"
-};
-const CompareTablevue_type_template_id_0f6d4ced_hoisted_22 = {
-  key: 1,
-  class: "fwde-table__limit"
-};
-function CompareTablevue_type_template_id_0f6d4ced_render(_ctx, _cache, $props, $setup, $data, $options) {
-  const _component_RowMenu = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("RowMenu");
-  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", CompareTablevue_type_template_id_0f6d4ced_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", CompareTablevue_type_template_id_0f6d4ced_hoisted_2, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("table", CompareTablevue_type_template_id_0f6d4ced_hoisted_3, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("thead", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tr", null, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.dimensionColumns, dimension => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("th", {
-      key: dimension.key,
-      class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
-        label: true,
-        'fwde-table__dimension': true,
-        'fwde-table__dimension-last': dimension.key === _ctx.lastDimension,
-        'fwde-table__dimension--fit': dimension.key === 'label' && _ctx.firstDimensionFits
-      }),
-      rowspan: "2"
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(dimension.label), 3);
-  }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.metricColumns, metric => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("th", {
-      key: metric.key,
-      colspan: _ctx.columns.length,
-      class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
-        'fwde-compare__group': true,
-        sortable: true,
-        columnSorted: _ctx.state.sort === metric.key
-      }),
-      "aria-sort": _ctx.ariaSort(metric.key)
-    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
-      type: "button",
-      class: "fwde-table__sort",
-      title: _ctx.translate('FeinwerkDataExploration_SortBy', metric.label),
-      onClick: $event => _ctx.$emit('sort', metric.key)
-    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(metric.label), 1), _ctx.state.sort === metric.key ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", {
-      key: 0,
-      class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(`sortIcon ${_ctx.state.sortOrder}`),
-      "aria-hidden": "true"
-    }, null, 2)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 8, CompareTablevue_type_template_id_0f6d4ced_hoisted_5)], 10, CompareTablevue_type_template_id_0f6d4ced_hoisted_4);
-  }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", CompareTablevue_type_template_id_0f6d4ced_hoisted_6, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", CompareTablevue_type_template_id_0f6d4ced_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_RowActions')), 1)])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tr", null, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.metricColumns, metric => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
-      key: metric.key
-    }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.columns, (column, n) => {
-      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("th", {
-        key: `${metric.key}-${n}`,
-        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
-          'fwde-table__number': true,
-          'fwde-compare__column': true,
-          'fwde-compare__group-start': n === 0
-        }),
-        title: column.title
-      }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
-        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(_ctx.dotClasses(n)),
-        "data-name": _ctx.dotName(n),
-        "aria-hidden": "true"
-      }, null, 10, CompareTablevue_type_template_id_0f6d4ced_hoisted_9), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", CompareTablevue_type_template_id_0f6d4ced_hoisted_10, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(column.segmentTitle || column.title), 1), column.periodTitle ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", CompareTablevue_type_template_id_0f6d4ced_hoisted_11, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(column.periodTitle), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 10, CompareTablevue_type_template_id_0f6d4ced_hoisted_8);
-    }), 128))], 64);
-  }), 128))])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tbody", null, [_ctx.total ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("tr", CompareTablevue_type_template_id_0f6d4ced_hoisted_12, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.dimensionColumns, dimension => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
-      key: dimension.key,
-      class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
-        label: true,
-        'fwde-table__label': true,
-        'fwde-table__dimension': true,
-        'fwde-table__dimension-last': dimension.key === _ctx.lastDimension,
-        'fwde-table__dimension--fit': dimension.key === 'label' && _ctx.firstDimensionFits
-      })
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(dimension.key === 'label' ? _ctx.total.label : ''), 3);
-  }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.metricColumns, metric => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
-      key: metric.key
-    }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.columns, (column, n) => {
-      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
-        key: `${metric.key}-${n}`,
-        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
-          'fwde-table__number': true,
-          'fwde-compare__cell': true,
-          'fwde-compare__group-start': n === 0
-        })
-      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.columnErrors[n] ? '' : _ctx.value(_ctx.total, metric.key, n)), 3);
-    }), 128))], 64);
-  }), 128)), CompareTablevue_type_template_id_0f6d4ced_hoisted_13])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.sortedRows, (row, index) => {
-    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("tr", {
-      key: index
-    }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.dimensionColumns, dimension => {
-      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
-        key: dimension.key,
-        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
-          label: true,
-          'fwde-table__label': true,
-          'fwde-table__dimension': true,
-          'fwde-table__dimension-last': dimension.key === _ctx.lastDimension,
-          'fwde-table__dimension--fit': dimension.key === 'label' && _ctx.firstDimensionFits
-        }),
-        title: String(row[dimension.key])
-      }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
-        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(_ctx.ellipsisClasses(row[dimension.key]))
-      }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", CompareTablevue_type_template_id_0f6d4ced_hoisted_15, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.labelPart(row[dimension.key], 0)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", CompareTablevue_type_template_id_0f6d4ced_hoisted_16, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.labelPart(row[dimension.key], 1)), 1)], 2)], 10, CompareTablevue_type_template_id_0f6d4ced_hoisted_14);
-    }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.metricColumns, metric => {
-      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
-        key: metric.key
-      }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.columns, (column, n) => {
-        return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
-          key: `${metric.key}-${n}`,
-          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
-            'fwde-table__number': true,
-            'fwde-compare__cell': true,
-            'fwde-compare__group-start': n === 0,
-            'fwde-cellbar': _ctx.barStyle(row, metric.key, n) !== null
-          }),
-          style: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeStyle"])(_ctx.barStyle(row, metric.key, n) || undefined)
-        }, [!_ctx.columnErrors[n] ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
-          key: 0
-        }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", CompareTablevue_type_template_id_0f6d4ced_hoisted_17, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.value(row, metric.key, n)), 1), _ctx.extra(row, metric.key, column, n) ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", CompareTablevue_type_template_id_0f6d4ced_hoisted_18, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.extra(row, metric.key, column, n)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 64)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 6);
-      }), 128))], 64);
-    }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", CompareTablevue_type_template_id_0f6d4ced_hoisted_19, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_RowMenu, {
-      label: _ctx.rowLabel(row),
-      "can-break-down": _ctx.state.dimensions.length === 1,
-      "visits-reason": _ctx.visitsReason(row),
-      "filter-reason": _ctx.filterReason(row),
-      onFilter: $event => _ctx.$emit('row-filter', row),
-      onBreakdown: $event => _ctx.$emit('row-breakdown', row),
-      onVisits: $event => _ctx.$emit('row-visits', row)
-    }, null, 8, ["label", "can-break-down", "visits-reason", "filter-reason", "onFilter", "onBreakdown", "onVisits"])])]);
-  }), 128))])])]), _ctx.overcountKey ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", CompareTablevue_type_template_id_0f6d4ced_hoisted_20, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.overcountKey)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("p", CompareTablevue_type_template_id_0f6d4ced_hoisted_21, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.rowCountKey(_ctx.dataRows.length), _ctx.formatNumber(_ctx.dataRows.length))), 1), _ctx.dataRows.length >= _ctx.state.limit ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", CompareTablevue_type_template_id_0f6d4ced_hoisted_22, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_LimitReached')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
-}
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/CompareTable.vue?vue&type=template&id=0f6d4ced
-
 // CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/CompareTable.vue?vue&type=script&lang=ts
+
+
+
+
+
 
 
 
@@ -3343,7 +4215,8 @@ const SERIES_COLOURS = 10;
  */
 /* harmony default export */ var CompareTablevue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
   components: {
-    RowMenu: RowMenu
+    RowMenu: RowMenu,
+    TableScroller: TableScroller
   },
   props: {
     /** the total row (fwde_total) first, then the own rows */
@@ -3382,6 +4255,15 @@ const SERIES_COLOURS = 10;
     }
   },
   emits: ['sort', 'row-filter', 'row-breakdown', 'row-visits'],
+  data() {
+    return {
+      MAX_DIMENSIONS: MAX_DIMENSIONS,
+      /** two dimensions: the first at its natural width while the table fits (Peter, 2026-11-23) */
+      roomy: true,
+      /** the scroller's last width; a shrunk table tries again only when it widens */
+      boxWidth: 0
+    };
+  },
   computed: {
     /** why the rows can add up to more than the total (design 2026-11-20), '' when they add up */
     overcountKey() {
@@ -3397,7 +4279,7 @@ const SERIES_COLOURS = 10;
         return ((_this$catalog$dimensi = this.catalog.dimensions.find(d => d.id === id)) === null || _this$catalog$dimensi === void 0 ? void 0 : _this$catalog$dimensi.name) || id;
       };
       return this.state.dimensions.map((id, i) => ({
-        key: i === 0 ? 'label' : 'secondary_label',
+        key: LABEL_COLUMNS[i],
         label: name(id)
       }));
     },
@@ -3412,7 +4294,7 @@ const SERIES_COLOURS = 10;
       });
     },
     lastDimension() {
-      return this.state.dimensions.length > 1 ? 'secondary_label' : 'label';
+      return LABEL_COLUMNS[this.state.dimensions.length - 1];
     },
     /**
      * With two dimensions and only short values in the first one, the first column is only as
@@ -3424,12 +4306,23 @@ const SERIES_COLOURS = 10;
       return this.state.dimensions.length > 1 && this.rows.every(row => headAndTail(String(row.label))[1] === '');
     },
     /**
+     * the first of two dimension columns is only as wide as its values: always for short values,
+     * for long ones while the table has room; the second dimension then takes the free width
+     */
+    firstColumnFits() {
+      return this.state.dimensions.length > 1 && (this.firstDimensionFits || this.roomy);
+    },
+    /** long first values shown on one line at their natural width (up to the usual 32em) */
+    naturalFirst() {
+      return this.state.dimensions.length > 1 && !this.firstDimensionFits && this.roomy;
+    },
+    /**
      * What each count's bars are measured against: the metric's largest value in all its columns,
      * so a smaller segment shows smaller bars (sorting does not change it).
      */
     barMaxima() {
       const maxima = {};
-      this.state.metrics.filter(id => SHARE_METRICS.includes(id)).forEach(id => {
+      this.state.metrics.filter(id => hasShare(id)).forEach(id => {
         maxima[id] = barMaximum(this.rows, this.columns.map((_, n) => valueKey(id, n)));
       });
       return maxima;
@@ -3455,7 +4348,17 @@ const SERIES_COLOURS = 10;
       };
     }
   },
+  watch: {
+    // a new result tries the natural width again
+    rows() {
+      this.roomy = true;
+    }
+  },
   methods: {
+    onLayout(layout) {
+      this.roomy = roomyAfter(this.roomy, this.naturalFirst, layout, this.boxWidth);
+      this.boxWidth = layout.width;
+    },
     translate: external_CoreHome_["translate"],
     rowCountKey: rowCountKey,
     formatNumber(value) {
@@ -3479,7 +4382,7 @@ const SERIES_COLOURS = 10;
         return Number(change) > 0 ? `+${formatted}` : formatted;
       }
       const share = row[shareKey(metric, n)];
-      if (!SHARE_METRICS.includes(metric) || share === null || share === undefined) {
+      if (!hasShare(metric) || share === null || share === undefined) {
         return '';
       }
       return external_CoreHome_["NumberFormatter"].formatPercent(Number(share), 1, 0);
@@ -3513,7 +4416,7 @@ const SERIES_COLOURS = 10;
       return external_CoreHome_["ComparisonsStoreInstance"].getSeriesColorName(n, 0);
     },
     rowLabel(row) {
-      return row.secondary_label === undefined ? String(row.label) : `${row.label} · ${row.secondary_label}`;
+      return LABEL_COLUMNS.filter(column => row[column] !== undefined).map(column => String(row[column])).join(' · ');
     },
     filterReason(row) {
       return canFilterTo(row) ? '' : Object(external_CoreHome_["translate"])('FeinwerkDataExploration_NoFilterForRow');
@@ -3538,9 +4441,562 @@ const SERIES_COLOURS = 10;
 
 
 
-CompareTablevue_type_script_lang_ts.render = CompareTablevue_type_template_id_0f6d4ced_render
+CompareTablevue_type_script_lang_ts.render = CompareTablevue_type_template_id_955e3b2c_render
 
 /* harmony default export */ var CompareTable = (CompareTablevue_type_script_lang_ts);
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/PivotTable.vue?vue&type=template&id=8f383e26
+
+const PivotTablevue_type_template_id_8f383e26_hoisted_1 = {
+  class: "fwde-table fwde-compare fwde-pivot"
+};
+const PivotTablevue_type_template_id_8f383e26_hoisted_2 = {
+  class: "dataTable fwde-table__table fwde-compare__table"
+};
+const PivotTablevue_type_template_id_8f383e26_hoisted_3 = ["aria-sort"];
+const PivotTablevue_type_template_id_8f383e26_hoisted_4 = ["title", "onClick"];
+const PivotTablevue_type_template_id_8f383e26_hoisted_5 = ["colspan", "title"];
+const PivotTablevue_type_template_id_8f383e26_hoisted_6 = {
+  class: "fwde-table__menu",
+  rowspan: "2"
+};
+const PivotTablevue_type_template_id_8f383e26_hoisted_7 = {
+  class: "fwde-visually-hidden"
+};
+const PivotTablevue_type_template_id_8f383e26_hoisted_8 = ["aria-sort"];
+const PivotTablevue_type_template_id_8f383e26_hoisted_9 = ["title", "onClick"];
+const PivotTablevue_type_template_id_8f383e26_hoisted_10 = {
+  key: 1
+};
+const PivotTablevue_type_template_id_8f383e26_hoisted_11 = {
+  key: 0,
+  class: "fwde-compare__total"
+};
+const PivotTablevue_type_template_id_8f383e26_hoisted_12 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", {
+  class: "fwde-table__menu"
+}, null, -1);
+const PivotTablevue_type_template_id_8f383e26_hoisted_13 = ["title"];
+const PivotTablevue_type_template_id_8f383e26_hoisted_14 = {
+  class: "fwde-ellipsis__head"
+};
+const PivotTablevue_type_template_id_8f383e26_hoisted_15 = {
+  class: "fwde-ellipsis__tail"
+};
+const PivotTablevue_type_template_id_8f383e26_hoisted_16 = {
+  class: "fwde-table__menu"
+};
+const PivotTablevue_type_template_id_8f383e26_hoisted_17 = {
+  key: 0,
+  class: "fwde-table__overcount"
+};
+const PivotTablevue_type_template_id_8f383e26_hoisted_18 = {
+  key: 1,
+  class: "fwde-table__overcount fwde-pivot__overcount"
+};
+const PivotTablevue_type_template_id_8f383e26_hoisted_19 = {
+  class: "fwde-table__footer"
+};
+const PivotTablevue_type_template_id_8f383e26_hoisted_20 = {
+  key: 2,
+  class: "fwde-table__limit"
+};
+function PivotTablevue_type_template_id_8f383e26_render(_ctx, _cache, $props, $setup, $data, $options) {
+  const _component_RowMenu = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("RowMenu");
+  const _component_TableScroller = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("TableScroller");
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", PivotTablevue_type_template_id_8f383e26_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_TableScroller, null, {
+    default: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withCtx"])(() => [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("table", PivotTablevue_type_template_id_8f383e26_hoisted_2, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("thead", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tr", null, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.dimensionColumns, dimension => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("th", {
+        key: dimension.key,
+        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+          label: true,
+          sortable: true,
+          columnSorted: _ctx.state.sort === dimension.key,
+          'fwde-table__dimension': true,
+          'fwde-table__dimension-last': dimension.key === _ctx.lastDimension
+        }),
+        "aria-sort": _ctx.ariaSort(dimension.key),
+        rowspan: "2"
+      }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+        type: "button",
+        class: "fwde-table__sort",
+        title: _ctx.translate('FeinwerkDataExploration_SortBy', dimension.label),
+        onClick: $event => _ctx.$emit('sort', dimension.key)
+      }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(dimension.label), 1), _ctx.state.sort === dimension.key ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", {
+        key: 0,
+        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(`sortIcon ${_ctx.state.sortOrder}`),
+        "aria-hidden": "true"
+      }, null, 2)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 8, PivotTablevue_type_template_id_8f383e26_hoisted_4)], 10, PivotTablevue_type_template_id_8f383e26_hoisted_3);
+    }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.groups, group => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("th", {
+        key: group.key,
+        colspan: group.metrics.length,
+        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+          'fwde-compare__group': true,
+          'fwde-pivot__group': true,
+          'fwde-pivot__group--total': group.key === 'total'
+        }),
+        title: group.title
+      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(group.title), 11, PivotTablevue_type_template_id_8f383e26_hoisted_5);
+    }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", PivotTablevue_type_template_id_8f383e26_hoisted_6, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", PivotTablevue_type_template_id_8f383e26_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_RowActions')), 1)])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tr", null, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.groups, group => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+        key: group.key
+      }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(group.metrics, (metric, m) => {
+        return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("th", {
+          key: `${group.key}-${metric.id}`,
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+            'fwde-table__number': true,
+            'fwde-compare__column': true,
+            'fwde-compare__group-start': m === 0,
+            sortable: group.key === 'total',
+            columnSorted: group.key === 'total' && _ctx.state.sort === metric.id
+          }),
+          "aria-sort": group.key === 'total' ? _ctx.ariaSort(metric.id) : undefined
+        }, [group.key === 'total' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
+          key: 0,
+          type: "button",
+          class: "fwde-table__sort",
+          title: _ctx.translate('FeinwerkDataExploration_SortBy', metric.label),
+          onClick: $event => _ctx.$emit('sort', metric.id)
+        }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(metric.label), 1), _ctx.state.sort === metric.id ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", {
+          key: 0,
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(`sortIcon ${_ctx.state.sortOrder}`),
+          "aria-hidden": "true"
+        }, null, 2)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 8, PivotTablevue_type_template_id_8f383e26_hoisted_9)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", PivotTablevue_type_template_id_8f383e26_hoisted_10, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(metric.label), 1))], 10, PivotTablevue_type_template_id_8f383e26_hoisted_8);
+      }), 128))], 64);
+    }), 128))])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tbody", null, [_ctx.pivot.total ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("tr", PivotTablevue_type_template_id_8f383e26_hoisted_11, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.dimensionColumns, dimension => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+        key: dimension.key,
+        class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+          label: true,
+          'fwde-table__label': true,
+          'fwde-table__dimension': true,
+          'fwde-table__dimension-last': dimension.key === _ctx.lastDimension
+        })
+      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(dimension.key === 'label' ? _ctx.pivot.total.label : ''), 3);
+    }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.groups, group => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+        key: group.key
+      }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(group.metrics, (metric, m) => {
+        return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+          key: `${group.key}-${metric.id}`,
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+            'fwde-table__number': true,
+            'fwde-compare__cell': true,
+            'fwde-pivot__cell': true,
+            'fwde-compare__group-start': m === 0
+          })
+        }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.format(metric.id, _ctx.pivot.total[_ctx.cellKey(group.key, metric.id)])), 3);
+      }), 128))], 64);
+    }), 128)), PivotTablevue_type_template_id_8f383e26_hoisted_12])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.sortedRows, (row, index) => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("tr", {
+        key: index
+      }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.dimensionColumns, dimension => {
+        return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+          key: dimension.key,
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+            label: true,
+            'fwde-table__label': true,
+            'fwde-table__dimension': true,
+            'fwde-table__dimension-last': dimension.key === _ctx.lastDimension
+          }),
+          title: String(row[dimension.key])
+        }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+          class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(_ctx.ellipsisClasses(row[dimension.key]))
+        }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", PivotTablevue_type_template_id_8f383e26_hoisted_14, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.labelPart(row[dimension.key], 0)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", PivotTablevue_type_template_id_8f383e26_hoisted_15, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.labelPart(row[dimension.key], 1)), 1)], 2)], 10, PivotTablevue_type_template_id_8f383e26_hoisted_13);
+      }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.groups, group => {
+        return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+          key: group.key
+        }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(group.metrics, (metric, m) => {
+          return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", {
+            key: `${group.key}-${metric.id}`,
+            class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])({
+              'fwde-table__number': true,
+              'fwde-compare__cell': true,
+              'fwde-pivot__cell': true,
+              'fwde-compare__group-start': m === 0,
+              'fwde-cellbar': _ctx.barStyle(_ctx.cellKey(group.key, metric.id), row) !== null
+            }),
+            style: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeStyle"])(_ctx.barStyle(_ctx.cellKey(group.key, metric.id), row) || undefined)
+          }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.format(metric.id, row[_ctx.cellKey(group.key, metric.id)])), 7);
+        }), 128))], 64);
+      }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", PivotTablevue_type_template_id_8f383e26_hoisted_16, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_RowMenu, {
+        label: _ctx.rowLabel(row),
+        "can-break-down": _ctx.state.dimensions.length < _ctx.MAX_DIMENSIONS,
+        "visits-reason": _ctx.visitsReason(row),
+        "filter-reason": _ctx.filterReason(row),
+        onFilter: $event => _ctx.$emit('row-filter', row),
+        onBreakdown: $event => _ctx.$emit('row-breakdown', row),
+        onVisits: $event => _ctx.$emit('row-visits', row)
+      }, null, 8, ["label", "can-break-down", "visits-reason", "filter-reason", "onFilter", "onBreakdown", "onVisits"])])]);
+    }), 128))])])]),
+    _: 1
+  }), _ctx.overcountKey ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", PivotTablevue_type_template_id_8f383e26_hoisted_17, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.overcountKey)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.pivotOvercount ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", PivotTablevue_type_template_id_8f383e26_hoisted_18, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_PivotOvercountHint')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("p", PivotTablevue_type_template_id_8f383e26_hoisted_19, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.rowCountKey(_ctx.pivot.rows.length), _ctx.formatNumber(_ctx.pivot.rows.length))), 1), _ctx.pivot.rows.length >= _ctx.state.limit ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", PivotTablevue_type_template_id_8f383e26_hoisted_20, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_LimitReached')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
+}
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/PivotTable.vue?vue&type=template&id=8f383e26
+
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/PivotTable.vue?vue&type=script&lang=ts
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * A pivoted result (rows and pivot, 2026-11-24): the row dimensions on the left; one column group
+ * per pivot value, then "Others" (the metrics whose rest is exact) and "Total", each with the
+ * metrics; the total row first. Sorting by the row labels or a metric's Total.
+ */
+/* harmony default export */ var PivotTablevue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
+  components: {
+    RowMenu: RowMenu,
+    TableScroller: TableScroller
+  },
+  props: {
+    rows: {
+      type: Array,
+      required: true
+    },
+    state: {
+      type: Object,
+      required: true
+    },
+    catalog: {
+      type: Object,
+      required: true
+    },
+    actionScope: {
+      type: Boolean,
+      required: true
+    },
+    currencySymbol: {
+      type: String,
+      required: true
+    },
+    /** Matomo's visits log is on for this site */
+    visitsLogEnabled: {
+      type: Boolean,
+      default: false
+    }
+  },
+  emits: ['sort', 'row-filter', 'row-breakdown', 'row-visits'],
+  data() {
+    return {
+      MAX_DIMENSIONS: MAX_DIMENSIONS
+    };
+  },
+  computed: {
+    pivot() {
+      return parsePivotResult(this.rows);
+    },
+    /** why the rows can add up to more than the total, as the plain table says it; '' when not */
+    overcountKey() {
+      const unit = overcountUnit(this.state, this.catalog);
+      if (!unit) {
+        return '';
+      }
+      return unit === 'visitor' ? 'FeinwerkDataExploration_OvercountHintVisitor' : 'FeinwerkDataExploration_OvercountHintVisit';
+    },
+    /** a count can add up to more than its Total across the columns (final review, 2026-11-24) */
+    pivotOvercount() {
+      return pivotOvercounts(this.state, this.catalog);
+    },
+    dimensionColumns() {
+      return this.state.dimensions.map((id, i) => {
+        var _this$catalog$dimensi;
+        return {
+          key: LABEL_COLUMNS[i],
+          label: ((_this$catalog$dimensi = this.catalog.dimensions.find(d => d.id === id)) === null || _this$catalog$dimensi === void 0 ? void 0 : _this$catalog$dimensi.name) || id
+        };
+      });
+    },
+    lastDimension() {
+      return LABEL_COLUMNS[this.state.dimensions.length - 1];
+    },
+    metrics() {
+      return this.state.metrics.map(id => {
+        const metric = this.catalog.metrics.find(m => m.id === id);
+        const label = metric && this.actionScope && metric.nameInActionScope ? metric.nameInActionScope : (metric === null || metric === void 0 ? void 0 : metric.name) || id;
+        return {
+          id,
+          label
+        };
+      });
+    },
+    groups() {
+      const groups = this.pivot.values.map((value, n) => ({
+        key: `p${n + 1}`,
+        title: value.label,
+        metrics: this.metrics
+      }));
+      const total = this.pivot.total || {};
+      const others = this.metrics.filter(metric => `${metric.id}__p_others` in total);
+      if (this.pivot.others && others.length) {
+        groups.push({
+          key: 'p_others',
+          title: Object(external_CoreHome_["translate"])('General_Others'),
+          metrics: others
+        });
+      }
+      groups.push({
+        key: 'total',
+        title: Object(external_CoreHome_["translate"])('General_Total'),
+        metrics: this.metrics
+      });
+      return groups;
+    },
+    /** what each count's bar is measured against: its column's largest value */
+    barMaxima() {
+      const maxima = {};
+      this.groups.forEach(group => {
+        group.metrics.filter(metric => hasShare(metric.id)).forEach(metric => {
+          const key = this.cellKey(group.key, metric.id);
+          maxima[key] = barMaximum(this.pivot.rows, [key]);
+        });
+      });
+      return maxima;
+    },
+    sortedRows() {
+      const {
+        rows
+      } = this.pivot;
+      if (!shouldSortClientSide(rows.length, this.state.limit, this.state.sort)) {
+        return rows;
+      }
+      return sortByLabel(rows, this.state.sort, this.state.sortOrder, external_CoreHome_["Matomo"].language);
+    },
+    formatters() {
+      return {
+        number: v => external_CoreHome_["NumberFormatter"].formatNumber(v, 2, 0),
+        percent: v => external_CoreHome_["NumberFormatter"].formatPercent(v, 2, 0),
+        currency: v => external_CoreHome_["NumberFormatter"].formatCurrency(v, this.currencySymbol, 2, 2),
+        duration: v => formatDuration(v)
+      };
+    }
+  },
+  methods: {
+    translate: external_CoreHome_["translate"],
+    rowCountKey: rowCountKey,
+    /** the column of a metric in a group: the plain metric is the row's Total */
+    cellKey(group, metric) {
+      return group === 'total' ? metric : `${metric}__${group}`;
+    },
+    /** a cell without a value (a rate without visits) stays empty, not "0 %" */
+    format(metricId, value) {
+      if (value === null || value === undefined || value === '') {
+        return '';
+      }
+      return formatMetric(metricId, Number(value), this.formatters);
+    },
+    formatNumber(value) {
+      return external_CoreHome_["NumberFormatter"].formatNumber(value, 0, 0);
+    },
+    labelPart(value, part) {
+      return headAndTail(String(value))[part];
+    },
+    ellipsisClasses(value) {
+      return {
+        'fwde-ellipsis': true,
+        'fwde-ellipsis--long': headAndTail(String(value))[1] !== ''
+      };
+    },
+    barStyle(key, row) {
+      if (!(key in this.barMaxima)) {
+        return null;
+      }
+      const width = cellBarWidth(row[key], this.barMaxima[key]);
+      return width === null ? null : {
+        '--fwde-bar': `${width}%`
+      };
+    },
+    rowLabel(row) {
+      return LABEL_COLUMNS.filter(column => row[column] !== undefined).map(column => String(row[column])).join(' · ');
+    },
+    filterReason(row) {
+      return canFilterTo(row) ? '' : Object(external_CoreHome_["translate"])('FeinwerkDataExploration_NoFilterForRow');
+    },
+    visitsReason(row) {
+      if (!this.visitsLogEnabled) {
+        return Object(external_CoreHome_["translate"])('FeinwerkDataExploration_VisitsLogDisabled');
+      }
+      return row.segment ? '' : Object(external_CoreHome_["translate"])('FeinwerkDataExploration_NoVisitsForRow');
+    },
+    ariaSort(key) {
+      if (this.state.sort !== key) {
+        return 'none';
+      }
+      return this.state.sortOrder === 'asc' ? 'ascending' : 'descending';
+    }
+  }
+}));
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/PivotTable.vue?vue&type=script&lang=ts
+ 
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/PivotTable.vue
+
+
+
+PivotTablevue_type_script_lang_ts.render = PivotTablevue_type_template_id_8f383e26_render
+
+/* harmony default export */ var PivotTable = (PivotTablevue_type_script_lang_ts);
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/PivotPicker.vue?vue&type=template&id=76a57371
+
+const PivotPickervue_type_template_id_76a57371_hoisted_1 = {
+  class: "fwde-picker fwde-pivot-picker"
+};
+const PivotPickervue_type_template_id_76a57371_hoisted_2 = {
+  class: "fwde-picker__slot"
+};
+const PivotPickervue_type_template_id_76a57371_hoisted_3 = {
+  class: "fwde-field__label"
+};
+const PivotPickervue_type_template_id_76a57371_hoisted_4 = ["disabled", "aria-expanded"];
+const PivotPickervue_type_template_id_76a57371_hoisted_5 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+  class: "icon-chevron-down",
+  "aria-hidden": "true"
+}, null, -1);
+const PivotPickervue_type_template_id_76a57371_hoisted_6 = {
+  key: 0,
+  class: "fwde-pivot-picker__paused"
+};
+const PivotPickervue_type_template_id_76a57371_hoisted_7 = {
+  key: 1,
+  class: "fwde-picker__panel"
+};
+const PivotPickervue_type_template_id_76a57371_hoisted_8 = {
+  key: 0,
+  class: "fwde-pivot-picker__limit"
+};
+function PivotPickervue_type_template_id_76a57371_render(_ctx, _cache, $props, $setup, $data, $options) {
+  const _component_SearchableList = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SearchableList");
+  const _component_SegmentedSwitch = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SegmentedSwitch");
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", PivotPickervue_type_template_id_76a57371_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", PivotPickervue_type_template_id_76a57371_hoisted_2, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", PivotPickervue_type_template_id_76a57371_hoisted_3, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_Pivot')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+    ref: "current",
+    type: "button",
+    class: "fwde-picker__current",
+    disabled: _ctx.comparing,
+    "aria-expanded": _ctx.open ? 'true' : 'false',
+    onClick: _cache[0] || (_cache[0] = $event => _ctx.open = !_ctx.open)
+  }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.currentName), 1), PivotPickervue_type_template_id_76a57371_hoisted_5], 8, PivotPickervue_type_template_id_76a57371_hoisted_4), _ctx.comparing ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", PivotPickervue_type_template_id_76a57371_hoisted_6, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_PivotPaused')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.open && !_ctx.comparing ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", PivotPickervue_type_template_id_76a57371_hoisted_7, [_ctx.state.pivot ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
+    key: 0,
+    type: "button",
+    class: "btn-flat fwde-picker__none",
+    onClick: _cache[1] || (_cache[1] = $event => _ctx.choose(null))
+  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_NoSecondDimension')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_SearchableList, {
+    items: _ctx.items,
+    selected: _ctx.state.pivot ? [_ctx.state.pivot] : [],
+    "search-label": _ctx.translate('FeinwerkDataExploration_SearchDimensions'),
+    onToggle: _cache[2] || (_cache[2] = $event => _ctx.choose($event)),
+    onClose: _ctx.close
+  }, null, 8, ["items", "selected", "search-label", "onClose"])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]), _ctx.state.pivot && _ctx.state.pivot !== _ctx.PIVOT_WEEKDAY && !_ctx.comparing ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", PivotPickervue_type_template_id_76a57371_hoisted_8, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_SegmentedSwitch, {
+    options: _ctx.limitOptions,
+    "model-value": String(_ctx.state.pivotLimit),
+    label: _ctx.translate('FeinwerkDataExploration_PivotValues'),
+    "onUpdate:modelValue": _cache[3] || (_cache[3] = $event => _ctx.$emit('change', {
+      pivot: _ctx.state.pivot,
+      pivotLimit: Number($event)
+    }))
+  }, null, 8, ["options", "model-value", "label"])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
+}
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/PivotPicker.vue?vue&type=template&id=76a57371
+
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/PivotPicker.vue?vue&type=script&lang=ts
+
+
+
+
+
+
+/**
+ * "Columns (pivot)" (rows and pivot, 2026-11-24): a dimension whose top values become column
+ * groups, and how many (3, 5, 10). Off while Matomo compares: the comparison wins, the pivot stays
+ * in the link and comes back when the comparison ends.
+ */
+/* harmony default export */ var PivotPickervue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
+  components: {
+    SearchableList: SearchableList,
+    SegmentedSwitch: SegmentedSwitch
+  },
+  props: {
+    catalog: {
+      type: Object,
+      required: true
+    },
+    state: {
+      type: Object,
+      required: true
+    },
+    /** Matomo compares segments or periods */
+    comparing: {
+      type: Boolean,
+      default: false
+    }
+  },
+  emits: ['change'],
+  data() {
+    return {
+      open: false,
+      PIVOT_WEEKDAY: PIVOT_WEEKDAY
+    };
+  },
+  computed: {
+    currentName() {
+      const dimension = this.catalog.dimensions.find(d => d.id === this.state.pivot);
+      return dimension ? dimension.name : Object(external_CoreHome_["translate"])('FeinwerkDataExploration_NoSecondDimension');
+    },
+    items() {
+      const reasons = pivotReasons(this.state, this.catalog);
+      return this.catalog.dimensions.map(d => ({
+        key: d.id,
+        label: d.name,
+        group: GROUP_KEYS[d.group] ? Object(external_CoreHome_["translate"])(GROUP_KEYS[d.group]) : d.group,
+        reason: reasons[d.id]
+      }));
+    },
+    limitOptions() {
+      const reasons = pivotLimitReasons(this.state);
+      return PIVOT_LIMITS.map(limit => ({
+        value: String(limit),
+        label: String(limit),
+        disabled: reasons[limit] !== null,
+        title: reasons[limit] ? Object(external_CoreHome_["translate"])(reasons[limit]) : undefined
+      }));
+    }
+  },
+  methods: {
+    translate: external_CoreHome_["translate"],
+    choose(id) {
+      this.open = false;
+      this.$emit('change', {
+        pivot: id,
+        pivotLimit: id === this.state.pivot ? this.state.pivotLimit : PIVOT_DEFAULT_LIMIT
+      });
+    },
+    /** Escape in the list: close it and give the focus back to its button */
+    close() {
+      this.open = false;
+      this.$nextTick(() => {
+        const button = this.$refs.current;
+        if (button) {
+          button.focus();
+        }
+      });
+    }
+  }
+}));
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/PivotPicker.vue?vue&type=script&lang=ts
+ 
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/PivotPicker.vue
+
+
+
+PivotPickervue_type_script_lang_ts.render = PivotPickervue_type_template_id_76a57371_render
+
+/* harmony default export */ var PivotPicker = (PivotPickervue_type_script_lang_ts);
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/funnelState.ts
 /** As FunnelStep::OPERATORS in PHP: the conditions of the text steps. */
 const OPERATORS_BY_TYPE = {
@@ -3699,7 +5155,8 @@ function exportUrl(state, format, columns = []) {
     period: parsed.period,
     date: parsed.date,
     segment: parsed.segment || '',
-    definition: JSON.stringify(toDefinition(state)),
+    // with comparison columns the pivot is paused (the comparison wins)
+    definition: JSON.stringify(toDefinition(state, columns.length > 1)),
     readableColumns: 1,
     filter_limit: -1,
     language: external_CoreHome_["Matomo"].language,
@@ -3738,47 +5195,59 @@ function funnelExportUrl(steps, format) {
   };
   return `${window.location.href.split(/[?#]/)[0]}?${external_CoreHome_["MatomoUrl"].stringify(params)}`;
 }
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ExplorationToolbar.vue?vue&type=template&id=6e557543
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ExplorationToolbar.vue?vue&type=template&id=2f6db02e
 
-const ExplorationToolbarvue_type_template_id_6e557543_hoisted_1 = {
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_1 = {
   class: "fwde-toolbar"
 };
-const ExplorationToolbarvue_type_template_id_6e557543_hoisted_2 = {
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_2 = {
   key: 1,
   class: "fwde-toolbar__limit"
 };
-const ExplorationToolbarvue_type_template_id_6e557543_hoisted_3 = ["value"];
-const ExplorationToolbarvue_type_template_id_6e557543_hoisted_4 = ["value"];
-const ExplorationToolbarvue_type_template_id_6e557543_hoisted_5 = {
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_3 = ["value"];
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_4 = ["value"];
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_5 = {
   key: 2,
   ref: "exportMenu",
   class: "fwde-menu"
 };
-const ExplorationToolbarvue_type_template_id_6e557543_hoisted_6 = ["aria-expanded"];
-const ExplorationToolbarvue_type_template_id_6e557543_hoisted_7 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_6 = ["aria-expanded"];
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_7 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
   class: "icon-export",
   "aria-hidden": "true"
 }, null, -1);
-const ExplorationToolbarvue_type_template_id_6e557543_hoisted_8 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_8 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
   class: "icon-chevron-down",
   "aria-hidden": "true"
 }, null, -1);
-const ExplorationToolbarvue_type_template_id_6e557543_hoisted_9 = {
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_9 = {
   key: 0,
   class: "fwde-menu__list"
 };
-const ExplorationToolbarvue_type_template_id_6e557543_hoisted_10 = ["href"];
-const ExplorationToolbarvue_type_template_id_6e557543_hoisted_11 = ["title", "aria-label"];
-function ExplorationToolbarvue_type_template_id_6e557543_render(_ctx, _cache, $props, $setup, $data, $options) {
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_10 = ["href"];
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_11 = {
+  ref: "copyBox",
+  class: "fwde-copybox"
+};
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_12 = ["title", "aria-label"];
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_13 = {
+  key: 0,
+  class: "fwde-menu__list fwde-copylink"
+};
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_14 = {
+  class: "fwde-copylink__label"
+};
+const ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_15 = ["value"];
+function ExplorationToolbarvue_type_template_id_2f6db02e_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_SegmentedSwitch = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SegmentedSwitch");
-  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ExplorationToolbarvue_type_template_id_6e557543_hoisted_1, [_ctx.state ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_SegmentedSwitch, {
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_1, [_ctx.state ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_SegmentedSwitch, {
     key: 0,
     class: "fwde-toolbar__view",
     options: _ctx.viewSwitch,
     "model-value": _ctx.view,
     label: _ctx.translate('FeinwerkDataExploration_View'),
     "onUpdate:modelValue": _cache[0] || (_cache[0] = $event => _ctx.$emit('view', $event))
-  }, null, 8, ["options", "model-value", "label"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.state ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("label", ExplorationToolbarvue_type_template_id_6e557543_hoisted_2, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_Rows')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
+  }, null, 8, ["options", "model-value", "label"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.state ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("label", ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_2, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_Rows')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
     class: "browser-default fwde-select",
     value: String(_ctx.state.limit),
     onChange: _cache[1] || (_cache[1] = (...args) => _ctx.onLimit && _ctx.onLimit(...args))
@@ -3786,14 +5255,14 @@ function ExplorationToolbarvue_type_template_id_6e557543_render(_ctx, _cache, $p
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
       key: option,
       value: String(option)
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(option), 9, ExplorationToolbarvue_type_template_id_6e557543_hoisted_4);
-  }), 128))], 40, ExplorationToolbarvue_type_template_id_6e557543_hoisted_3)])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.state || _ctx.exportUrlFor ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ExplorationToolbarvue_type_template_id_6e557543_hoisted_5, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(option), 9, ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_4);
+  }), 128))], 40, ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_3)])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.state || _ctx.exportUrlFor ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_5, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
     type: "button",
     class: "fwde-button",
     "aria-haspopup": "true",
     "aria-expanded": _ctx.exportOpen ? 'true' : 'false',
     onClick: _cache[2] || (_cache[2] = $event => _ctx.exportOpen = !_ctx.exportOpen)
-  }, [ExplorationToolbarvue_type_template_id_6e557543_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(" " + Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Export')) + " ", 1), ExplorationToolbarvue_type_template_id_6e557543_hoisted_8], 8, ExplorationToolbarvue_type_template_id_6e557543_hoisted_6), _ctx.exportOpen ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("ul", ExplorationToolbarvue_type_template_id_6e557543_hoisted_9, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.formats, format => {
+  }, [ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(" " + Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Export')) + " ", 1), ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_8], 8, ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_6), _ctx.exportOpen ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("ul", ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_9, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.formats, format => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("li", {
       key: format
     }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("a", {
@@ -3802,8 +5271,8 @@ function ExplorationToolbarvue_type_template_id_6e557543_render(_ctx, _cache, $p
       target: "_blank",
       rel: "noreferrer noopener",
       onClick: _cache[3] || (_cache[3] = $event => _ctx.exportOpen = false)
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ExportAs', format)), 9, ExplorationToolbarvue_type_template_id_6e557543_hoisted_10)]);
-  }), 128))])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 512)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ExportAs', format)), 9, ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_10)]);
+  }), 128))])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 512)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_11, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
     type: "button",
     class: "fwde-icon-button fwde-toolbar__copy",
     title: _ctx.copyText,
@@ -3812,9 +5281,17 @@ function ExplorationToolbarvue_type_template_id_6e557543_render(_ctx, _cache, $p
   }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
     class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(_ctx.copied ? 'icon-ok' : 'icon-content-copy'),
     "aria-hidden": "true"
-  }, null, 2)], 8, ExplorationToolbarvue_type_template_id_6e557543_hoisted_11)]);
+  }, null, 2)], 8, ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_12), _ctx.manualLink ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_13, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_14, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_CopyLinkByHand')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("input", {
+    ref: "manualInput",
+    class: "browser-default fwde-input",
+    type: "text",
+    readonly: "",
+    value: _ctx.manualLink,
+    onFocus: _cache[5] || (_cache[5] = (...args) => _ctx.selectAll && _ctx.selectAll(...args)),
+    onKeydown: _cache[6] || (_cache[6] = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withKeys"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withModifiers"])((...args) => _ctx.closeManual && _ctx.closeManual(...args), ["stop"]), ["escape"]))
+  }, null, 40, ExplorationToolbarvue_type_template_id_2f6db02e_hoisted_15)])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 512)]);
 }
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ExplorationToolbar.vue?vue&type=template&id=6e557543
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ExplorationToolbar.vue?vue&type=template&id=2f6db02e
 
 // CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ExplorationToolbar.vue?vue&type=script&lang=ts
 
@@ -3854,6 +5331,8 @@ function ExplorationToolbarvue_type_template_id_6e557543_render(_ctx, _cache, $p
   data() {
     return {
       copied: false,
+      /** the link shown for copying by hand when the browser refuses ('' = hidden) */
+      manualLink: '',
       timer: 0,
       exportOpen: false,
       formats: ['CSV', 'TSV']
@@ -3912,6 +5391,10 @@ function ExplorationToolbarvue_type_template_id_6e557543_render(_ctx, _cache, $p
       this.$emit('limit', Number(event.target.value));
     },
     onDocumentClick(event) {
+      const copyBox = this.$refs.copyBox;
+      if (this.manualLink && copyBox && !copyBox.contains(event.target)) {
+        this.manualLink = '';
+      }
       const menu = this.$refs.exportMenu;
       if (this.exportOpen && menu && !menu.contains(event.target)) {
         this.exportOpen = false;
@@ -3920,18 +5403,68 @@ function ExplorationToolbarvue_type_template_id_6e557543_render(_ctx, _cache, $p
     onKeydown(event) {
       if (event.key === 'Escape') {
         this.exportOpen = false;
+        this.manualLink = '';
       }
     },
+    /**
+     * The clipboard first; without it (Matomo over http) or when the browser refuses, the older
+     * copy command; when that fails too, the link selected in a field to copy by hand (UI review
+     * 2026-11-23: never a silent failure, the user would paste an old clipboard).
+     */
     copyLink() {
-      const done = () => {
-        this.copied = true;
-        window.clearTimeout(this.timer);
-        this.timer = window.setTimeout(() => {
-          this.copied = false;
-        }, 2500);
-      };
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(window.location.href).then(done).catch(() => undefined);
+      const url = window.location.href;
+      this.manualLink = '';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => this.copiedNow()).catch(() => this.copyWithCommand(url));
+        return;
+      }
+      this.copyWithCommand(url);
+    },
+    copyWithCommand(url) {
+      let copied = false;
+      if (typeof document.execCommand === 'function') {
+        const field = document.createElement('textarea');
+        field.value = url;
+        field.setAttribute('readonly', '');
+        field.style.position = 'fixed';
+        field.style.top = '-1000px';
+        document.body.appendChild(field);
+        field.select();
+        try {
+          copied = document.execCommand('copy');
+        } catch (e) {
+          copied = false;
+        }
+        document.body.removeChild(field);
+      }
+      if (copied) {
+        this.copiedNow();
+        return;
+      }
+      this.manualLink = url;
+      this.$nextTick(() => {
+        const input = this.$refs.manualInput;
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      });
+    },
+    copiedNow() {
+      this.copied = true;
+      window.clearTimeout(this.timer);
+      this.timer = window.setTimeout(() => {
+        this.copied = false;
+      }, 2500);
+    },
+    selectAll(event) {
+      event.target.select();
+    },
+    closeManual() {
+      this.manualLink = '';
+      const button = this.$el.querySelector('.fwde-toolbar__copy');
+      if (button) {
+        button.focus();
       }
     }
   }
@@ -3942,59 +5475,59 @@ function ExplorationToolbarvue_type_template_id_6e557543_render(_ctx, _cache, $p
 
 
 
-ExplorationToolbarvue_type_script_lang_ts.render = ExplorationToolbarvue_type_template_id_6e557543_render
+ExplorationToolbarvue_type_script_lang_ts.render = ExplorationToolbarvue_type_template_id_2f6db02e_render
 
 /* harmony default export */ var ExplorationToolbar = (ExplorationToolbarvue_type_script_lang_ts);
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/SavedPicker.vue?vue&type=template&id=b0c3cb76
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/SavedPicker.vue?vue&type=template&id=3a2d3f38
 
-const SavedPickervue_type_template_id_b0c3cb76_hoisted_1 = {
+const SavedPickervue_type_template_id_3a2d3f38_hoisted_1 = {
   class: "fwde-saved"
 };
-const SavedPickervue_type_template_id_b0c3cb76_hoisted_2 = {
+const SavedPickervue_type_template_id_3a2d3f38_hoisted_2 = {
   class: "fwde-field__label",
   for: "fwde-saved-select"
 };
-const SavedPickervue_type_template_id_b0c3cb76_hoisted_3 = {
+const SavedPickervue_type_template_id_3a2d3f38_hoisted_3 = {
   class: "fwde-saved__row"
 };
-const SavedPickervue_type_template_id_b0c3cb76_hoisted_4 = ["value"];
-const SavedPickervue_type_template_id_b0c3cb76_hoisted_5 = {
+const SavedPickervue_type_template_id_3a2d3f38_hoisted_4 = ["value"];
+const SavedPickervue_type_template_id_3a2d3f38_hoisted_5 = {
   value: ""
 };
-const SavedPickervue_type_template_id_b0c3cb76_hoisted_6 = ["label"];
-const SavedPickervue_type_template_id_b0c3cb76_hoisted_7 = ["value"];
-const SavedPickervue_type_template_id_b0c3cb76_hoisted_8 = ["label"];
-const SavedPickervue_type_template_id_b0c3cb76_hoisted_9 = ["value"];
-const SavedPickervue_type_template_id_b0c3cb76_hoisted_10 = {
+const SavedPickervue_type_template_id_3a2d3f38_hoisted_6 = ["label"];
+const SavedPickervue_type_template_id_3a2d3f38_hoisted_7 = ["value"];
+const SavedPickervue_type_template_id_3a2d3f38_hoisted_8 = ["label"];
+const SavedPickervue_type_template_id_3a2d3f38_hoisted_9 = ["value"];
+const SavedPickervue_type_template_id_3a2d3f38_hoisted_10 = {
   key: 0,
   class: "fwde-saved__copy"
 };
-const SavedPickervue_type_template_id_b0c3cb76_hoisted_11 = ["aria-expanded"];
-function SavedPickervue_type_template_id_b0c3cb76_render(_ctx, _cache, $props, $setup, $data, $options) {
+const SavedPickervue_type_template_id_3a2d3f38_hoisted_11 = ["aria-expanded"];
+function SavedPickervue_type_template_id_3a2d3f38_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_ManageSavedDialog = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("ManageSavedDialog");
   const _component_SidePanel = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SidePanel");
-  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", SavedPickervue_type_template_id_b0c3cb76_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", SavedPickervue_type_template_id_b0c3cb76_hoisted_2, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedExplorations')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", SavedPickervue_type_template_id_b0c3cb76_hoisted_3, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", SavedPickervue_type_template_id_3a2d3f38_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", SavedPickervue_type_template_id_3a2d3f38_hoisted_2, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedExplorations')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", SavedPickervue_type_template_id_3a2d3f38_hoisted_3, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
     id: "fwde-saved-select",
     class: "browser-default fwde-select fwde-saved__select",
     value: _ctx.current ? String(_ctx.current.id) : '',
     onChange: _cache[0] || (_cache[0] = (...args) => _ctx.onChange && _ctx.onChange(...args))
-  }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("option", SavedPickervue_type_template_id_b0c3cb76_hoisted_5, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_NewExploration')), 1), _ctx.groups.mine.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("optgroup", {
+  }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("option", SavedPickervue_type_template_id_3a2d3f38_hoisted_5, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_NewExploration')), 1), _ctx.groups.mine.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("optgroup", {
     key: 0,
     label: _ctx.translate('FeinwerkDataExploration_MyExplorations')
   }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.groups.mine, saved => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
       key: saved.id,
       value: String(saved.id)
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(saved.shared ? _ctx.translate('FeinwerkDataExploration_SavedShared', _ctx.displayName(saved)) : _ctx.displayName(saved)), 9, SavedPickervue_type_template_id_b0c3cb76_hoisted_7);
-  }), 128))], 8, SavedPickervue_type_template_id_b0c3cb76_hoisted_6)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.groups.shared.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("optgroup", {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(saved.shared ? _ctx.translate('FeinwerkDataExploration_SavedShared', _ctx.displayName(saved)) : _ctx.displayName(saved)), 9, SavedPickervue_type_template_id_3a2d3f38_hoisted_7);
+  }), 128))], 8, SavedPickervue_type_template_id_3a2d3f38_hoisted_6)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.groups.shared.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("optgroup", {
     key: 1,
     label: _ctx.translate('FeinwerkDataExploration_SharedByOthers')
   }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.groups.shared, saved => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
       key: saved.id,
       value: String(saved.id)
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.ownedBy(saved)), 9, SavedPickervue_type_template_id_b0c3cb76_hoisted_9);
-  }), 128))], 8, SavedPickervue_type_template_id_b0c3cb76_hoisted_8)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 40, SavedPickervue_type_template_id_b0c3cb76_hoisted_4), _ctx.canCopy && _ctx.copy && _ctx.copyStore && _ctx.current ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", SavedPickervue_type_template_id_b0c3cb76_hoisted_10, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveDynamicComponent"])(_ctx.copy.action), {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.ownedBy(saved)), 9, SavedPickervue_type_template_id_3a2d3f38_hoisted_9);
+  }), 128))], 8, SavedPickervue_type_template_id_3a2d3f38_hoisted_8)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 40, SavedPickervue_type_template_id_3a2d3f38_hoisted_4), _ctx.canCopy && _ctx.copy && _ctx.copyStore && _ctx.current ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", SavedPickervue_type_template_id_3a2d3f38_hoisted_10, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveDynamicComponent"])(_ctx.copy.action), {
     "action-form-data": {
       idSaved: _ctx.current.id
     },
@@ -4010,23 +5543,26 @@ function SavedPickervue_type_template_id_b0c3cb76_render(_ctx, _cache, $props, $
     "aria-haspopup": "dialog",
     "aria-expanded": _ctx.managing ? 'true' : 'false',
     onClick: _cache[1] || (_cache[1] = $event => _ctx.managing = true)
-  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ManageShared')), 9, SavedPickervue_type_template_id_b0c3cb76_hoisted_11)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.canManage ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_SidePanel, {
+  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ManageShared')), 9, SavedPickervue_type_template_id_3a2d3f38_hoisted_11)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.canManage ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_SidePanel, {
     key: 1,
     open: _ctx.managing,
     title: _ctx.translate('FeinwerkDataExploration_ManageShared'),
     "close-label": _ctx.translate('General_Close'),
     "scope-class": "fwde-page fwde-managepanel",
-    "onUpdate:open": _cache[3] || (_cache[3] = $event => _ctx.managing = $event)
+    "onUpdate:open": _cache[4] || (_cache[4] = $event => _ctx.managing = $event)
   }, {
     default: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withCtx"])(() => [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_ManageSavedDialog, {
       saved: _ctx.saved,
       remove: _ctx.removeSaved,
-      onDeleted: _cache[2] || (_cache[2] = $event => _ctx.$emit('deleted', $event))
-    }, null, 8, ["saved", "remove"])]),
+      place: _ctx.placeSaved,
+      "menu-sections": _ctx.menuSections,
+      onDeleted: _cache[2] || (_cache[2] = $event => _ctx.$emit('deleted', $event)),
+      onPlaced: _cache[3] || (_cache[3] = $event => _ctx.$emit('deleted', $event))
+    }, null, 8, ["saved", "remove", "place", "menu-sections"])]),
     _: 1
   }, 8, ["open", "title", "close-label"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
 }
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/SavedPicker.vue?vue&type=template&id=b0c3cb76
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/SavedPicker.vue?vue&type=template&id=3a2d3f38
 
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/api.ts
 /*!
@@ -4082,24 +5618,48 @@ function saveBody(fields) {
     shared: fields.shared ? '1' : '0'
   };
 }
+/**
+ * Saved explorations can have menu entries of their own (saved reports), so Matomo's menu is read
+ * again after a change succeeded, as Goals does after a goal changed (UI review 2026-11-24). A menu
+ * that cannot be reloaded never fails the change.
+ */
+function withMenuReload(change) {
+  return change.then(result => {
+    try {
+      external_CoreHome_["ReportingMenuStore"].reloadMenuItems().catch(() => undefined);
+    } catch (e) {
+      // no reporting menu on this page: nothing to reload
+    }
+    return result;
+  });
+}
 function addSaved(fields) {
-  return external_CoreHome_["AjaxHelper"].post({
+  return withMenuReload(external_CoreHome_["AjaxHelper"].post({
     method: 'FeinwerkDataExploration.addSavedExploration'
-  }, saveBody(fields), OPTIONS);
+  }, saveBody(fields), OPTIONS));
 }
 function updateSaved(id, fields) {
-  return external_CoreHome_["AjaxHelper"].post({
+  return withMenuReload(external_CoreHome_["AjaxHelper"].post({
     method: 'FeinwerkDataExploration.updateSavedExploration'
   }, Object.assign(Object.assign({}, saveBody(fields)), {}, {
     idSaved: String(id)
-  }), OPTIONS);
+  }), OPTIONS));
+}
+/** Changes the menu place of a saved exploration (owner, super user, admin for a shared one). */
+function setSavedMenu(id, menu) {
+  return withMenuReload(external_CoreHome_["AjaxHelper"].post({
+    method: 'FeinwerkDataExploration.setSavedExplorationMenu'
+  }, {
+    idSaved: String(id),
+    menu
+  }, OPTIONS));
 }
 function deleteSaved(id) {
-  return external_CoreHome_["AjaxHelper"].post({
+  return withMenuReload(external_CoreHome_["AjaxHelper"].post({
     method: 'FeinwerkDataExploration.deleteSavedExploration'
   }, {
     idSaved: String(id)
-  }, OPTIONS);
+  }, OPTIONS));
 }
 /** The site's goals; an empty list when they cannot be read. */
 function loadGoals() {
@@ -4126,6 +5686,13 @@ function runExploration(state, abortController) {
     abortController
   }));
 }
+/** A KPI card for the dashboard's period and segment (idSite, period, date, segment: the URL's). */
+function loadKpiCard(idSaved) {
+  return external_CoreHome_["AjaxHelper"].fetch({
+    method: 'FeinwerkDataExploration.getKpiCard',
+    idSaved: String(idSaved)
+  }, OPTIONS);
+}
 /**
  * The exact rest of the cut table ("Others", design 2026-11-20), asked on demand: null when nothing
  * was cut. Period, date and segment from the URL as for runExploration.
@@ -4134,8 +5701,10 @@ function runOthers(state) {
   return external_CoreHome_["AjaxHelper"].post({
     method: 'FeinwerkDataExploration.getOthers',
     format: 'json'
-  }, {
-    definition: JSON.stringify(toDefinition(state))
+  },
+  // the rest of the rows needs no pivot columns
+  {
+    definition: JSON.stringify(toDefinition(state, true))
   }, OPTIONS).then(result => result && result.others ? result.others : null);
 }
 /**
@@ -4162,7 +5731,8 @@ function runComparison(state, column, abortController) {
     format: 'json',
     filter_limit: -1
   }, {
-    definition: JSON.stringify(toDefinition(state)),
+    // pivot and comparison are exclusive: the comparison wins
+    definition: JSON.stringify(toDefinition(state, true)),
     comparisons: JSON.stringify([{
       segment: column.segment,
       period: column.period,
@@ -4182,7 +5752,8 @@ function runTrend(state, column, abortController) {
     format: 'json',
     filter_limit: -1
   }, {
-    definition: JSON.stringify(toDefinition(state)),
+    // the trend follows the rows, never the pivot
+    definition: JSON.stringify(toDefinition(state, true)),
     comparisons: column === null ? '' : JSON.stringify([{
       segment: column.segment,
       period: column.period,
@@ -4192,69 +5763,99 @@ function runTrend(state, column, abortController) {
     abortController
   }));
 }
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ManageSavedDialog.vue?vue&type=template&id=63f9a986
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ManageSavedDialog.vue?vue&type=template&id=6ab04ea2
 
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_1 = {
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_1 = {
   class: "fwde-manage"
 };
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_2 = {
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_2 = {
   key: 0,
   class: "fwde-manage__empty"
 };
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_3 = {
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_3 = {
   key: 1,
   class: "fwde-manage__table"
 };
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_4 = {
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_4 = {
+  key: 0
+};
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_5 = {
   class: "fwde-visually-hidden"
 };
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_5 = ["data-id"];
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_6 = {
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_6 = ["data-id"];
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_7 = {
   class: "fwde-manage__name"
 };
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_7 = {
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_8 = {
   class: "fwde-manage__kind"
 };
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_8 = {
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_9 = {
+  key: 0
+};
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_10 = ["aria-label", "value", "disabled", "onChange"];
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_11 = {
+  value: ""
+};
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_12 = ["value"];
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_13 = {
+  key: 1
+};
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_14 = {
   class: "fwde-manage__actions"
 };
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_9 = {
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_15 = {
   class: "fwde-manage__confirm"
 };
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_10 = ["disabled", "onClick"];
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_11 = ["disabled", "onClick"];
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_12 = ["onClick"];
-const ManageSavedDialogvue_type_template_id_63f9a986_hoisted_13 = {
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_16 = {
+  key: 0,
+  class: "fwde-manage__deletehint"
+};
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_17 = ["disabled", "onClick"];
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_18 = ["disabled", "onClick"];
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_19 = ["onClick"];
+const ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_20 = {
   key: 2,
   class: "fwde-manage__error",
   role: "alert"
 };
-function ManageSavedDialogvue_type_template_id_63f9a986_render(_ctx, _cache, $props, $setup, $data, $options) {
-  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ManageSavedDialogvue_type_template_id_63f9a986_hoisted_1, [!_ctx.shared.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", ManageSavedDialogvue_type_template_id_63f9a986_hoisted_2, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ManageSharedEmpty')), 1)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("table", ManageSavedDialogvue_type_template_id_63f9a986_hoisted_3, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("thead", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tr", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Name')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ColumnOwner')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ColumnChanged')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ManageSavedDialogvue_type_template_id_63f9a986_hoisted_4, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_RowActions')), 1)])])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tbody", null, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.shared, item => {
+function ManageSavedDialogvue_type_template_id_6ab04ea2_render(_ctx, _cache, $props, $setup, $data, $options) {
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_1, [!_ctx.shared.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_2, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ManageSharedEmpty')), 1)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("table", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_3, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("thead", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tr", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Name')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ColumnOwner')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ColumnChanged')), 1), _ctx.menuSections.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("th", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_4, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ShowInMenu')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("th", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_5, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_RowActions')), 1)])])]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("tbody", null, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.shared, item => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("tr", {
       key: item.id,
       "data-id": item.id
-    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ManageSavedDialogvue_type_template_id_63f9a986_hoisted_6, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(item.name), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ManageSavedDialogvue_type_template_id_63f9a986_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.kindKey(item))), 1)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(item.owner), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(item.updated.slice(0, 10)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", ManageSavedDialogvue_type_template_id_63f9a986_hoisted_8, [_ctx.confirming === item.id ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", null, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(item.name), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_8, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate(_ctx.kindKey(item))), 1)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(item.owner), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(item.updated.slice(0, 10)), 1), _ctx.menuSections.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("td", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_9, [item.kind === 'table' && item.canPlace && _ctx.place ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("select", {
+      key: 0,
+      class: "browser-default fwde-select fwde-manage__menu",
+      "aria-label": _ctx.translate('FeinwerkDataExploration_ShowInMenu'),
+      value: item.menu || '',
+      disabled: _ctx.busy,
+      onChange: $event => _ctx.changePlace(item, $event)
+    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("option", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_11, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_MenuNone')), 1), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.menuSections, section => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
+        key: section.id,
+        value: section.id
+      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(section.name), 9, ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_12);
+    }), 128))], 40, ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_10)) : item.kind === 'table' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_13, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.sectionName(item.menu)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("td", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_14, [_ctx.confirming === item.id ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
       key: 0
-    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ManageSavedDialogvue_type_template_id_63f9a986_hoisted_9, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ManageSharedConfirm', item.name)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_15, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ManageSharedConfirm', item.name)) + " ", 1), item.kind !== 'funnel' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_16, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_DeleteAlsoRemoves')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
       type: "button",
       class: "fwde-button fwde-manage__confirm-yes",
       disabled: _ctx.busy,
       onClick: $event => _ctx.confirmDelete(item)
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Delete')), 9, ManageSavedDialogvue_type_template_id_63f9a986_hoisted_10), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Delete')), 9, ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_17), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
       type: "button",
       class: "fwde-button fwde-manage__confirm-no",
       disabled: _ctx.busy,
       onClick: $event => _ctx.ask(null, item.id)
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Cancel')), 9, ManageSavedDialogvue_type_template_id_63f9a986_hoisted_11)], 64)) : item.canDelete ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Cancel')), 9, ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_18)], 64)) : item.canDelete ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
       key: 1,
       type: "button",
       class: "fwde-button fwde-manage__delete",
       onClick: $event => _ctx.ask(item.id, item.id)
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Delete')), 9, ManageSavedDialogvue_type_template_id_63f9a986_hoisted_12)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)])], 8, ManageSavedDialogvue_type_template_id_63f9a986_hoisted_5);
-  }), 128))])])), _ctx.error ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", ManageSavedDialogvue_type_template_id_63f9a986_hoisted_13, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.error), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Delete')), 9, ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_19)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)])], 8, ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_6);
+  }), 128))])])), _ctx.error ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", ManageSavedDialogvue_type_template_id_6ab04ea2_hoisted_20, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.error), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
 }
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ManageSavedDialog.vue?vue&type=template&id=63f9a986
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ManageSavedDialog.vue?vue&type=template&id=6ab04ea2
 
 // CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ManageSavedDialog.vue?vue&type=script&lang=ts
 
@@ -4269,9 +5870,18 @@ function ManageSavedDialogvue_type_template_id_63f9a986_render(_ctx, _cache, $pr
     remove: {
       type: Function,
       required: true
+    },
+    /** changes a shared exploration's menu place (Peter, 2026-11-24: admins may) */
+    place: {
+      type: Function,
+      default: null
+    },
+    menuSections: {
+      type: Array,
+      default: () => []
     }
   },
-  emits: ['deleted'],
+  emits: ['deleted', 'placed'],
   data() {
     return {
       confirming: null,
@@ -4287,7 +5897,10 @@ function ManageSavedDialogvue_type_template_id_63f9a986_render(_ctx, _cache, $pr
   methods: {
     translate: external_CoreHome_["translate"],
     kindKey(item) {
-      return item.kind === 'funnel' ? 'FeinwerkDataExploration_Funnel' : 'FeinwerkDataExploration_FreeFormTable';
+      if (item.kind === 'funnel') {
+        return 'FeinwerkDataExploration_Funnel';
+      }
+      return item.kind === 'kpi' ? 'FeinwerkDataExploration_SaveAsKpiCard' : 'FeinwerkDataExploration_FreeFormTable';
     },
     /**
      * Shows or hides the confirmation of one row; the focus goes along (to "Delete" in the
@@ -4301,6 +5914,22 @@ function ManageSavedDialogvue_type_template_id_63f9a986_render(_ctx, _cache, $pr
         if (target) {
           target.focus();
         }
+      });
+    },
+    sectionName(menu) {
+      const section = this.menuSections.find(s => s.id === menu);
+      return section ? section.name : Object(external_CoreHome_["translate"])('FeinwerkDataExploration_MenuNone');
+    },
+    changePlace(item, event) {
+      const menu = event.target.value;
+      this.busy = true;
+      this.error = '';
+      this.place(item.id, menu).then(() => {
+        this.$emit('placed', item.id);
+      }).catch(e => {
+        this.error = e instanceof Error ? e.message : String(e);
+      }).finally(() => {
+        this.busy = false;
       });
     },
     confirmDelete(item) {
@@ -4323,26 +5952,67 @@ function ManageSavedDialogvue_type_template_id_63f9a986_render(_ctx, _cache, $pr
 
 
 
-ManageSavedDialogvue_type_script_lang_ts.render = ManageSavedDialogvue_type_template_id_63f9a986_render
+ManageSavedDialogvue_type_script_lang_ts.render = ManageSavedDialogvue_type_template_id_6ab04ea2_render
 
 /* harmony default export */ var ManageSavedDialog = (ManageSavedDialogvue_type_script_lang_ts);
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/saved.ts
 
 
+const COMPARES = ['none', 'previous', 'weekday', 'average4'];
+const LINES = [0, 7, 30];
+const CHANGES = ['percent', 'absolute'];
+/** a card's own keys, next to its exploration's */
+const CARD_KEYS = ['fwdeKpiMetric', 'fwdeKpiCompare', 'fwdeKpiLine', 'fwdeKpiChange'];
+const TABLE_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder', 'fwdeLimit', 'fwdeFilters', 'fwdeView', 'fwdeChart', 'fwdeChartType', 'fwdeMatch', 'fwdePivot', 'fwdePivotLimit'];
 /** The hash keys of each kind of exploration. */
 const KIND_KEYS = {
-  table: ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder', 'fwdeLimit', 'fwdeFilters', 'fwdeView', 'fwdeChart', 'fwdeChartType', 'fwdeMatch'],
-  funnel: ['fwdeSteps']
+  table: TABLE_KEYS,
+  funnel: ['fwdeSteps'],
+  kpi: TABLE_KEYS.concat(CARD_KEYS)
 };
-/** Every key a saved exploration may set (fwdeKind: 'funnel', absent for tables). */
-const STATE_KEYS = [...KIND_KEYS.table, 'fwdeKind', ...KIND_KEYS.funnel];
-/** The page (Matomo subcategory) of each kind. */
+/** Every key a saved exploration may set (fwdeKind: 'funnel' or 'kpi', absent for tables). */
+const STATE_KEYS = [...KIND_KEYS.table, 'fwdeKind', ...KIND_KEYS.funnel, ...CARD_KEYS];
+/** The page (Matomo subcategory) of each kind: a KPI card opens as its exploration. */
 const SUBCATEGORY = {
   table: 'FeinwerkDataExploration_FreeFormTable',
-  funnel: 'FeinwerkDataExploration_Funnel'
+  funnel: 'FeinwerkDataExploration_Funnel',
+  kpi: 'FeinwerkDataExploration_FreeFormTable'
 };
 function savedKind(saved) {
-  return saved.state.fwdeKind === 'funnel' ? 'funnel' : 'table';
+  if (saved.state.fwdeKind === 'funnel') {
+    return 'funnel';
+  }
+  return saved.state.fwdeKind === 'kpi' ? 'kpi' : 'table';
+}
+/** A card's state: its exploration's (without a menu place, a card has none) plus its settings. */
+function withCard(state, card) {
+  const rest = Object.assign({}, state);
+  delete rest.fwdeMenu;
+  return Object.assign(Object.assign({}, rest), {}, {
+    fwdeKind: 'kpi',
+    fwdeKpiMetric: card.metric,
+    fwdeKpiCompare: card.compare,
+    fwdeKpiLine: String(card.line),
+    fwdeKpiChange: card.change
+  });
+}
+/**
+ * The save panel's start for a card: a saved card's settings (a metric the exploration no longer
+ * has: its first one), the defaults otherwise (Peter, 2026-11-24: "ja, passt so").
+ */
+function cardDefaults(current, metricIds) {
+  const state = current && savedKind(current) === 'kpi' ? current.state : {};
+  const compare = COMPARES.find(c => c === state.fwdeKpiCompare) || 'average4';
+  const line = LINES.includes(Number(state.fwdeKpiLine)) && state.fwdeKpiLine !== undefined ? Number(state.fwdeKpiLine) : 30;
+  return {
+    saveAs: current && savedKind(current) === 'kpi' ? 'kpi' : 'table',
+    card: {
+      metric: metricIds.includes(state.fwdeKpiMetric) ? state.fwdeKpiMetric : metricIds[0] || '',
+      compare,
+      line,
+      change: CHANGES.find(c => c === state.fwdeKpiChange) || 'percent'
+    }
+  };
 }
 /**
  * The hash that opens a saved exploration on its page: the state of its kind (every other state
@@ -4351,10 +6021,12 @@ function savedKind(saved) {
  */
 function savedHashParams(saved) {
   const kind = savedKind(saved);
+  // a card opens as its exploration: its own keys stay out of the link
+  const linkKeys = KIND_KEYS[kind === 'kpi' ? 'table' : kind];
   const params = {};
   STATE_KEYS.forEach(key => {
     const value = saved.state[key];
-    params[key] = KIND_KEYS[kind].includes(key) && typeof value === 'string' ? value : '';
+    params[key] = linkKeys.includes(key) && typeof value === 'string' ? value : '';
   });
   params.segment = saved.segment || '';
   params.fwdeSaved = String(saved.id);
@@ -4397,24 +6069,35 @@ function findSaved(list, id, kind = null) {
     return null;
   }
   const found = list.find(s => String(s.id) === String(id)) || null;
-  return found && kind && savedKind(found) !== kind ? null : found;
+  const kinds = kind === null || Array.isArray(kind) ? kind : [kind];
+  return found && kinds && !kinds.includes(savedKind(found)) ? null : found;
 }
 /**
  * What the save dialog starts with: the open exploration's name and visibility when the user may
  * change it; a copy of someone else's exploration starts private, and so does every exploration
  * of a user who may not share (no write access).
  */
+/** where a new saved exploration shows as a report (saved reports, 2026-11-24) */
+const DEFAULT_MENU = 'FeinwerkDataExploration_Explorations';
 function dialogDefaults(current, suggestedName, canShare) {
   if (current && current.canEdit) {
     return {
       name: current.name,
-      shared: canShare && current.shared
+      shared: canShare && current.shared,
+      menu: current.menu || ''
     };
   }
   return {
     name: (current ? current.name : suggestedName).slice(0, 100),
-    shared: false
+    shared: false,
+    menu: DEFAULT_MENU
   };
+}
+/** The saved state with its menu place (never part of the page's link). */
+function withMenu(state, menu) {
+  return menu ? Object.assign(Object.assign({}, state), {}, {
+    fwdeMenu: menu
+  }) : state;
 }
 /**
  * Whether the page shows something other than the saved exploration (a later change, or an older
@@ -4477,6 +6160,11 @@ const {
     canManage: {
       type: Boolean,
       default: false
+    },
+    /** Matomo's sections a saved exploration can show in as a report (saved reports, 2026-11-24) */
+    menuSections: {
+      type: Array,
+      default: () => []
     }
   },
   emits: ['open', 'deleted'],
@@ -4506,13 +6194,23 @@ const {
         throw new Error(errorText(e));
       });
     },
+    /** the manage dialog's menu place, with Matomo's error text as the message */
+    placeSaved(id, menu) {
+      return setSavedMenu(id, menu).catch(e => {
+        throw new Error(errorText(e));
+      });
+    },
     translate: SavedPickervue_type_script_lang_ts_translate,
     ownedBy(saved) {
       return SavedPickervue_type_script_lang_ts_translate('FeinwerkDataExploration_SavedBy', this.displayName(saved), saved.owner);
     },
-    /** funnels are named as such; tables by their name */
+    /** funnels and KPI cards are named as such; tables by their name */
     displayName(saved) {
-      return savedKind(saved) === 'funnel' ? SavedPickervue_type_script_lang_ts_translate('FeinwerkDataExploration_SavedFunnel', saved.name) : saved.name;
+      const kind = savedKind(saved);
+      if (kind === 'funnel') {
+        return SavedPickervue_type_script_lang_ts_translate('FeinwerkDataExploration_SavedFunnel', saved.name);
+      }
+      return kind === 'kpi' ? SavedPickervue_type_script_lang_ts_translate('FeinwerkDataExploration_SavedKpiCard', saved.name) : saved.name;
     },
     onChange(event) {
       const id = event.target.value;
@@ -4526,71 +6224,115 @@ const {
 
 
 
-SavedPickervue_type_script_lang_ts.render = SavedPickervue_type_template_id_b0c3cb76_render
+SavedPickervue_type_script_lang_ts.render = SavedPickervue_type_template_id_3a2d3f38_render
 
 /* harmony default export */ var SavedPicker = (SavedPickervue_type_script_lang_ts);
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/SaveDialog.vue?vue&type=template&id=8b6e6f04
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/SaveDialog.vue?vue&type=template&id=3780d2ad
 
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_1 = {
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_1 = {
   class: "fwde-savedialog"
 };
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_2 = ["aria-expanded"];
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_3 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_2 = ["aria-expanded"];
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_3 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
   class: "icon-save",
   "aria-hidden": "true"
 }, null, -1);
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_4 = {
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_4 = {
   key: 0,
   class: "fwde-savedialog__note"
 };
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_5 = {
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_5 = {
   class: "fwde-field__label",
   for: "fwde-savedialog-name"
 };
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_6 = {
-  class: "fwde-savedialog__visibility"
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_6 = {
+  key: 1,
+  class: "fwde-savedialog__kind"
 };
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_7 = {
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_7 = {
   class: "fwde-field__label"
 };
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_8 = {
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_8 = {
+  key: 2,
+  class: "fwde-savedialog__card"
+};
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_9 = {
+  class: "fwde-field__label",
+  for: "fwde-savedialog-kpimetric"
+};
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_10 = ["value"];
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_11 = {
+  class: "fwde-field__label",
+  for: "fwde-savedialog-kpicompare"
+};
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_12 = ["value"];
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_13 = {
+  class: "fwde-field__label"
+};
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_14 = {
+  class: "fwde-field__label"
+};
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_15 = {
+  key: 3,
+  class: "fwde-savedialog__place"
+};
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_16 = {
+  class: "fwde-field__label",
+  for: "fwde-savedialog-menu"
+};
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_17 = {
+  value: ""
+};
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_18 = ["value"];
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_19 = {
+  class: "fwde-savedialog__visibility"
+};
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_20 = {
+  class: "fwde-field__label"
+};
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_21 = {
   class: "fwde-savedialog__option"
 };
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_9 = {
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_22 = {
   class: "fwde-list__label"
 };
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_10 = ["disabled"];
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_11 = {
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_23 = ["disabled"];
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_24 = {
   class: "fwde-list__label"
 };
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_12 = {
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_25 = {
   key: 0,
   class: "fwde-savedialog__note"
 };
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_13 = {
-  key: 1,
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_26 = {
+  key: 4,
   class: "fwde-savedialog__error",
   role: "alert"
 };
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_14 = {
-  key: 2,
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_27 = {
+  key: 5,
   class: "fwde-savedialog__delete"
 };
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_15 = ["disabled"];
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_16 = ["disabled"];
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_17 = ["disabled"];
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_18 = ["disabled"];
-const SaveDialogvue_type_template_id_8b6e6f04_hoisted_19 = ["disabled"];
-function SaveDialogvue_type_template_id_8b6e6f04_render(_ctx, _cache, $props, $setup, $data, $options) {
+const SaveDialogvue_type_template_id_3780d2ad_hoisted_28 = ["disabled"];
+const _hoisted_29 = {
+  key: 0,
+  class: "fwde-savedialog__deletehint"
+};
+const _hoisted_30 = ["disabled"];
+const _hoisted_31 = ["disabled"];
+const _hoisted_32 = ["disabled"];
+const _hoisted_33 = ["disabled"];
+function SaveDialogvue_type_template_id_3780d2ad_render(_ctx, _cache, $props, $setup, $data, $options) {
+  const _component_SegmentedSwitch = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SegmentedSwitch");
   const _component_SidePanel = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SidePanel");
-  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", SaveDialogvue_type_template_id_8b6e6f04_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", SaveDialogvue_type_template_id_3780d2ad_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
     ref: "toggle",
     type: "button",
     class: "fwde-button fwde-savedialog__toggle",
     "aria-haspopup": "dialog",
     "aria-expanded": _ctx.open ? 'true' : 'false',
     onClick: _cache[0] || (_cache[0] = (...args) => _ctx.toggle && _ctx.toggle(...args))
-  }, [SaveDialogvue_type_template_id_8b6e6f04_hoisted_3, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(" " + Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Save')), 1)], 8, SaveDialogvue_type_template_id_8b6e6f04_hoisted_2), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_SidePanel, {
+  }, [SaveDialogvue_type_template_id_3780d2ad_hoisted_3, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(" " + Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Save')), 1)], 8, SaveDialogvue_type_template_id_3780d2ad_hoisted_2), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_SidePanel, {
     open: _ctx.open,
     title: _ctx.translate('FeinwerkDataExploration_SaveExploration'),
     "close-label": _ctx.translate('General_Close'),
@@ -4600,31 +6342,31 @@ function SaveDialogvue_type_template_id_8b6e6f04_render(_ctx, _cache, $props, $s
     footer: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withCtx"])(() => [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
       type: "button",
       class: "fwde-button fwde-savedialog__cancel",
-      onClick: _cache[8] || (_cache[8] = $event => _ctx.close())
+      onClick: _cache[14] || (_cache[14] = $event => _ctx.close())
     }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Cancel')), 1), _ctx.canChange ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
       key: 0
     }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
       type: "button",
       class: "fwde-button fwde-savedialog__asnew",
       disabled: _ctx.busy,
-      onClick: _cache[9] || (_cache[9] = $event => _ctx.save(true))
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SaveAsNew')), 9, SaveDialogvue_type_template_id_8b6e6f04_hoisted_17), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+      onClick: _cache[15] || (_cache[15] = $event => _ctx.save(true))
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SaveAsNew')), 9, _hoisted_31), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
       type: "submit",
       form: "fwde-savedialog-form",
       class: "btn fwde-savedialog__changes",
       disabled: _ctx.busy
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SaveChanges')), 9, SaveDialogvue_type_template_id_8b6e6f04_hoisted_18)], 64)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SaveChanges')), 9, _hoisted_32)], 64)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
       key: 1,
       type: "submit",
       form: "fwde-savedialog-form",
       class: "btn fwde-savedialog__new",
       disabled: _ctx.busy
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Save')), 9, SaveDialogvue_type_template_id_8b6e6f04_hoisted_19))]),
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Save')), 9, _hoisted_33))]),
     default: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withCtx"])(() => [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("form", {
       id: "fwde-savedialog-form",
       class: "fwde-savedialog__form",
-      onSubmit: _cache[7] || (_cache[7] = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withModifiers"])($event => _ctx.save(!_ctx.canChange), ["prevent"]))
-    }, [_ctx.current && !_ctx.current.canEdit ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", SaveDialogvue_type_template_id_8b6e6f04_hoisted_4, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedNotYours', _ctx.current.owner)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", SaveDialogvue_type_template_id_8b6e6f04_hoisted_5, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedName')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withDirectives"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("input", {
+      onSubmit: _cache[13] || (_cache[13] = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withModifiers"])($event => _ctx.save(!_ctx.canChange), ["prevent"]))
+    }, [_ctx.current && !_ctx.current.canEdit ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", SaveDialogvue_type_template_id_3780d2ad_hoisted_4, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedNotYours', _ctx.current.owner)), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", SaveDialogvue_type_template_id_3780d2ad_hoisted_5, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedName')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withDirectives"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("input", {
       id: "fwde-savedialog-name",
       ref: "name",
       "onUpdate:modelValue": _cache[1] || (_cache[1] = $event => _ctx.name = $event),
@@ -4632,54 +6374,98 @@ function SaveDialogvue_type_template_id_8b6e6f04_render(_ctx, _cache, $props, $s
       class: "browser-default fwde-input",
       maxlength: "100",
       required: ""
-    }, null, 512), [[external_commonjs_vue_commonjs2_vue_root_Vue_["vModelText"], _ctx.name]]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("fieldset", SaveDialogvue_type_template_id_8b6e6f04_hoisted_6, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("legend", SaveDialogvue_type_template_id_8b6e6f04_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedVisibility')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", SaveDialogvue_type_template_id_8b6e6f04_hoisted_8, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withDirectives"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("input", {
-      "onUpdate:modelValue": _cache[2] || (_cache[2] = $event => _ctx.shared = $event),
+    }, null, 512), [[external_commonjs_vue_commonjs2_vue_root_Vue_["vModelText"], _ctx.name]]), _ctx.metrics.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", SaveDialogvue_type_template_id_3780d2ad_hoisted_6, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", SaveDialogvue_type_template_id_3780d2ad_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SaveAs')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_SegmentedSwitch, {
+      options: _ctx.kindOptions,
+      "model-value": _ctx.saveAs,
+      label: _ctx.translate('FeinwerkDataExploration_SaveAs'),
+      "onUpdate:modelValue": _cache[2] || (_cache[2] = $event => _ctx.saveAs = $event)
+    }, null, 8, ["options", "model-value", "label"])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.saveAs === 'kpi' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", SaveDialogvue_type_template_id_3780d2ad_hoisted_8, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", SaveDialogvue_type_template_id_3780d2ad_hoisted_9, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_KpiMetric')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withDirectives"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
+      id: "fwde-savedialog-kpimetric",
+      "onUpdate:modelValue": _cache[3] || (_cache[3] = $event => _ctx.card.metric = $event),
+      class: "browser-default fwde-select"
+    }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.metrics, metric => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
+        key: metric.id,
+        value: metric.id
+      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(metric.name), 9, SaveDialogvue_type_template_id_3780d2ad_hoisted_10);
+    }), 128))], 512), [[external_commonjs_vue_commonjs2_vue_root_Vue_["vModelSelect"], _ctx.card.metric]]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", SaveDialogvue_type_template_id_3780d2ad_hoisted_11, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_KpiCompare')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withDirectives"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
+      id: "fwde-savedialog-kpicompare",
+      "onUpdate:modelValue": _cache[4] || (_cache[4] = $event => _ctx.card.compare = $event),
+      class: "browser-default fwde-select"
+    }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.compareOptions, option => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
+        key: option.value,
+        value: option.value
+      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(option.label), 9, SaveDialogvue_type_template_id_3780d2ad_hoisted_12);
+    }), 128))], 512), [[external_commonjs_vue_commonjs2_vue_root_Vue_["vModelSelect"], _ctx.card.compare]]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", SaveDialogvue_type_template_id_3780d2ad_hoisted_13, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_KpiLine')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_SegmentedSwitch, {
+      options: _ctx.lineOptions,
+      "model-value": String(_ctx.card.line),
+      label: _ctx.translate('FeinwerkDataExploration_KpiLine'),
+      "onUpdate:modelValue": _cache[5] || (_cache[5] = $event => _ctx.card.line = Number($event))
+    }, null, 8, ["options", "model-value", "label"]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", SaveDialogvue_type_template_id_3780d2ad_hoisted_14, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_KpiChange')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_SegmentedSwitch, {
+      options: _ctx.changeOptions,
+      "model-value": _ctx.card.change,
+      label: _ctx.translate('FeinwerkDataExploration_KpiChange'),
+      "onUpdate:modelValue": _cache[6] || (_cache[6] = $event => _ctx.card.change = $event)
+    }, null, 8, ["options", "model-value", "label"])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.menuSections.length && _ctx.saveAs !== 'kpi' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", SaveDialogvue_type_template_id_3780d2ad_hoisted_15, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", SaveDialogvue_type_template_id_3780d2ad_hoisted_16, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ShowInMenu')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withDirectives"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
+      id: "fwde-savedialog-menu",
+      "onUpdate:modelValue": _cache[7] || (_cache[7] = $event => _ctx.menu = $event),
+      class: "browser-default fwde-select fwde-savedialog__menu"
+    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("option", SaveDialogvue_type_template_id_3780d2ad_hoisted_17, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_MenuNone')), 1), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.menuSections, section => {
+      return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
+        key: section.id,
+        value: section.id
+      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(section.name), 9, SaveDialogvue_type_template_id_3780d2ad_hoisted_18);
+    }), 128))], 512), [[external_commonjs_vue_commonjs2_vue_root_Vue_["vModelSelect"], _ctx.menu]])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("fieldset", SaveDialogvue_type_template_id_3780d2ad_hoisted_19, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("legend", SaveDialogvue_type_template_id_3780d2ad_hoisted_20, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedVisibility')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", SaveDialogvue_type_template_id_3780d2ad_hoisted_21, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withDirectives"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("input", {
+      "onUpdate:modelValue": _cache[8] || (_cache[8] = $event => _ctx.shared = $event),
       type: "radio",
       name: "fwde-savedialog-shared",
       value: false
-    }, null, 512), [[external_commonjs_vue_commonjs2_vue_root_Vue_["vModelRadio"], _ctx.shared]]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", SaveDialogvue_type_template_id_8b6e6f04_hoisted_9, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_VisibilityPrivate')), 1)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", {
+    }, null, 512), [[external_commonjs_vue_commonjs2_vue_root_Vue_["vModelRadio"], _ctx.shared]]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", SaveDialogvue_type_template_id_3780d2ad_hoisted_22, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_VisibilityPrivate')), 1)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", {
       class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(["fwde-savedialog__option", {
         'fwde-savedialog__option--disabled': !_ctx.canShare
       }])
     }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withDirectives"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("input", {
-      "onUpdate:modelValue": _cache[3] || (_cache[3] = $event => _ctx.shared = $event),
+      "onUpdate:modelValue": _cache[9] || (_cache[9] = $event => _ctx.shared = $event),
       type: "radio",
       name: "fwde-savedialog-shared",
       value: true,
       disabled: !_ctx.canShare
-    }, null, 8, SaveDialogvue_type_template_id_8b6e6f04_hoisted_10), [[external_commonjs_vue_commonjs2_vue_root_Vue_["vModelRadio"], _ctx.shared]]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", SaveDialogvue_type_template_id_8b6e6f04_hoisted_11, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_VisibilityShared')), 1)], 2), !_ctx.canShare ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", SaveDialogvue_type_template_id_8b6e6f04_hoisted_12, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedShareNeedsWrite')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]), _ctx.error ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", SaveDialogvue_type_template_id_8b6e6f04_hoisted_13, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.error), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.canChange ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", SaveDialogvue_type_template_id_8b6e6f04_hoisted_14, [!_ctx.confirmDelete ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
+    }, null, 8, SaveDialogvue_type_template_id_3780d2ad_hoisted_23), [[external_commonjs_vue_commonjs2_vue_root_Vue_["vModelRadio"], _ctx.shared]]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", SaveDialogvue_type_template_id_3780d2ad_hoisted_24, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_VisibilityShared')), 1)], 2), !_ctx.canShare ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", SaveDialogvue_type_template_id_3780d2ad_hoisted_25, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedShareNeedsWrite')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]), _ctx.error ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", SaveDialogvue_type_template_id_3780d2ad_hoisted_26, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.error), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.canChange ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", SaveDialogvue_type_template_id_3780d2ad_hoisted_27, [!_ctx.confirmDelete ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("button", {
       key: 0,
       ref: "deleteAsk",
       type: "button",
       class: "fwde-button fwde-savedialog__deleteask",
       disabled: _ctx.busy,
-      onClick: _cache[4] || (_cache[4] = $event => _ctx.askDelete(true))
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Delete')), 9, SaveDialogvue_type_template_id_8b6e6f04_hoisted_15)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
+      onClick: _cache[10] || (_cache[10] = $event => _ctx.askDelete(true))
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Delete')), 9, SaveDialogvue_type_template_id_3780d2ad_hoisted_28)) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
       key: 1
-    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedDeleteConfirm', _ctx.currentName)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_SavedDeleteConfirm', _ctx.currentName)), 1), _ctx.current && _ctx.savedKind(_ctx.current) !== 'funnel' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", _hoisted_29, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_DeleteAlsoRemoves')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
       ref: "deleteYes",
       type: "button",
       class: "fwde-button fwde-savedialog__deleteyes",
       disabled: _ctx.busy,
-      onClick: _cache[5] || (_cache[5] = $event => _ctx.$emit('delete'))
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Delete')), 9, SaveDialogvue_type_template_id_8b6e6f04_hoisted_16), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+      onClick: _cache[11] || (_cache[11] = $event => _ctx.$emit('delete'))
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Delete')), 9, _hoisted_30), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
       type: "button",
       class: "fwde-button fwde-savedialog__deleteno",
-      onClick: _cache[6] || (_cache[6] = $event => _ctx.askDelete(false))
+      onClick: _cache[12] || (_cache[12] = $event => _ctx.askDelete(false))
     }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('General_Cancel')), 1)], 64))])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 32)]),
     _: 1
   }, 8, ["open", "title", "close-label", "onUpdate:open"])]);
 }
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/SaveDialog.vue?vue&type=template&id=8b6e6f04
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/SaveDialog.vue?vue&type=template&id=3780d2ad
 
 // CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/SaveDialog.vue?vue&type=script&lang=ts
 
 
 
 
+
 /* harmony default export */ var SaveDialogvue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
   components: {
-    SidePanel: SidePanel
+    SidePanel: SidePanel,
+    SegmentedSwitch: SegmentedSwitch
   },
   props: {
     current: {
@@ -4703,6 +6489,16 @@ function SaveDialogvue_type_template_id_8b6e6f04_render(_ctx, _cache, $props, $s
     error: {
       type: String,
       default: ''
+    },
+    /** Matomo's sections a saved exploration can show in as a report; none: no choice (funnels) */
+    menuSections: {
+      type: Array,
+      default: () => []
+    },
+    /** the exploration's metrics with their names: with them it can be saved as a KPI card too */
+    metrics: {
+      type: Array,
+      default: () => []
     }
   },
   emits: ['save', 'delete', 'open'],
@@ -4711,18 +6507,88 @@ function SaveDialogvue_type_template_id_8b6e6f04_render(_ctx, _cache, $props, $s
       open: false,
       name: '',
       shared: false,
-      confirmDelete: false
+      menu: '',
+      confirmDelete: false,
+      /** an exploration or a KPI card (2026-11-24) */
+      saveAs: 'table',
+      card: {
+        metric: '',
+        compare: 'average4',
+        line: 30,
+        change: 'percent'
+      },
+      /**
+       * the name the panel suggested last; while the name is still it, it follows the kind and
+       * the card's metric
+       */
+      autoName: ''
     };
   },
   computed: {
     currentName() {
       return this.current ? this.current.name : '';
     },
+    /** "Save changes" keeps the kind: a table never turns into a card or back (then: a new save) */
     canChange() {
-      return !!(this.current && this.current.canEdit);
+      if (!this.current || !this.current.canEdit) {
+        return false;
+      }
+      return !this.metrics.length || savedKind(this.current) === this.saveAs;
+    },
+    kindOptions() {
+      return [{
+        value: 'table',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_SaveAsExploration')
+      }, {
+        value: 'kpi',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_SaveAsKpiCard')
+      }];
+    },
+    compareOptions() {
+      return [{
+        value: 'average4',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_KpiCompareAverage4')
+      }, {
+        value: 'weekday',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_KpiCompareWeekday')
+      }, {
+        value: 'previous',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_KpiComparePrevious')
+      }, {
+        value: 'none',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_KpiCompareNone')
+      }];
+    },
+    lineOptions() {
+      return [{
+        value: '0',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_KpiLineOff')
+      }, {
+        value: '7',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_KpiLine7')
+      }, {
+        value: '30',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_KpiLine30')
+      }];
+    },
+    changeOptions() {
+      return [{
+        value: 'percent',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_KpiChangePercent')
+      }, {
+        value: 'absolute',
+        label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_KpiChangeAbsolute')
+      }];
     }
   },
   watch: {
+    // UI review 2026-11-24 (F6): a new card is named after its metric, a name the user typed stays
+    saveAs() {
+      this.suggestName();
+    },
+    'card.metric': function cardMetric() {
+      this.suggestName();
+    },
     // a finished save or delete closes the dialog
     busy(isBusy, wasBusy) {
       if (wasBusy && !isBusy && !this.error) {
@@ -4739,8 +6605,15 @@ function SaveDialogvue_type_template_id_8b6e6f04_render(_ctx, _cache, $props, $s
       }
       ({
         name: this.name,
-        shared: this.shared
+        shared: this.shared,
+        menu: this.menu
       } = dialogDefaults(this.current, this.suggestedName, this.canShare));
+      ({
+        saveAs: this.saveAs,
+        card: this.card
+      } = cardDefaults(this.current, this.metrics.map(metric => metric.id)));
+      // a saved exploration keeps its name; a new one starts with the suggestion
+      this.autoName = this.current ? '' : this.name;
       this.confirmDelete = false;
       this.open = true;
       this.$emit('open');
@@ -4751,6 +6624,19 @@ function SaveDialogvue_type_template_id_8b6e6f04_render(_ctx, _cache, $props, $s
           input.select();
         }
       });
+    },
+    savedKind: savedKind,
+    /**
+     * while the name is still the panel's suggestion: the card's metric for a KPI card, else the
+     * result title
+     */
+    suggestName() {
+      if (!this.open || this.name !== this.autoName) {
+        return;
+      }
+      const metric = this.metrics.find(m => m.id === this.card.metric);
+      this.name = this.saveAs === 'kpi' && metric ? metric.name : this.suggestedName;
+      this.autoName = this.name;
     },
     /** closes the panel; focus back on Save (also where a click does not focus a button) */
     close() {
@@ -4780,11 +6666,16 @@ function SaveDialogvue_type_template_id_8b6e6f04_render(_ctx, _cache, $props, $s
       if (this.name.trim() === '') {
         return;
       }
-      this.$emit('save', {
+      const event = {
         name: this.name.trim(),
         shared: this.shared,
-        asNew
-      });
+        asNew,
+        menu: this.menuSections.length && this.saveAs !== 'kpi' ? this.menu : ''
+      };
+      if (this.saveAs === 'kpi') {
+        event.card = Object.assign({}, this.card);
+      }
+      this.$emit('save', event);
     }
   }
 }));
@@ -4794,7 +6685,7 @@ function SaveDialogvue_type_template_id_8b6e6f04_render(_ctx, _cache, $props, $s
 
 
 
-SaveDialogvue_type_script_lang_ts.render = SaveDialogvue_type_template_id_8b6e6f04_render
+SaveDialogvue_type_script_lang_ts.render = SaveDialogvue_type_template_id_3780d2ad_render
 
 /* harmony default export */ var SaveDialog = (SaveDialogvue_type_script_lang_ts);
 // CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/FeedbackBar.vue?vue&type=template&id=571877ce
@@ -5128,54 +7019,53 @@ FeinwerkLogovue_type_script_lang_ts.render = FeinwerkLogovue_type_template_id_04
 PromoLinevue_type_script_lang_ts.render = PromoLinevue_type_template_id_0f0580af_render
 
 /* harmony default export */ var PromoLine = (PromoLinevue_type_script_lang_ts);
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/PremiumBanner.vue?vue&type=template&id=0f4c14a0
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/PremiumBanner.vue?vue&type=template&id=6c811999
 
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_1 = {
+const PremiumBannervue_type_template_id_6c811999_hoisted_1 = {
   key: 0,
   class: "fwde-premium-slot"
 };
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_2 = ["data-fwpromo-id", "data-fwpromo-days", "data-fwpromo-demo", "aria-label"];
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_3 = {
+const PremiumBannervue_type_template_id_6c811999_hoisted_2 = ["data-fwpromo-id", "data-fwpromo-days", "data-fwpromo-demo", "aria-label"];
+const PremiumBannervue_type_template_id_6c811999_hoisted_3 = {
   class: "fwde-premium__head"
 };
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_4 = {
+const PremiumBannervue_type_template_id_6c811999_hoisted_4 = {
   key: 0,
   class: "fwde-premium__art"
 };
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_5 = ["src"];
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_6 = {
+const PremiumBannervue_type_template_id_6c811999_hoisted_5 = ["src"];
+const PremiumBannervue_type_template_id_6c811999_hoisted_6 = {
   class: "fwde-premium__intro"
 };
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_7 = {
+const PremiumBannervue_type_template_id_6c811999_hoisted_7 = {
   class: "fwde-premium__label"
 };
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_8 = {
+const PremiumBannervue_type_template_id_6c811999_hoisted_8 = {
   class: "fwde-premium__name"
 };
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_9 = ["title"];
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_10 = {
+const PremiumBannervue_type_template_id_6c811999_hoisted_9 = ["title"];
+const PremiumBannervue_type_template_id_6c811999_hoisted_10 = {
   key: 1,
   class: "fwde-premium__note"
 };
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_11 = {
+const PremiumBannervue_type_template_id_6c811999_hoisted_11 = {
   class: "fwde-premium__actions"
 };
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_12 = ["href", "target", "rel"];
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_13 = {
+const PremiumBannervue_type_template_id_6c811999_hoisted_12 = ["href", "target", "rel"];
+const PremiumBannervue_type_template_id_6c811999_hoisted_13 = {
   key: 0,
   class: "fwde-premium__price"
 };
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_14 = ["title", "aria-label"];
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_15 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+const PremiumBannervue_type_template_id_6c811999_hoisted_14 = ["title", "aria-label"];
+const PremiumBannervue_type_template_id_6c811999_hoisted_15 = /*#__PURE__*/Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
   "aria-hidden": "true"
 }, "×", -1);
-const PremiumBannervue_type_template_id_0f4c14a0_hoisted_16 = [PremiumBannervue_type_template_id_0f4c14a0_hoisted_15];
-function PremiumBannervue_type_template_id_0f4c14a0_render(_ctx, _cache, $props, $setup, $data, $options) {
+const PremiumBannervue_type_template_id_6c811999_hoisted_16 = [PremiumBannervue_type_template_id_6c811999_hoisted_15];
+function PremiumBannervue_type_template_id_6c811999_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_FeinwerkLogo = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("FeinwerkLogo");
-  return _ctx.premium && _ctx.premium.plugins.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", PremiumBannervue_type_template_id_0f4c14a0_hoisted_1, [_cache[0] || (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["setBlockTracking"])(-1), _cache[0] = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", {
-    class: "fwde-premium",
-    "data-fwpromo-rotation": "banner"
-  }, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.premium.plugins, plugin => {
+  return _ctx.premium && _ctx.premium.plugins.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", PremiumBannervue_type_template_id_6c811999_hoisted_1, [_cache[0] || (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["setBlockTracking"])(-1), _cache[0] = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", Object(external_commonjs_vue_commonjs2_vue_root_Vue_["mergeProps"])({
+    class: "fwde-premium"
+  }, _ctx.placeAttributes), [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.premium.plugins, plugin => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("section", {
       key: plugin.id,
       class: "fwde-premium__item",
@@ -5183,29 +7073,29 @@ function PremiumBannervue_type_template_id_0f4c14a0_render(_ctx, _cache, $props,
       "data-fwpromo-days": _ctx.premium.days,
       "data-fwpromo-demo": _ctx.premium.demo ? '1' : undefined,
       "aria-label": _ctx.label
-    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", PremiumBannervue_type_template_id_0f4c14a0_hoisted_3, [plugin.image ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", PremiumBannervue_type_template_id_0f4c14a0_hoisted_4, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("img", {
+    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", PremiumBannervue_type_template_id_6c811999_hoisted_3, [plugin.image ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", PremiumBannervue_type_template_id_6c811999_hoisted_4, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("img", {
       src: plugin.image,
       alt: "",
       loading: "lazy"
-    }, null, 8, PremiumBannervue_type_template_id_0f4c14a0_hoisted_5)])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", PremiumBannervue_type_template_id_0f4c14a0_hoisted_6, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", PremiumBannervue_type_template_id_0f4c14a0_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.label), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", PremiumBannervue_type_template_id_0f4c14a0_hoisted_8, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(plugin.name), 1)])]), plugin.description ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", {
+    }, null, 8, PremiumBannervue_type_template_id_6c811999_hoisted_5)])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", PremiumBannervue_type_template_id_6c811999_hoisted_6, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", PremiumBannervue_type_template_id_6c811999_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.label), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", PremiumBannervue_type_template_id_6c811999_hoisted_8, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(plugin.name), 1)])]), plugin.description ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", {
       key: 0,
       class: "fwde-premium__text",
       title: plugin.description
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(plugin.description), 9, PremiumBannervue_type_template_id_0f4c14a0_hoisted_9)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), plugin.external === '1' && _ctx.premium.note ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", PremiumBannervue_type_template_id_0f4c14a0_hoisted_10, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.premium.note), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", PremiumBannervue_type_template_id_0f4c14a0_hoisted_11, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("a", {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(plugin.description), 9, PremiumBannervue_type_template_id_6c811999_hoisted_9)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), plugin.external === '1' && _ctx.premium.note ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", PremiumBannervue_type_template_id_6c811999_hoisted_10, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.premium.note), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", PremiumBannervue_type_template_id_6c811999_hoisted_11, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("a", {
       class: "fwde-premium__cta",
       href: plugin.url,
       target: plugin.external === '1' ? '_blank' : undefined,
       rel: plugin.external === '1' ? 'noopener' : undefined
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.moreLabel) + " →", 9, PremiumBannervue_type_template_id_0f4c14a0_hoisted_12), plugin.price ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", PremiumBannervue_type_template_id_0f4c14a0_hoisted_13, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(plugin.price), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_FeinwerkLogo)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.moreLabel) + " →", 9, PremiumBannervue_type_template_id_6c811999_hoisted_12), plugin.price ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", PremiumBannervue_type_template_id_6c811999_hoisted_13, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(plugin.price), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_FeinwerkLogo)]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("button", {
       type: "button",
       class: "fwde-premium__close",
       "data-fwpromo-close": "",
       title: _ctx.dismissLabel,
       "aria-label": _ctx.dismissLabel
-    }, PremiumBannervue_type_template_id_0f4c14a0_hoisted_16, 8, PremiumBannervue_type_template_id_0f4c14a0_hoisted_14)], 8, PremiumBannervue_type_template_id_0f4c14a0_hoisted_2);
-  }), 128))]), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["setBlockTracking"])(1), _cache[0])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true);
+    }, PremiumBannervue_type_template_id_6c811999_hoisted_16, 8, PremiumBannervue_type_template_id_6c811999_hoisted_14)], 8, PremiumBannervue_type_template_id_6c811999_hoisted_2);
+  }), 128))], 16), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["setBlockTracking"])(1), _cache[0])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true);
 }
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/PremiumBanner.vue?vue&type=template&id=0f4c14a0
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/PremiumBanner.vue?vue&type=template&id=6c811999
 
 // CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/PremiumBanner.vue?vue&type=script&lang=ts
 
@@ -5231,6 +7121,22 @@ function PremiumBannervue_type_template_id_0f4c14a0_render(_ctx, _cache, $props,
       type: String,
       required: true
     }
+  },
+  computed: {
+    /**
+     * a pausable place, or in demo mode (pauseDays 0) the plain rotation group (kit
+     * _premiumBanner.twig)
+     */
+    placeAttributes() {
+      const pauseDays = this.premium ? this.premium.pauseDays : 0;
+      return pauseDays > 0 ? {
+        'data-fwpromo-pausable': 'banner',
+        'data-fwpromo-pause': 'fwde-banner',
+        'data-fwpromo-pause-days': String(pauseDays)
+      } : {
+        'data-fwpromo-rotation': 'banner'
+      };
+    }
   }
 }));
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/PremiumBanner.vue?vue&type=script&lang=ts
@@ -5239,86 +7145,86 @@ function PremiumBannervue_type_template_id_0f4c14a0_render(_ctx, _cache, $props,
 
 
 
-PremiumBannervue_type_script_lang_ts.render = PremiumBannervue_type_template_id_0f4c14a0_render
+PremiumBannervue_type_script_lang_ts.render = PremiumBannervue_type_template_id_6c811999_render
 
 /* harmony default export */ var PremiumBanner = (PremiumBannervue_type_script_lang_ts);
-// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ResultChart.vue?vue&type=template&id=7a5e87fe
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/ResultChart.vue?vue&type=template&id=3f67992e
 
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_1 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_1 = {
   ref: "root",
   class: "fwde-chart"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_2 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_2 = {
   class: "fwde-chart__header"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_3 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_3 = {
   class: "fwde-chart__metric"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_4 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_4 = {
   class: "fwde-field__label"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_5 = ["value"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_6 = ["value"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_7 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_5 = ["value"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_6 = ["value"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_7 = {
   key: 1,
   class: "fwde-chart__note"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_8 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_8 = {
   key: 1,
   class: "fwde-chart__donut"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_9 = ["aria-label"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_10 = ["d"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_11 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_9 = ["aria-label"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_10 = ["d"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_11 = {
   class: "fwde-chart__donut-total",
   x: "100",
   y: "93",
   "text-anchor": "middle",
   "dominant-baseline": "central"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_12 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_12 = {
   class: "fwde-chart__donut-metric",
   x: "100",
   y: "118",
   "text-anchor": "middle",
   "dominant-baseline": "central"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_13 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_13 = {
   class: "fwde-chart__donut-legend"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_14 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_14 = {
   class: "fwde-chart__donut-name"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_15 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_15 = {
   class: "fwde-chart__donut-value"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_16 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_16 = {
   class: "fwde-chart__donut-share"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_17 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_17 = {
   key: 2,
   class: "fwde-chart__plot"
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_18 = ["width", "height", "viewBox", "aria-label", "tabindex"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_19 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_18 = ["width", "height", "viewBox", "aria-label", "tabindex"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_19 = {
   key: 0
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_20 = ["x1", "x2", "y1", "y2"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_21 = ["x", "y"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_22 = ["x", "y"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_23 = ["data-name", "x", "y", "width", "height"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_24 = ["x", "y"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_25 = ["x", "y"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_26 = ["x", "y", "width", "height"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_27 = ["x", "y"];
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_28 = {
+const ResultChartvue_type_template_id_3f67992e_hoisted_20 = ["x1", "x2", "y1", "y2"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_21 = ["x", "y"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_22 = ["x", "y"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_23 = ["data-name", "x", "y", "width", "height"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_24 = ["x", "y"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_25 = ["x", "y"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_26 = ["x", "y", "width", "height"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_27 = ["x", "y"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_28 = {
   key: 1
 };
-const ResultChartvue_type_template_id_7a5e87fe_hoisted_29 = ["x1", "x2", "y1", "y2"];
-const _hoisted_30 = ["x", "y"];
-const _hoisted_31 = ["x", "y"];
-const _hoisted_32 = ["x1", "x2", "y1", "y2"];
-const _hoisted_33 = ["data-name"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_29 = ["x1", "x2", "y1", "y2"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_30 = ["x", "y"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_31 = ["x", "y"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_32 = ["x1", "x2", "y1", "y2"];
+const ResultChartvue_type_template_id_3f67992e_hoisted_33 = ["data-name"];
 const _hoisted_34 = ["d"];
 const _hoisted_35 = ["cx", "cy"];
 const _hoisted_36 = ["x", "y", "width", "height", "onMouseenter", "onFocus"];
@@ -5338,10 +7244,10 @@ const _hoisted_41 = {
   class: "fwde-chart__legend"
 };
 const _hoisted_42 = ["data-name"];
-function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $setup, $data, $options) {
+function ResultChartvue_type_template_id_3f67992e_render(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_SegmentedSwitch = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("SegmentedSwitch");
   const _component_ActivityIndicator = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("ActivityIndicator");
-  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ResultChartvue_type_template_id_7a5e87fe_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", ResultChartvue_type_template_id_7a5e87fe_hoisted_2, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", ResultChartvue_type_template_id_7a5e87fe_hoisted_3, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultChartvue_type_template_id_7a5e87fe_hoisted_4, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ChartMetric')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ResultChartvue_type_template_id_3f67992e_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", ResultChartvue_type_template_id_3f67992e_hoisted_2, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("label", ResultChartvue_type_template_id_3f67992e_hoisted_3, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultChartvue_type_template_id_3f67992e_hoisted_4, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_ChartMetric')), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("select", {
     class: "browser-default fwde-select",
     value: _ctx.metric,
     onChange: _cache[0] || (_cache[0] = (...args) => _ctx.onMetric && _ctx.onMetric(...args))
@@ -5349,19 +7255,19 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("option", {
       key: option.id,
       value: option.id
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(option.name), 9, ResultChartvue_type_template_id_7a5e87fe_hoisted_6);
-  }), 128))], 40, ResultChartvue_type_template_id_7a5e87fe_hoisted_5)]), _ctx.showTypeSwitch ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_SegmentedSwitch, {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(option.name), 9, ResultChartvue_type_template_id_3f67992e_hoisted_6);
+  }), 128))], 40, ResultChartvue_type_template_id_3f67992e_hoisted_5)]), _ctx.showTypeSwitch ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_SegmentedSwitch, {
     key: 0,
     class: "fwde-chart__type",
     options: _ctx.typeSwitch,
     "model-value": _ctx.chartType,
     label: _ctx.translate('FeinwerkDataExploration_ChartType'),
     "onUpdate:modelValue": _cache[1] || (_cache[1] = $event => _ctx.$emit('chart-type', $event))
-  }, null, 8, ["options", "model-value", "label"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.note ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", ResultChartvue_type_template_id_7a5e87fe_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.note), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]), _ctx.chartType === 'trend' && _ctx.trendLoading ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_ActivityIndicator, {
+  }, null, 8, ["options", "model-value", "label"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.note ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", ResultChartvue_type_template_id_3f67992e_hoisted_7, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.note), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]), _ctx.chartType === 'trend' && _ctx.trendLoading ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_ActivityIndicator, {
     key: 0,
     loading: true,
     "loading-message": _ctx.translate('FeinwerkDataExploration_LoadingTrend')
-  }, null, 8, ["loading-message"])) : _ctx.chartType === 'donut' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ResultChartvue_type_template_id_7a5e87fe_hoisted_8, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("svg", {
+  }, null, 8, ["loading-message"])) : _ctx.chartType === 'donut' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ResultChartvue_type_template_id_3f67992e_hoisted_8, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("svg", {
     class: "fwde-chart__donut-svg",
     viewBox: "0 0 200 200",
     width: "200",
@@ -5373,15 +7279,15 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
       key: index,
       class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(['fwde-chart__slice', `fwde-chart__series-${index % _ctx.SERIES_COLOURS + 1}`]),
       d: _ctx.donutPath(index)
-    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("title", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.sliceTitle(slice)), 1)], 10, ResultChartvue_type_template_id_7a5e87fe_hoisted_10);
-  }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("text", ResultChartvue_type_template_id_7a5e87fe_hoisted_11, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.format(_ctx.donut.total)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("text", ResultChartvue_type_template_id_7a5e87fe_hoisted_12, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.metricName), 1)], 8, ResultChartvue_type_template_id_7a5e87fe_hoisted_9)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("ul", ResultChartvue_type_template_id_7a5e87fe_hoisted_13, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.donut.slices, (slice, index) => {
+    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("title", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.sliceTitle(slice)), 1)], 10, ResultChartvue_type_template_id_3f67992e_hoisted_10);
+  }), 128)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("text", ResultChartvue_type_template_id_3f67992e_hoisted_11, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.format(_ctx.donut.total)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("text", ResultChartvue_type_template_id_3f67992e_hoisted_12, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.metricName), 1)], 8, ResultChartvue_type_template_id_3f67992e_hoisted_9)), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("ul", ResultChartvue_type_template_id_3f67992e_hoisted_13, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.donut.slices, (slice, index) => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("li", {
       key: index
     }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
       class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(['fwde-chart__swatch', `fwde-chart__series-${index % _ctx.SERIES_COLOURS + 1}`]),
       "aria-hidden": "true"
-    }, null, 2), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultChartvue_type_template_id_7a5e87fe_hoisted_14, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.sliceName(slice)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultChartvue_type_template_id_7a5e87fe_hoisted_15, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.format(slice.value)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultChartvue_type_template_id_7a5e87fe_hoisted_16, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.sharePercent(slice.share)), 1)]);
-  }), 128))])])) : _ctx.chartType !== 'trend' || _ctx.model.series.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ResultChartvue_type_template_id_7a5e87fe_hoisted_17, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("svg", {
+    }, null, 2), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultChartvue_type_template_id_3f67992e_hoisted_14, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.sliceName(slice)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultChartvue_type_template_id_3f67992e_hoisted_15, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.format(slice.value)), 1), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", ResultChartvue_type_template_id_3f67992e_hoisted_16, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.sharePercent(slice.share)), 1)]);
+  }), 128))])])) : _ctx.chartType !== 'trend' || _ctx.model.series.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", ResultChartvue_type_template_id_3f67992e_hoisted_17, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("svg", {
     class: "fwde-chart__svg",
     width: _ctx.width,
     height: _ctx.height,
@@ -5393,7 +7299,7 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
     onBlur: _cache[3] || (_cache[3] = $event => _ctx.hoverIndex = null),
     onFocus: _cache[4] || (_cache[4] = (...args) => _ctx.onFocus && _ctx.onFocus(...args)),
     onKeydown: _cache[5] || (_cache[5] = (...args) => _ctx.onKey && _ctx.onKey(...args))
-  }, [_ctx.model.type === 'bar' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("g", ResultChartvue_type_template_id_7a5e87fe_hoisted_19, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.model.scale.ticks, tick => {
+  }, [_ctx.model.type === 'bar' ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("g", ResultChartvue_type_template_id_3f67992e_hoisted_19, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.model.scale.ticks, tick => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("g", {
       key: `grid${tick}`
     }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("line", {
@@ -5402,12 +7308,12 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
       x2: _ctx.barX(tick),
       y1: _ctx.TOP,
       y2: _ctx.barAreaBottom
-    }, null, 8, ResultChartvue_type_template_id_7a5e87fe_hoisted_20), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("text", {
+    }, null, 8, ResultChartvue_type_template_id_3f67992e_hoisted_20), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("text", {
       class: "fwde-chart__tick",
       x: _ctx.barX(tick),
       y: _ctx.barAreaBottom + 16,
       "text-anchor": "middle"
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.formatTick(tick)), 9, ResultChartvue_type_template_id_7a5e87fe_hoisted_21)]);
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.formatTick(tick)), 9, ResultChartvue_type_template_id_3f67992e_hoisted_21)]);
   }), 128)), _ctx.model.series.length > 1 ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
     key: 0
   }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.model.categories, (category, index) => {
@@ -5420,7 +7326,7 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
       y: _ctx.barY(index) + _ctx.bandHeight / 2,
       "text-anchor": "end",
       "dominant-baseline": "central"
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.truncateLabel(category, _ctx.labelChars)), 9, ResultChartvue_type_template_id_7a5e87fe_hoisted_22), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.model.series, (series, seriesIndex) => {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.truncateLabel(category, _ctx.labelChars)), 9, ResultChartvue_type_template_id_3f67992e_hoisted_22), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.model.series, (series, seriesIndex) => {
       return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("g", {
         key: `group${index}-${seriesIndex}`
       }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("title", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.groupTitle(series, series.points[index])), 1), series.points[index].value !== null ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
@@ -5433,12 +7339,12 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
         width: Math.max(1, Math.abs(_ctx.barX(series.points[index].value || 0) - _ctx.barX(0))),
         height: _ctx.GROUP_BAR_HEIGHT - 2,
         rx: "2"
-      }, null, 10, ResultChartvue_type_template_id_7a5e87fe_hoisted_23), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("text", {
+      }, null, 10, ResultChartvue_type_template_id_3f67992e_hoisted_23), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("text", {
         class: "fwde-chart__value fwde-chart__value--grouped",
         x: Math.max(_ctx.barX(0), _ctx.barX(series.points[index].value || 0)) + 6,
         y: _ctx.groupBarY(index, seriesIndex) + (_ctx.GROUP_BAR_HEIGHT - 2) / 2,
         "dominant-baseline": "central"
-      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.format(series.points[index].value)), 9, ResultChartvue_type_template_id_7a5e87fe_hoisted_24)], 64)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
+      }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.format(series.points[index].value)), 9, ResultChartvue_type_template_id_3f67992e_hoisted_24)], 64)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
     }), 128))]);
   }), 128)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.model.series.length > 1 ? [] : _ctx.model.series[0].points, (point, index) => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("g", {
@@ -5449,20 +7355,20 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
       y: _ctx.barY(index) + _ctx.BAR_HEIGHT / 2,
       "text-anchor": "end",
       "dominant-baseline": "central"
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.truncateLabel(point.label, _ctx.labelChars)), 9, ResultChartvue_type_template_id_7a5e87fe_hoisted_25), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("rect", {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.truncateLabel(point.label, _ctx.labelChars)), 9, ResultChartvue_type_template_id_3f67992e_hoisted_25), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("rect", {
       class: "fwde-chart__bar fwde-chart__series-1",
       x: Math.min(_ctx.barX(0), _ctx.barX(point.value || 0)),
       y: _ctx.barY(index) + 3,
       width: Math.max(1, Math.abs(_ctx.barX(point.value || 0) - _ctx.barX(0))),
       height: _ctx.BAR_HEIGHT - 6,
       rx: "2"
-    }, null, 8, ResultChartvue_type_template_id_7a5e87fe_hoisted_26), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("text", {
+    }, null, 8, ResultChartvue_type_template_id_3f67992e_hoisted_26), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("text", {
       class: "fwde-chart__value",
       x: Math.max(_ctx.barX(0), _ctx.barX(point.value || 0)) + 6,
       y: _ctx.barY(index) + _ctx.BAR_HEIGHT / 2,
       "dominant-baseline": "central"
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.format(point.value)), 9, ResultChartvue_type_template_id_7a5e87fe_hoisted_27)]);
-  }), 128))])) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("g", ResultChartvue_type_template_id_7a5e87fe_hoisted_28, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.model.scale.ticks, tick => {
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.format(point.value)), 9, ResultChartvue_type_template_id_3f67992e_hoisted_27)]);
+  }), 128))])) : (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("g", ResultChartvue_type_template_id_3f67992e_hoisted_28, [(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.model.scale.ticks, tick => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("g", {
       key: `grid${tick}`
     }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("line", {
@@ -5471,13 +7377,13 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
       x2: _ctx.width - _ctx.LINE_RIGHT,
       y1: _ctx.lineY(tick),
       y2: _ctx.lineY(tick)
-    }, null, 8, ResultChartvue_type_template_id_7a5e87fe_hoisted_29), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("text", {
+    }, null, 8, ResultChartvue_type_template_id_3f67992e_hoisted_29), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("text", {
       class: "fwde-chart__tick fwde-chart__value-tick",
       x: _ctx.LINE_LEFT - 8,
       y: _ctx.lineY(tick),
       "text-anchor": "end",
       "dominant-baseline": "central"
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.formatTick(tick)), 9, _hoisted_30)]);
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.formatTick(tick)), 9, ResultChartvue_type_template_id_3f67992e_hoisted_30)]);
   }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.model.categories, (category, index) => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withDirectives"])((Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("text", {
       key: `cat${index}`,
@@ -5485,7 +7391,7 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
       x: _ctx.lineX(index),
       y: _ctx.LINE_HEIGHT - 10,
       "text-anchor": "middle"
-    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.axisLabel(category)), 9, _hoisted_31)), [[external_commonjs_vue_commonjs2_vue_root_Vue_["vShow"], index % _ctx.categoryStep === 0]]);
+    }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.axisLabel(category)), 9, ResultChartvue_type_template_id_3f67992e_hoisted_31)), [[external_commonjs_vue_commonjs2_vue_root_Vue_["vShow"], index % _ctx.categoryStep === 0]]);
   }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.model.categories, (category, index) => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], {
       key: `daygrid${index}`
@@ -5496,7 +7402,7 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
       x2: _ctx.lineX(index),
       y1: _ctx.LINE_TOP,
       y2: _ctx.LINE_HEIGHT - _ctx.LINE_BOTTOM
-    }, null, 8, _hoisted_32)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 64);
+    }, null, 8, ResultChartvue_type_template_id_3f67992e_hoisted_32)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 64);
   }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.model.series, (series, seriesIndex) => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("g", {
       key: `series${seriesIndex}`,
@@ -5518,7 +7424,7 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
         cy: _ctx.lineY(point.value),
         r: "3.5"
       }, null, 8, _hoisted_35)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 64);
-    }), 128))], 10, _hoisted_33);
+    }), 128))], 10, ResultChartvue_type_template_id_3f67992e_hoisted_33);
   }), 128)), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.model.categories, (category, index) => {
     return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("rect", {
       key: `hover${index}`,
@@ -5531,7 +7437,7 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
       onMouseenter: $event => _ctx.hoverIndex = index,
       onFocus: $event => _ctx.hoverIndex = index
     }, null, 40, _hoisted_36);
-  }), 128))]))], 40, ResultChartvue_type_template_id_7a5e87fe_hoisted_18)), _ctx.model.type === 'line' && _ctx.hoverIndex !== null && _ctx.tooltipRows.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", {
+  }), 128))]))], 40, ResultChartvue_type_template_id_3f67992e_hoisted_18)), _ctx.model.type === 'line' && _ctx.hoverIndex !== null && _ctx.tooltipRows.length ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", {
     key: 0,
     class: "ui-tooltip fwde-chart__tooltip",
     style: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeStyle"])(_ctx.tooltipStyle),
@@ -5557,18 +7463,16 @@ function ResultChartvue_type_template_id_7a5e87fe_render(_ctx, _cache, $props, $
     }, null, 10, _hoisted_42), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(" " + Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(series.label), 1)]);
   }), 128))])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)], 512);
 }
-// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ResultChart.vue?vue&type=template&id=7a5e87fe
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/ResultChart.vue?vue&type=template&id=3f67992e
 
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/chart.ts
 
 
 
+
+
 /** First dimensions shown as a line over time instead of bars. */
 const TIME_DIMENSIONS = ['date', 'hour', 'weekday'];
-/** Metrics where a missing row is not zero (a rate or an average of no visits): lines get a gap. */
-const NO_ZERO_METRICS = ['bounce_rate', 'conversion_rate', 'avg_time_on_site', 'nb_actions_per_visit', 'avg_event_value', 'max_actions'];
-/** Metrics counted in whole numbers (and seconds): their axis steps by whole numbers. */
-const INTEGER_METRICS = ['nb_visits', 'nb_uniq_visitors', 'nb_actions', 'nb_conversions', 'nb_pageviews', 'nb_uniq_pageviews', 'nb_events', 'nb_downloads', 'nb_outlinks', 'avg_time_on_site', 'nb_searches', 'max_actions'];
 const NICE_STEPS = [1, 2, 2.5, 5, 10];
 /** The title of the result: the names of its dimensions, e.g. "Channel type × Browser". */
 function resultTitle(state, catalog) {
@@ -5713,7 +7617,7 @@ function compareKeys(a, b) {
   return String(a).localeCompare(String(b));
 }
 function rowLabel(row) {
-  return row.secondary_label === undefined ? String(row.label) : `${row.label} · ${row.secondary_label}`;
+  return LABEL_COLUMNS.filter(column => row[column] !== undefined).map(column => String(row[column])).join(' · ');
 }
 function barModel(rows, metric, maxBars, tickCount) {
   const top = [...rows].sort((a, b) => chart_valueOf(b, metric) - chart_valueOf(a, metric)).slice(0, maxBars);
@@ -5731,7 +7635,8 @@ function barModel(rows, metric, maxBars, tickCount) {
     omittedRows: Math.max(0, rows.length - maxBars),
     omittedSeries: 0,
     incomplete: false,
-    scale: niceScale(Math.min(...values), Math.max(...values), tickCount, INTEGER_METRICS.includes(metric))
+    gaps: false,
+    scale: niceScale(Math.min(...values), Math.max(...values), tickCount, isInteger(metric))
   };
 }
 function lineModel(rows, metric, order, /** every value of the time axis when missing values are real zeros, else null */
@@ -5773,7 +7678,36 @@ allCategories, zeroForMissing, complete, maxSeries, tickCount) {
     omittedRows: 0,
     omittedSeries: ranked.length - kept.length,
     incomplete: !complete,
-    scale: niceScale(Math.min(0, ...values), Math.max(0, ...values), tickCount, INTEGER_METRICS.includes(metric))
+    gaps: complete && series.some(s => s.points.some(p => p.value === null)),
+    scale: niceScale(Math.min(0, ...values), Math.max(0, ...values), tickCount, isInteger(metric))
+  };
+}
+/**
+ * The bar chart of a pivot (rows and pivot, 2026-11-24): the largest rows by the metric's total,
+ * one bar per pivot value (no bars for Others and Total).
+ */
+function pivotBarModel(rows, values, metric, maxBars, tickCount) {
+  const top = [...rows].sort((a, b) => {
+    var _numberOrNull, _numberOrNull2;
+    return ((_numberOrNull = numberOrNull(b[metric])) !== null && _numberOrNull !== void 0 ? _numberOrNull : 0) - ((_numberOrNull2 = numberOrNull(a[metric])) !== null && _numberOrNull2 !== void 0 ? _numberOrNull2 : 0);
+  }).slice(0, maxBars);
+  const series = values.map((value, n) => ({
+    label: value.label,
+    points: top.map(row => ({
+      label: rowLabel(row),
+      value: numberOrNull(row[`${metric}__p${n + 1}`])
+    }))
+  }));
+  const numbers = series.flatMap(s => s.points.map(p => p.value)).filter(value => value !== null);
+  return {
+    type: 'bar',
+    categories: top.map(rowLabel),
+    series,
+    omittedRows: Math.max(0, rows.length - maxBars),
+    omittedSeries: 0,
+    incomplete: false,
+    gaps: false,
+    scale: niceScale(Math.min(0, ...numbers), Math.max(0, ...numbers), tickCount, isInteger(metric))
   };
 }
 /**
@@ -5788,8 +7722,8 @@ function compareBarModel(rows, columns, metric, options) {
   } = options;
   const data = rows.filter(row => !row.fwde_total);
   const top = [...data].sort((a, b) => {
-    var _numberOrNull, _numberOrNull2;
-    return ((_numberOrNull = numberOrNull(b[metric])) !== null && _numberOrNull !== void 0 ? _numberOrNull : 0) - ((_numberOrNull2 = numberOrNull(a[metric])) !== null && _numberOrNull2 !== void 0 ? _numberOrNull2 : 0);
+    var _numberOrNull3, _numberOrNull4;
+    return ((_numberOrNull3 = numberOrNull(b[metric])) !== null && _numberOrNull3 !== void 0 ? _numberOrNull3 : 0) - ((_numberOrNull4 = numberOrNull(a[metric])) !== null && _numberOrNull4 !== void 0 ? _numberOrNull4 : 0);
   }).slice(0, maxBars);
   const series = columns.map((column, n) => ({
     label: columnLabel(column),
@@ -5813,7 +7747,8 @@ function compareBarModel(rows, columns, metric, options) {
     omittedRows: Math.max(0, data.length - maxBars),
     omittedSeries: 0,
     incomplete: false,
-    scale: niceScale(Math.min(0, ...values), Math.max(0, ...values), tickCount, INTEGER_METRICS.includes(metric))
+    gaps: false,
+    scale: niceScale(Math.min(0, ...values), Math.max(0, ...values), tickCount, isInteger(metric))
   };
 }
 /**
@@ -5849,23 +7784,40 @@ function chartModel(rows, state, metric, options) {
     complete = true,
     tickCount = 5,
     maxBars = 20,
+    pivotValues = []
+  } = options;
+  let {
     maxSeries = 5
   } = options;
-  let dimension = state.dimensions[0];
-  let data = rows;
-  if (!TIME_DIMENSIONS.includes(dimension) && TIME_DIMENSIONS.includes(state.dimensions[1])) {
-    // "Browser x Date": the date is the axis, one line per browser (trend design 3)
-    [, dimension] = state.dimensions;
-    data = rows.map(row => Object.assign(Object.assign({}, row), {}, {
-      label: row.secondary_label,
-      secondary_label: row.label
+  const own = rows.filter(row => !row.fwde_total);
+  // the first time dimension is the axis, one line per value of the others ("Browser x Date": one
+  // line per browser, trend design 3)
+  const axis = state.dimensions.findIndex(id => TIME_DIMENSIONS.includes(id));
+  if (pivotValues.length && (axis < 0 || state.dimensions.length > 1)) {
+    return pivotBarModel(own, pivotValues, metric, Math.min(maxBars, 10), tickCount);
+  }
+  if (axis < 0) {
+    return barModel(own, metric, maxBars, tickCount);
+  }
+  const dimension = state.dimensions[axis];
+  const columns = labelColumns(state.dimensions.length);
+  let data = own;
+  if (pivotValues.length) {
+    // a single time dimension with a pivot: one line per pivot value
+    maxSeries = pivotValues.length;
+    data = own.flatMap(row => pivotValues.map((value, n) => ({
+      label: row.label,
+      secondary_label: value.label,
+      [metric]: row[`${metric}__p${n + 1}`]
+    })));
+  } else if (columns.length > 1) {
+    data = own.map(row => Object.assign(Object.assign({}, row), {}, {
+      label: row[columns[axis]],
+      secondary_label: columns.filter((_, i) => i !== axis).map(c => String(row[c])).join(' · ')
     }));
   }
-  if (!TIME_DIMENSIONS.includes(dimension)) {
-    return barModel(rows, metric, maxBars, tickCount);
-  }
   const metricFilter = state.filters.some(f => NUMBER_OPERATORS.includes(f.operator));
-  const zeroForMissing = complete && !metricFilter && !NO_ZERO_METRICS.includes(metric);
+  const zeroForMissing = complete && !metricFilter && metricMeta_zeroForMissing(metric);
   let allCategories = null;
   if (zeroForMissing) {
     if (dimension === 'hour' && hourLabels.length === 24) {
@@ -5940,7 +7892,11 @@ function donutBlocker(state, catalog, metric, comparing) {
   if (comparing) {
     return 'FeinwerkDataExploration_DonutNotWhileComparing';
   }
-  if (!SHARE_METRICS.includes(metric)) {
+  if (state.pivot) {
+    // with a pivot the chart offers bars only (rows and pivot, 2026-11-24)
+    return 'FeinwerkDataExploration_ReasonNotWithPivot';
+  }
+  if (!hasShare(metric)) {
     return 'FeinwerkDataExploration_DonutNeedsCount';
   }
   if (!addsUp(state, catalog)) {
@@ -5952,12 +7908,13 @@ function donutBlocker(state, catalog, metric, comparing) {
  * The chart that shows: the chosen donut while it qualifies (donutReason null) and there are two
  * rows or more, else the trend or the bars as chartTypeFor decides.
  */
-function effectiveChartType(state, rowCount, donutReason) {
+function effectiveChartType(state, rowCount, donutReason, pivoting = false) {
   // a time dimension draws a line over time and offers no switch, so no donut there either
   if (state.chartType === 'donut' && rowCount >= 2 && donutReason === null && canTrend(state)) {
     return 'donut';
   }
-  if (!canTrend(state)) {
+  // with a pivot the chart offers bars only (rows and pivot, 2026-11-24)
+  if (!canTrend(state) || pivoting) {
     return 'bar';
   }
   return rowCount === 1 || state.chartType === 'trend' ? 'trend' : 'bar';
@@ -5997,11 +7954,22 @@ function othersAnswered(answer) {
     othersState: 'done'
   };
 }
+/**
+ * Whether the lines of a time dimension need the exploration's every row (Peter, 2026-11-24, to
+ * the proposal "the chart fetches its lines separately, with every day"): the table reached its
+ * row limit, which is below the largest one; not while comparing (the lines show column totals).
+ */
+function needsFullTimeRows(state, rowCount, maxRows, comparing, pivoting = false) {
+  // a pivot draws bars of the table's rows, lines only over a single time dimension
+  return !comparing && !(pivoting && state.dimensions.length > 1) && state.dimensions.some(id => TIME_DIMENSIONS.includes(id)) && rowCount >= state.limit && state.limit < maxRows;
+}
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/trend.ts
 /*!
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
+
+
 
 
 
@@ -6017,7 +7985,7 @@ function timeLabel(time, hourLabels) {
 }
 function scaleOf(series, metric, tickCount) {
   const values = series.flatMap(s => s.points.map(p => p.value)).filter(value => value !== null);
-  return niceScale(Math.min(0, ...values), Math.max(0, ...values), tickCount, INTEGER_METRICS.includes(metric));
+  return niceScale(Math.min(0, ...values), Math.max(0, ...values), tickCount, isInteger(metric));
 }
 function isOtherPeriod(kind) {
   return kind === 'period' || kind === 'both';
@@ -6043,7 +8011,7 @@ function trendModel(rows, metric, options) {
   const categories = first.map(row => timeLabel(String(row.time), hourLabels));
   const series = ordered.map(lineRows => {
     const head = lineRows[0];
-    const label = head.secondary_label === undefined || head.secondary_label === null ? String(head.label) : `${head.label} · ${head.secondary_label}`;
+    const label = LABEL_COLUMNS.filter(column => head[column] !== undefined && head[column] !== null).map(column => String(head[column])).join(' · ');
     return {
       label,
       dashed: isOtherPeriod(head.fwde_kind),
@@ -6075,6 +8043,7 @@ function trendModel(rows, metric, options) {
     omittedRows: comparing || !series.length ? 0 : Math.max(0, tableRows - series.length),
     omittedSeries: 0,
     incomplete: false,
+    gaps: false,
     scale: scaleOf(series, metric, tickCount)
   };
 }
@@ -6107,6 +8076,7 @@ function compareTimeModel(rows, columns, state, metric, options) {
     omittedRows: 0,
     omittedSeries: 0,
     incomplete: false,
+    gaps: false,
     scale: scaleOf(series, metric, tickCount)
   };
 }
@@ -6241,6 +8211,14 @@ const ResultChartvue_type_script_lang_ts_SERIES_COLOURS = 10;
       type: Number,
       default: 5
     },
+    /**
+     * the row limit of the rows given: the page's own request for every row of a time dimension
+     * (2026-11-24) asks with the largest limit; 0 = the table's
+     */
+    rowLimit: {
+      type: Number,
+      default: 0
+    },
     /** comparison columns: one line per column (time dimension) or one bar per column and row */
     compareColumns: {
       type: Array,
@@ -6260,6 +8238,11 @@ const ResultChartvue_type_script_lang_ts_SERIES_COLOURS = 10;
     othersNote: {
       type: String,
       default: ''
+    },
+    /** the pivot's values (rows and pivot, 2026-11-24): one bar or line per value, bars only */
+    pivotValues: {
+      type: Array,
+      default: () => []
     }
   },
   emits: ['metric', 'chart-type'],
@@ -6317,10 +8300,11 @@ const ResultChartvue_type_script_lang_ts_SERIES_COLOURS = 10;
         weekdayNames: weekdays,
         hourLabels: this.hourLabels,
         periodDays: this.periodDays,
-        complete: this.rows.length < this.state.limit,
+        complete: this.rows.length < (this.rowLimit || this.state.limit),
         // about 70 pixels per axis label; the line chart's axis is vertical and always fits five
         tickCount: this.state.dimensions.some(id => TIME_DIMENSIONS.includes(id)) ? LINE_TICKS : Math.min(5, Math.max(2, Math.floor(this.barPlotWidth / 70))),
-        maxSeries: this.maxLines
+        maxSeries: this.maxLines,
+        pivotValues: this.pivotValues
       };
       if (this.compareColumns.length > 1) {
         const {
@@ -6343,7 +8327,7 @@ const ResultChartvue_type_script_lang_ts_SERIES_COLOURS = 10;
       if (this.model.type === 'bar') {
         return this.model.series.length > 1;
       }
-      return this.state.dimensions.length > 1 || this.chartType === 'trend' || this.compareColumns.length > 1;
+      return this.state.dimensions.length > 1 || this.pivotValues.length > 0 || this.chartType === 'trend' || this.compareColumns.length > 1;
     },
     /** the height of one row: a single bar, or one bar per comparison column */
     bandHeight() {
@@ -6369,7 +8353,8 @@ const ResultChartvue_type_script_lang_ts_SERIES_COLOURS = 10;
         options.push({
           type: 'trend',
           label: Object(external_CoreHome_["translate"])('FeinwerkDataExploration_ChartTypeTrend'),
-          reason: null
+          // with a pivot the chart offers bars only (rows and pivot, 2026-11-24)
+          reason: this.pivotValues.length ? 'FeinwerkDataExploration_ReasonNotWithPivot' : null
         });
       }
       options.push({
@@ -6471,6 +8456,9 @@ const ResultChartvue_type_script_lang_ts_SERIES_COLOURS = 10;
       }
       if (this.model.incomplete) {
         return Object(external_CoreHome_["translate"])('FeinwerkDataExploration_ChartIncomplete');
+      }
+      if (this.model.gaps) {
+        return Object(external_CoreHome_["translate"])('FeinwerkDataExploration_ChartGaps');
       }
       if (this.model.omittedRows > 0) {
         return Object(external_CoreHome_["translate"])('FeinwerkDataExploration_ChartOmittedRows', String(this.model.categories.length));
@@ -6664,7 +8652,7 @@ const ResultChartvue_type_script_lang_ts_SERIES_COLOURS = 10;
 
 
 
-ResultChartvue_type_script_lang_ts.render = ResultChartvue_type_template_id_7a5e87fe_render
+ResultChartvue_type_script_lang_ts.render = ResultChartvue_type_template_id_3f67992e_render
 
 /* harmony default export */ var ResultChart = (ResultChartvue_type_script_lang_ts);
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/requestGuard.ts
@@ -6750,9 +8738,12 @@ function createRunQueue() {
 
 
 
-const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder', 'fwdeLimit', 'fwdeFilters', 'fwdeView', 'fwdeChart', 'fwdeChartType', 'fwdeMatch',
+
+
+
+const HASH_KEYS = STATE_HASH_KEYS.concat([
 // Matomo's comparison of segments and periods (comparison design)
-'compareSegments', 'comparePeriods', 'compareDates'];
+'compareSegments', 'comparePeriods', 'compareDates']);
 /* harmony default export */ var ExplorationPagevue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
   inheritAttrs: false,
   components: {
@@ -6762,6 +8753,8 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
     MetricPicker: MetricPicker,
     FilterPanel: FilterPanel,
     ResultTable: ResultTable,
+    PivotTable: PivotTable,
+    PivotPicker: PivotPicker,
     CompareTable: CompareTable,
     ResultChart: ResultChart,
     ExplorationToolbar: ExplorationToolbar,
@@ -6797,6 +8790,11 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
     canManage: {
       type: Boolean,
       default: false
+    },
+    /** Matomo's sections a saved exploration can show in as a report (saved reports, 2026-11-24) */
+    menuSections: {
+      type: Array,
+      default: () => []
     },
     promo: {
       type: Object,
@@ -6850,7 +8848,6 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
       saveBusy: false,
       saveError: '',
       catalog: null,
-      goals: [],
       state: null,
       rows: null,
       loading: false,
@@ -6876,14 +8873,16 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
       trendErrors: {},
       trendKey: '',
       trendSequence: 0,
-      trendAbort: null
+      trendAbort: null,
+      fullRows: null,
+      fullRowsKey: '',
+      fullRowsAbort: null
     };
   },
   created() {
     this.loadSavedList(true);
-    Promise.all([loadCatalog(), loadGoals()]).then(([catalog, goals]) => {
+    loadCatalog().then(catalog => {
       this.catalog = catalog;
-      this.goals = goals;
       this.readState();
     }).catch(e => {
       this.loadError = errorText(e);
@@ -6907,6 +8906,11 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
     }
   },
   computed: {
+    /** "n of 10" (more metrics, 2026-11-24) */
+    metricsCount() {
+      const chosen = this.state ? this.state.metrics.length : 0;
+      return Object(external_CoreHome_["translate"])('FeinwerkDataExploration_MetricsCount', String(chosen), String(MAX_METRICS));
+    },
     /** the table was cut: the row limit is reached or a number filter removed rows */
     tableCut() {
       if (!this.state || !this.rows) {
@@ -6928,6 +8932,32 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
     },
     comparing() {
       return isComparing(this.comparison.columns);
+    },
+    /** a pivot applies (rows and pivot, 2026-11-24): chosen and Matomo does not compare */
+    pivoting() {
+      return !!this.state && !!this.state.pivot && !this.comparing;
+    },
+    /** the exploration's metrics with the names the table shows: a KPI card picks one of them */
+    saveMetrics() {
+      const {
+        catalog,
+        state
+      } = this;
+      if (!catalog || !state) {
+        return [];
+      }
+      return state.metrics.map(id => {
+        const metric = catalog.metrics.find(m => m.id === id);
+        const name = metric && this.actionScope && metric.nameInActionScope ? metric.nameInActionScope : (metric === null || metric === void 0 ? void 0 : metric.name) || id;
+        return {
+          id,
+          name
+        };
+      });
+    },
+    /** the pivot's values of the result, for the chart */
+    pivotValues() {
+      return this.pivoting && this.rows ? parsePivotResult(this.rows).values : [];
     },
     compareLimitText() {
       return Object(external_CoreHome_["translate"])('FeinwerkDataExploration_CompareLimit', String(this.maxCompareColumns));
@@ -6954,12 +8984,12 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
     chips() {
       return viewChips(external_CoreHome_["ComparisonsStoreInstance"].getSegmentComparisons(), external_CoreHome_["ComparisonsStoreInstance"].getPeriodComparisons(), Object(external_CoreHome_["translate"])('General_Unknown'));
     },
-    /** the applied filters, one line each, for the left column (UI item 4) */
+    /** the applied filters for the left column (UI item 4; groups 2026-11-23) */
     filterLines() {
       if (!this.state || !this.catalog) {
         return [];
       }
-      return filterSummary(this.state, this.catalog, this.actionScope, external_CoreHome_["translate"]);
+      return filterSummaryLines(this.state, this.catalog, this.actionScope, external_CoreHome_["translate"]);
     },
     view() {
       const rowCount = this.ownRows ? this.ownRows.length : 0;
@@ -6969,7 +8999,7 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
       return this.state ? canChart(this.ownRows ? this.ownRows.length : 0, this.state) : false;
     },
     chartType() {
-      return this.state ? effectiveChartType(this.state, this.ownRows ? this.ownRows.length : 0, this.donutReason) : 'bar';
+      return this.state ? effectiveChartType(this.state, this.ownRows ? this.ownRows.length : 0, this.donutReason, this.pivoting) : 'bar';
     },
     /**
      * "Bars | Trend | Donut": two rows or more where a trend is possible; with a time dimension the
@@ -7027,6 +9057,16 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
     trendRequestKey() {
       return this.showsTrend && !this.loading ? this.lastDefinition : '';
     },
+    /** the definition whose every row the chart's time lines need ('' none) */
+    fullRowsRequestKey() {
+      if (!this.state || this.loading || this.error || !this.ownRows || this.view === 'table') {
+        return '';
+      }
+      const {
+        length
+      } = this.ownRows;
+      return needsFullTimeRows(this.state, length, this.maxRows, this.comparing, this.pivoting) ? this.lastDefinition : '';
+    },
     chartMetric() {
       return this.state ? chartMetricFor(this.state) : '';
     },
@@ -7059,7 +9099,8 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
       return this.catalog && this.state ? resultTitle(this.state, this.catalog) : '';
     },
     currentSaved() {
-      return findSaved(this.saved, String(external_CoreHome_["MatomoUrl"].parsed.value.fwdeSaved || ''), 'table');
+      // a KPI card opens as its exploration on this page (2026-11-24)
+      return findSaved(this.saved, String(external_CoreHome_["MatomoUrl"].parsed.value.fwdeSaved || ''), ['table', 'kpi']);
     },
     /** The page shows another setup than the open saved exploration (changed, or an older link). */
     savedChanged() {
@@ -7105,6 +9146,11 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
       if (key !== '' && key !== this.trendKey) {
         this.loadTrend(key);
       }
+    },
+    fullRowsRequestKey(key) {
+      if (key !== '' && key !== this.fullRowsKey) {
+        this.loadFullRows(key);
+      }
     }
   },
   methods: {
@@ -7121,12 +9167,12 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
       this.state = state;
       // "Explore this row" from a report: open the second-dimension picker once
       if (external_CoreHome_["MatomoUrl"].parsed.value.fwdeBreakdown === '1') {
-        this.openSecondDimension();
+        this.openNextDimension();
         external_CoreHome_["MatomoUrl"].updateHash(Object.assign(Object.assign({}, external_CoreHome_["MatomoUrl"].hashParsed.value), {}, {
           fwdeBreakdown: ''
         }));
       }
-      const definition = JSON.stringify([toDefinition(state), this.comparing ? this.comparison.columns : []]);
+      const definition = JSON.stringify([toDefinition(state, this.comparing), this.comparing ? this.comparison.columns : []]);
       if (definition !== this.lastDefinition) {
         const first = this.lastDefinition === '';
         this.lastDefinition = definition;
@@ -7134,6 +9180,12 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
         if (this.trendAbort) {
           this.trendAbort.abort();
         }
+        // so are the chart's full rows
+        if (this.fullRowsAbort) {
+          this.fullRowsAbort.abort();
+        }
+        this.fullRows = null;
+        this.fullRowsKey = '';
         // a short pause, so a few quick changes start one request; the table is dimmed meanwhile
         window.clearTimeout(this.runTimer);
         if (first) {
@@ -7209,15 +9261,18 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
       if (!this.state) {
         return;
       }
+      const explored = stateToSave(toHashParams(this.state));
       const fields = {
         name: event.name,
-        state: stateToSave(toHashParams(this.state)),
+        // the menu place goes into the saved state, never into the link (saved reports); a KPI card
+        // keeps its settings instead and has no menu place (2026-11-24)
+        state: event.card ? withCard(explored, event.card) : withMenu(explored, event.menu),
         segment: String(external_CoreHome_["MatomoUrl"].parsed.value.segment || ''),
         shared: event.shared
       };
       const current = this.currentSaved;
-      // a saved funnel is never overwritten by a table (its page saves it)
-      const request = current && current.canEdit && !event.asNew && savedKind(current) === 'table' ? updateSaved(current.id, fields).then(() => current.id) : addSaved(fields).then(result => Number(result.id));
+      // a saved funnel is never overwritten by a table, a table never by a card (and back)
+      const request = current && current.canEdit && !event.asNew && savedKind(current) === (event.card ? 'kpi' : 'table') ? updateSaved(current.id, fields).then(() => current.id) : addSaved(fields).then(result => Number(result.id));
       this.saveBusy = true;
       this.saveError = '';
       request.then(id => this.loadSavedList().then(() => {
@@ -7254,13 +9309,15 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
     },
     breakDownRow(row) {
       this.filterToRow(row);
-      this.openSecondDimension();
+      this.openNextDimension();
     },
-    openSecondDimension() {
+    /** the dimension picker's next empty slot ("break down", "Explore this row") */
+    openNextDimension() {
       this.$nextTick(() => {
         const picker = this.$refs.dimensionPicker;
         if (picker) {
-          picker.openSlot = 1;
+          const chosen = this.state ? this.state.dimensions.length : 1;
+          picker.openSlot = Math.min(MAX_DIMENSIONS - 1, chosen);
           if (picker.$el) {
             picker.$el.scrollIntoView({
               block: 'nearest'
@@ -7388,6 +9445,34 @@ const HASH_KEYS = ['fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder
       }).finally(() => {
         if (latest()) {
           this.trendLoading = false;
+        }
+      });
+    },
+    /**
+     * Every row of the exploration (the largest row limit) for the chart's time lines: the table
+     * keeps its limit. On failure the chart stays with the table's rows and its hint.
+     */
+    loadFullRows(key) {
+      if (!this.state) {
+        return;
+      }
+      if (this.fullRowsAbort) {
+        this.fullRowsAbort.abort();
+      }
+      const abortController = new AbortController();
+      this.fullRowsAbort = abortController;
+      this.fullRowsKey = key;
+      this.fullRows = null;
+      runExploration(Object.assign(Object.assign({}, this.state), {}, {
+        limit: this.maxRows
+      }), abortController).then(rows => {
+        if (!this.unmounted && !abortController.signal.aborted && this.lastDefinition === key) {
+          this.fullRows = rows;
+        }
+      }).catch(() => {
+        if (this.lastDefinition === key) {
+          // the same setup may be asked again later
+          this.fullRowsKey = '';
         }
       });
     },
@@ -8402,11 +10487,509 @@ FunnelResultvue_type_script_lang_ts.render = FunnelResultvue_type_template_id_71
 FunnelPagevue_type_script_lang_ts.render = FunnelPagevue_type_template_id_3361cca2_render
 
 /* harmony default export */ var FunnelPage = (FunnelPagevue_type_script_lang_ts);
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/SavedReportFooter.vue?vue&type=template&id=26a4008f
+
+const SavedReportFootervue_type_template_id_26a4008f_hoisted_1 = {
+  key: 0,
+  class: "fwde-page fwde-saved-footer"
+};
+const SavedReportFootervue_type_template_id_26a4008f_hoisted_2 = ["href"];
+function SavedReportFootervue_type_template_id_26a4008f_render(_ctx, _cache, $props, $setup, $data, $options) {
+  const _component_FeedbackBar = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("FeedbackBar");
+  return !_ctx.embedded ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", SavedReportFootervue_type_template_id_26a4008f_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("a", {
+    class: "fwde-saved-footer__open",
+    href: _ctx.exploreUrl
+  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_OpenInExploration')), 9, SavedReportFootervue_type_template_id_26a4008f_hoisted_2), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_FeedbackBar, {
+    "id-site": _ctx.idSite,
+    topic: "saved_report",
+    question: _ctx.translate('FeinwerkDataExploration_FeedbackQuestion_saved_report'),
+    feedback: _ctx.feedback
+  }, null, 8, ["id-site", "question", "feedback"])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true);
+}
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/SavedReportFooter.vue?vue&type=template&id=26a4008f
+
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/embed.ts
+/*!
+ * Matomo - free/libre analytics platform
+ * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
+ */
+/**
+ * Whether the page itself is an embed (Widgetize, disableLink=1), seen by the website's own
+ * viewers: then no feedback question and no link into Matomo (house rule "Feedback under every
+ * report"). The server checks its request too (Widgets/WidgetProps::isEmbedded), but Matomo loads
+ * the widgets of an embedded container or dashboard with their own module, so only the page's
+ * address tells (release review 2026-11-25).
+ */
+function embeddedPage(search) {
+  const params = new URLSearchParams(search);
+  return (params.get('module') || '').trim() === 'Widgetize' || params.get('disableLink') === '1';
+}
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/SavedReportFooter.vue?vue&type=script&lang=ts
+
+
+
+
+/**
+ * The footer under a saved exploration's report (saved reports, 2026-11-24), on its menu page and
+ * in its dashboard widget: "Open in exploration" and the feedback line; nothing in an embed.
+ */
+/* harmony default export */ var SavedReportFootervue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
+  components: {
+    FeedbackBar: FeedbackBar
+  },
+  props: {
+    idSite: {
+      type: Number,
+      required: true
+    },
+    /** the free-form table with the saved exploration, same website and period */
+    exploreUrl: {
+      type: String,
+      required: true
+    },
+    feedback: {
+      type: Object,
+      default: () => ({
+        enabled: false,
+        supportUrl: '',
+        version: ''
+      })
+    }
+  },
+  data() {
+    // an embed (Widgetize) shows no footer: its request does not say so, the page's address does
+    return {
+      embedded: embeddedPage(window.location.search)
+    };
+  },
+  methods: {
+    translate: external_CoreHome_["translate"]
+  }
+}));
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/SavedReportFooter.vue?vue&type=script&lang=ts
+ 
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/SavedReportFooter.vue
+
+
+
+SavedReportFootervue_type_script_lang_ts.render = SavedReportFootervue_type_template_id_26a4008f_render
+
+/* harmony default export */ var SavedReportFooter = (SavedReportFootervue_type_script_lang_ts);
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/KpiCard.vue?vue&type=template&id=0b54f2b6
+
+const KpiCardvue_type_template_id_0b54f2b6_hoisted_1 = {
+  class: "fwde-page fwde-kpi-widget"
+};
+function KpiCardvue_type_template_id_0b54f2b6_render(_ctx, _cache, $props, $setup, $data, $options) {
+  const _component_ActivityIndicator = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("ActivityIndicator");
+  const _component_Alert = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("Alert");
+  const _component_KpiCardView = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("KpiCardView");
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", KpiCardvue_type_template_id_0b54f2b6_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_ActivityIndicator, {
+    loading: _ctx.loading
+  }, null, 8, ["loading"]), _ctx.error ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_Alert, {
+    key: 0,
+    severity: "warning"
+  }, {
+    default: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["withCtx"])(() => [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createTextVNode"])(Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.error), 1)]),
+    _: 1
+  })) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.card ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createBlock"])(_component_KpiCardView, {
+    key: 1,
+    card: _ctx.card,
+    "id-site": _ctx.idSite,
+    "explore-url": _ctx.exploreUrl,
+    "currency-symbol": _ctx.currencySymbol,
+    feedback: _ctx.feedback
+  }, null, 8, ["card", "id-site", "explore-url", "currency-symbol", "feedback"])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
+}
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/KpiCard.vue?vue&type=template&id=0b54f2b6
+
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-babel/node_modules/cache-loader/dist/cjs.js??ref--13-0!./node_modules/@vue/cli-plugin-babel/node_modules/thread-loader/dist/cjs.js!./node_modules/babel-loader/lib!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist/templateLoader.js??ref--6!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/KpiCardView.vue?vue&type=template&id=06f288ae
+
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_1 = {
+  class: "fwde-page fwde-kpi"
+};
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_2 = ["title"];
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_3 = {
+  key: 0,
+  class: "fwde-kpi__metric"
+};
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_4 = {
+  class: "fwde-kpi__main"
+};
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_5 = {
+  class: "fwde-kpi__value"
+};
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_6 = {
+  key: 0,
+  class: "fwde-kpi__partial"
+};
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_7 = {
+  key: 1,
+  class: "fwde-kpi__compare"
+};
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_8 = ["title"];
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_9 = {
+  key: 2,
+  class: "fwde-kpi__note"
+};
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_10 = ["viewBox", "aria-label"];
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_11 = ["d"];
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_12 = ["x1", "x2", "y1", "y2"];
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_13 = {
+  key: 4,
+  class: "fwde-kpi__note"
+};
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_14 = {
+  key: 5,
+  class: "fwde-kpi__footer"
+};
+const KpiCardViewvue_type_template_id_06f288ae_hoisted_15 = ["href"];
+function KpiCardViewvue_type_template_id_06f288ae_render(_ctx, _cache, $props, $setup, $data, $options) {
+  const _component_FeedbackBar = Object(external_commonjs_vue_commonjs2_vue_root_Vue_["resolveComponent"])("FeedbackBar");
+  return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", KpiCardViewvue_type_template_id_06f288ae_hoisted_1, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", {
+    class: "fwde-kpi__title",
+    title: _ctx.card.metricName
+  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.card.title), 9, KpiCardViewvue_type_template_id_06f288ae_hoisted_2), _ctx.showMetric ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", KpiCardViewvue_type_template_id_06f288ae_hoisted_3, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.card.metricName), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("div", KpiCardViewvue_type_template_id_06f288ae_hoisted_4, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", KpiCardViewvue_type_template_id_06f288ae_hoisted_5, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.valueText), 1), _ctx.card.partial ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", KpiCardViewvue_type_template_id_06f288ae_hoisted_6, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_KpiSoFar', _ctx.card.until || '')), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]), _ctx.card.comparison ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", KpiCardViewvue_type_template_id_06f288ae_hoisted_7, [_ctx.change ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("span", {
+    key: 0,
+    class: Object(external_commonjs_vue_commonjs2_vue_root_Vue_["normalizeClass"])(['fwde-kpi__change', `fwde-kpi__change--${_ctx.tone}`])
+  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.change), 3)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("span", {
+    class: "fwde-kpi__baseline",
+    title: _ctx.baselineTitle
+  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.label), 9, KpiCardViewvue_type_template_id_06f288ae_hoisted_8)])) : _ctx.card.comparisonNote ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", KpiCardViewvue_type_template_id_06f288ae_hoisted_9, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.card.comparisonNote), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), _ctx.card.line && _ctx.card.line.length > 1 ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("svg", {
+    key: 3,
+    class: "fwde-kpi__spark",
+    viewBox: `0 0 ${_ctx.WIDTH} ${_ctx.HEIGHT}`,
+    preserveAspectRatio: "none",
+    role: "img",
+    "aria-label": _ctx.lineLabel
+  }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("path", {
+    class: "fwde-kpi__line",
+    d: _ctx.path
+  }, null, 8, KpiCardViewvue_type_template_id_06f288ae_hoisted_11), (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])(external_commonjs_vue_commonjs2_vue_root_Vue_["Fragment"], null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["renderList"])(_ctx.marks, mark => {
+    return Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("line", {
+      key: mark.day,
+      class: "fwde-kpi__mark",
+      x1: mark.x,
+      x2: mark.x,
+      y1: _ctx.HEIGHT - 4,
+      y2: _ctx.HEIGHT
+    }, [Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementVNode"])("title", null, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(mark.title), 1)], 8, KpiCardViewvue_type_template_id_06f288ae_hoisted_12);
+  }), 128))], 8, KpiCardViewvue_type_template_id_06f288ae_hoisted_10)) : _ctx.card.lineNote ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("p", KpiCardViewvue_type_template_id_06f288ae_hoisted_13, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.card.lineNote), 1)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), !_ctx.embedded && (_ctx.exploreUrl || _ctx.feedback.enabled) ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("div", KpiCardViewvue_type_template_id_06f288ae_hoisted_14, [_ctx.exploreUrl ? (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["openBlock"])(), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createElementBlock"])("a", {
+    key: 0,
+    class: "fwde-kpi__open",
+    href: _ctx.exploreUrl
+  }, Object(external_commonjs_vue_commonjs2_vue_root_Vue_["toDisplayString"])(_ctx.translate('FeinwerkDataExploration_OpenInExploration')), 9, KpiCardViewvue_type_template_id_06f288ae_hoisted_15)) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true), Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createVNode"])(_component_FeedbackBar, {
+    "id-site": _ctx.idSite,
+    topic: "kpi_card",
+    question: _ctx.translate('FeinwerkDataExploration_FeedbackQuestion_kpi_card'),
+    feedback: _ctx.feedback
+  }, null, 8, ["id-site", "question", "feedback"])])) : Object(external_commonjs_vue_commonjs2_vue_root_Vue_["createCommentVNode"])("", true)]);
+}
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/KpiCardView.vue?vue&type=template&id=06f288ae
+
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/kpi.ts
+/*!
+ * Matomo - free/libre analytics platform
+ * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
+ */
+
+function arrow(sign) {
+  if (sign > 0) {
+    return '▲';
+  }
+  return sign < 0 ? '▼' : '±';
+}
+/** "▲ 12 %" or "▼ 140" as the card's setting says; '' without a comparison or a change. */
+function changeText(card, formatters) {
+  const {
+    comparison
+  } = card;
+  if (!comparison) {
+    return '';
+  }
+  if (card.changeAs === 'absolute') {
+    if (comparison.absolute === null) {
+      return '';
+    }
+    const amount = formatMetric(card.metric, Math.abs(comparison.absolute), formatters);
+    return `${arrow(Math.sign(comparison.absolute))} ${amount}`;
+  }
+  if (comparison.change === null) {
+    return '';
+  }
+  const percent = Math.round(Math.abs(comparison.change) * 100);
+  return `${arrow(percent === 0 ? 0 : Math.sign(comparison.change))} ${formatters.percent(percent)}`;
+}
+/** Whether the change is good news: up for most metrics, down where less is better. */
+function changeTone(card) {
+  const absolute = card.comparison ? card.comparison.absolute : null;
+  if (absolute === null || absolute === 0) {
+    return 'neutral';
+  }
+  const up = absolute > 0;
+  return up !== card.lowerIsBetter ? 'good' : 'bad';
+}
+/** Matomo's name of a day's weekday (Intl_Day_Long_StandAlone_1 is Monday). */
+function weekdayKey(day) {
+  const weekday = new Date(`${day}T00:00:00Z`).getUTCDay();
+  return `Intl_Day_Long_StandAlone_${weekday === 0 ? 7 : weekday}`;
+}
+/** What the change is measured against, e.g. "vs. ⌀ Wednesday, last 4 weeks"; '' without one. */
+function comparisonLabel(card, translate) {
+  const {
+    comparison
+  } = card;
+  if (!comparison) {
+    return '';
+  }
+  const {
+    kind,
+    period,
+    used
+  } = comparison;
+  if (period === 'day' && kind === 'weekday') {
+    return translate('FeinwerkDataExploration_KpiVsWeekday', translate(weekdayKey(card.lastDay)));
+  }
+  if (kind === 'average4') {
+    if (period === 'day') {
+      return translate('FeinwerkDataExploration_KpiVsAverageWeekdays', translate(weekdayKey(card.lastDay)), used);
+    }
+    return translate(period === 'week' ? 'FeinwerkDataExploration_KpiVsAverageWeeks' : 'FeinwerkDataExploration_KpiVsAverageMonths', used);
+  }
+  const keys = {
+    day: 'FeinwerkDataExploration_KpiVsPreviousDay',
+    week: 'FeinwerkDataExploration_KpiVsPreviousWeek',
+    month: 'FeinwerkDataExploration_KpiVsPreviousMonth'
+  };
+  return translate(keys[period] || keys.day);
+}
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/KpiCardView.vue?vue&type=script&lang=ts
+
+
+
+
+
+
+
+const WIDTH = 300;
+const HEIGHT = 44;
+const PAD = 3;
+/**
+ * A KPI card (2026-11-24): its title, the number for the dashboard's period ("so far" when it
+ * includes today), the change against its comparison, the line of the last days with the
+ * comparison days marked, and the footer (Open in exploration, the feedback thumbs; no support
+ * link, the dashboard widget rule).
+ */
+/* harmony default export */ var KpiCardViewvue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
+  components: {
+    FeedbackBar: FeedbackBar
+  },
+  props: {
+    card: {
+      type: Object,
+      required: true
+    },
+    idSite: {
+      type: Number,
+      required: true
+    },
+    /** "Open in exploration"; empty in an embed, which shows no footer (UI review 2026-11-24) */
+    exploreUrl: {
+      type: String,
+      required: true
+    },
+    /** the website's currency symbol */
+    currencySymbol: {
+      type: String,
+      default: ''
+    },
+    feedback: {
+      type: Object,
+      default: () => ({
+        enabled: false,
+        supportUrl: '',
+        version: ''
+      })
+    }
+  },
+  data() {
+    // an embedded dashboard loads the card with its own module: the page's address tells
+    return {
+      WIDTH,
+      HEIGHT,
+      embedded: embeddedPage(window.location.search)
+    };
+  },
+  computed: {
+    /** the metric under the title, unless the title already is its name (UI review 2026-11-24) */
+    showMetric() {
+      const fold = text => text.trim().toLocaleLowerCase();
+      return fold(this.card.metricName) !== '' && fold(this.card.title) !== fold(this.card.metricName);
+    },
+    formatters() {
+      return {
+        number: v => external_CoreHome_["NumberFormatter"].formatNumber(v, 2, 0),
+        percent: v => external_CoreHome_["NumberFormatter"].formatPercent(v, 2, 0),
+        currency: v => external_CoreHome_["NumberFormatter"].formatCurrency(v, this.currencySymbol, 2, 2),
+        duration: v => formatDuration(v)
+      };
+    },
+    valueText() {
+      return this.card.value === null ? Object(external_CoreHome_["translate"])('FeinwerkDataExploration_KpiNoValue') : formatMetric(this.card.metric, this.card.value, this.formatters);
+    },
+    change() {
+      return changeText(this.card, this.formatters);
+    },
+    tone() {
+      return changeTone(this.card);
+    },
+    label() {
+      return comparisonLabel(this.card, external_CoreHome_["translate"]);
+    },
+    /** the baseline's value and its days, for the tooltip */
+    baselineTitle() {
+      const {
+        comparison
+      } = this.card;
+      if (!comparison) {
+        return '';
+      }
+      const days = comparison.spans.filter(span => span.value !== null).map(span => span.firstDay === span.lastDay ? span.firstDay : `${span.firstDay}/${span.lastDay}`);
+      return `${formatMetric(this.card.metric, comparison.baseline, this.formatters)} (${days.join(', ')})`;
+    },
+    values() {
+      return (this.card.line || []).map(point => point.value);
+    },
+    scale() {
+      const numbers = this.values.filter(v => v !== null);
+      const min = numbers.length ? Math.min(...numbers) : 0;
+      const max = numbers.length ? Math.max(...numbers) : 1;
+      return {
+        min,
+        max: max === min ? min + 1 : max
+      };
+    },
+    path() {
+      return linePath(this.values, this.x, this.y);
+    },
+    marks() {
+      return (this.card.line || []).map((point, i) => ({
+        point,
+        i
+      })).filter(({
+        point
+      }) => point.baseline && point.value !== null).map(({
+        point,
+        i
+      }) => ({
+        day: point.day,
+        x: this.x(i),
+        title: `${point.day}: ${formatMetric(this.card.metric, point.value, this.formatters)}`
+      }));
+    },
+    lineLabel() {
+      const line = this.card.line || [];
+      return line.length ? `${this.card.metricName}: ${line[0].day} ${line[line.length - 1].day}` : '';
+    }
+  },
+  methods: {
+    translate: external_CoreHome_["translate"],
+    x(index) {
+      const count = Math.max(1, (this.card.line || []).length - 1);
+      return PAD + index * (WIDTH - 2 * PAD) / count;
+    },
+    y(value) {
+      const {
+        min,
+        max
+      } = this.scale;
+      return HEIGHT - 6 - (value - min) / (max - min) * (HEIGHT - 6 - PAD);
+    }
+  }
+}));
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/KpiCardView.vue?vue&type=script&lang=ts
+ 
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/KpiCardView.vue
+
+
+
+KpiCardViewvue_type_script_lang_ts.render = KpiCardViewvue_type_template_id_06f288ae_render
+
+/* harmony default export */ var KpiCardView = (KpiCardViewvue_type_script_lang_ts);
+// CONCATENATED MODULE: ./node_modules/@vue/cli-plugin-typescript/node_modules/cache-loader/dist/cjs.js??ref--15-0!./node_modules/babel-loader/lib!./node_modules/@vue/cli-plugin-typescript/node_modules/ts-loader??ref--15-2!./node_modules/@vue/cli-service/node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/@vue/cli-service/node_modules/vue-loader-v16/dist??ref--1-1!./plugins/FeinwerkDataExploration/vue/src/KpiCard.vue?vue&type=script&lang=ts
+
+
+
+
+/**
+ * A KPI card's dashboard widget (2026-11-24): asks FeinwerkDataExploration.getKpiCard for the
+ * dashboard's period and segment and shows the card, or why it cannot.
+ */
+/* harmony default export */ var KpiCardvue_type_script_lang_ts = (Object(external_commonjs_vue_commonjs2_vue_root_Vue_["defineComponent"])({
+  components: {
+    ActivityIndicator: external_CoreHome_["ActivityIndicator"],
+    Alert: external_CoreHome_["Alert"],
+    KpiCardView: KpiCardView
+  },
+  props: {
+    idSite: {
+      type: Number,
+      required: true
+    },
+    idSaved: {
+      type: Number,
+      required: true
+    },
+    exploreUrl: {
+      type: String,
+      required: true
+    },
+    currencySymbol: {
+      type: String,
+      default: ''
+    },
+    feedback: {
+      type: Object,
+      default: () => ({
+        enabled: false,
+        supportUrl: '',
+        version: ''
+      })
+    }
+  },
+  data() {
+    return {
+      card: null,
+      loading: true,
+      error: ''
+    };
+  },
+  mounted() {
+    loadKpiCard(this.idSaved).then(card => {
+      this.card = card;
+    }).catch(e => {
+      this.error = errorText(e);
+    }).finally(() => {
+      this.loading = false;
+    });
+  }
+}));
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/KpiCard.vue?vue&type=script&lang=ts
+ 
+// CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/KpiCard.vue
+
+
+
+KpiCardvue_type_script_lang_ts.render = KpiCardvue_type_template_id_0b54f2b6_render
+
+/* harmony default export */ var KpiCard = (KpiCardvue_type_script_lang_ts);
 // CONCATENATED MODULE: ./plugins/FeinwerkDataExploration/vue/src/index.ts
 /*!
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
+
+
 
 
 // CONCATENATED MODULE: ./node_modules/@vue/cli-service/lib/commands/build/entry-lib-no-default.js

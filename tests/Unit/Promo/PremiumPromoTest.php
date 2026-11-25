@@ -205,6 +205,13 @@ class PremiumPromoTest extends TestCase
         self::assertNotSame([], PremiumPromo::choose([], $whole, 0, true, false));
     }
 
+    /** One x empties the place for the pause; the closed plugin stays away longer, so the next one follows it. */
+    public function test_the_closed_plugin_stays_away_longer_than_the_pause(): void
+    {
+        self::assertSame(30, PremiumPromo::PAUSE_DAYS);
+        self::assertGreaterThan(PremiumPromo::PAUSE_DAYS, PremiumPromo::ITEM_DAYS);
+    }
+
     /** "alternierend": another plugin comes first each day, the others follow in the store's order. */
     public function test_the_order_turns_by_one_each_day(): void
     {
@@ -220,7 +227,11 @@ class PremiumPromoTest extends TestCase
         self::assertSame([], PremiumPromo::rotate([], 5));
     }
 
-    /** What the page gets: nothing without plugins; the 30 days (demo: this session); the note only for admins. */
+    /**
+     * What the page gets: nothing without plugins; a pausable place (Peter, 2026-11-24: "Ein × blendet alles 30 Tage
+     * aus"): any x empties it for PAUSE_DAYS, the closed plugin stays away for ITEM_DAYS; demo mode keeps the plain
+     * rotation for the browser session (days 0, no pause); the note only for admins, a whole sentence without a value.
+     */
     public function test_the_banner_props(): void
     {
         $translate = static function (string $key, array $args = []): string {
@@ -233,13 +244,14 @@ class PremiumPromoTest extends TestCase
         self::assertNull(PremiumPromo::forBanner([], false, true, $translate));
 
         $super = PremiumPromo::forBanner($plugins, false, true, $translate);
-        self::assertSame(['plugins' => $plugins, 'days' => 30, 'demo' => false, 'note' => ''], $super);
+        self::assertSame(['plugins' => $plugins, 'days' => 90, 'pauseDays' => 30, 'demo' => false, 'note' => ''], $super);
+        self::assertSame([PremiumPromo::ITEM_DAYS, PremiumPromo::PAUSE_DAYS], [$super['days'], $super['pauseDays']]);
 
         $admin = PremiumPromo::forBanner($plugins, false, false, $translate);
-        self::assertSame('FeinwerkDataExploration_PremiumAskSuperUser(Installation_SuperUser)', $admin['note']);
+        self::assertSame('FeinwerkDataExploration_PremiumAskSuperUser', $admin['note'], 'no placeholder, no value');
 
         $demo = PremiumPromo::forBanner($plugins, true, true, $translate);
-        self::assertSame([0, true], [$demo['days'], $demo['demo']]);
+        self::assertSame([0, 0, true], [$demo['days'], $demo['pauseDays'], $demo['demo']]);
     }
 }
 

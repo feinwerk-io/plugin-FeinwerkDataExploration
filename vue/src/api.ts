@@ -2,13 +2,14 @@
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
-import { AjaxHelper, Matomo } from 'CoreHome';
+import { AjaxHelper, Matomo, ReportingMenuStore } from 'CoreHome';
 import {
   Catalog, ComparisonColumn, DimensionInfo, ExplorationState, FunnelRow, FunnelStepState,
   MetricInfo,
 } from './types';
 import { toDefinition } from './state';
 import { toFunnelDefinition } from './funnelState';
+import { KpiCardData } from './kpi';
 
 export interface Goal {
   id: number;
@@ -79,12 +80,22 @@ export interface SavedExploration {
   canEdit: boolean;
   /** the owner, super users, and admins of the website for a shared one (design 2026-11-20) */
   canDelete: boolean;
-  kind: 'table'|'funnel';
+  kind: 'table'|'funnel'|'kpi';
   /** last change, UTC (YYYY-MM-DD HH:MM:SS) */
   updated: string;
   /** the page's state parameters (fwdeDims, fwdeMetrics, ...) */
   state: Record<string, string>;
   segment: string;
+  /** its own menu entry's section as a Matomo report, null when not in the menu (2026-11-24) */
+  menu?: string|null;
+  /** whether the user may change the menu place (as canDelete) */
+  canPlace?: boolean;
+}
+
+/** A section of Matomo's reporting menu a saved exploration can be placed in. */
+export interface MenuSection {
+  id: string;
+  name: string;
 }
 
 export function loadSaved(): Promise<SavedExploration[]> {
@@ -110,28 +121,53 @@ function saveBody(fields: SaveFields): Record<string, string> {
   };
 }
 
+/**
+ * Saved explorations can have menu entries of their own (saved reports), so Matomo's menu is read
+ * again after a change succeeded, as Goals does after a goal changed (UI review 2026-11-24). A menu
+ * that cannot be reloaded never fails the change.
+ */
+function withMenuReload<T>(change: Promise<T>): Promise<T> {
+  return change.then((result) => {
+    try {
+      ReportingMenuStore.reloadMenuItems().catch(() => undefined);
+    } catch (e) {
+      // no reporting menu on this page: nothing to reload
+    }
+    return result;
+  });
+}
+
 export function addSaved(fields: SaveFields): Promise<{ id: number }> {
-  return AjaxHelper.post<{ id: number }>(
+  return withMenuReload(AjaxHelper.post<{ id: number }>(
     { method: 'FeinwerkDataExploration.addSavedExploration' },
     saveBody(fields),
     OPTIONS,
-  );
+  ));
 }
 
 export function updateSaved(id: number, fields: SaveFields): Promise<unknown> {
-  return AjaxHelper.post(
+  return withMenuReload(AjaxHelper.post(
     { method: 'FeinwerkDataExploration.updateSavedExploration' },
     { ...saveBody(fields), idSaved: String(id) },
     OPTIONS,
-  );
+  ));
+}
+
+/** Changes the menu place of a saved exploration (owner, super user, admin for a shared one). */
+export function setSavedMenu(id: number, menu: string): Promise<unknown> {
+  return withMenuReload(AjaxHelper.post(
+    { method: 'FeinwerkDataExploration.setSavedExplorationMenu' },
+    { idSaved: String(id), menu },
+    OPTIONS,
+  ));
 }
 
 export function deleteSaved(id: number): Promise<unknown> {
-  return AjaxHelper.post(
+  return withMenuReload(AjaxHelper.post(
     { method: 'FeinwerkDataExploration.deleteSavedExploration' },
     { idSaved: String(id) },
     OPTIONS,
-  );
+  ));
 }
 
 /** The site's goals; an empty list when they cannot be read. */
@@ -158,6 +194,13 @@ export function runExploration(
   );
 }
 
+/** A KPI card for the dashboard's period and segment (idSite, period, date, segment: the URL's). */
+export function loadKpiCard(idSaved: number): Promise<KpiCardData> {
+  return AjaxHelper.fetch<KpiCardData>({
+    method: 'FeinwerkDataExploration.getKpiCard', idSaved: String(idSaved),
+  }, OPTIONS);
+}
+
 /**
  * The exact rest of the cut table ("Others", design 2026-11-20), asked on demand: null when nothing
  * was cut. Period, date and segment from the URL as for runExploration.
@@ -165,7 +208,8 @@ export function runExploration(
 export function runOthers(state: ExplorationState): Promise<Record<string, number|null>|null> {
   return AjaxHelper.post<{ others: Record<string, number|null>|null }>(
     { method: 'FeinwerkDataExploration.getOthers', format: 'json' },
-    { definition: JSON.stringify(toDefinition(state)) },
+    // the rest of the rows needs no pivot columns
+    { definition: JSON.stringify(toDefinition(state, true)) },
     OPTIONS,
   ).then((result) => (result && result.others ? result.others : null));
 }
@@ -196,7 +240,8 @@ export function runComparison(
   return AjaxHelper.post<ResultRow[]>(
     { method: 'FeinwerkDataExploration.getExploration', format: 'json', filter_limit: -1 },
     {
-      definition: JSON.stringify(toDefinition(state)),
+      // pivot and comparison are exclusive: the comparison wins
+      definition: JSON.stringify(toDefinition(state, true)),
       comparisons: JSON.stringify([
         { segment: column.segment, period: column.period, date: column.date },
       ]),
@@ -217,7 +262,8 @@ export function runTrend(
   return AjaxHelper.post<TrendRow[]>(
     { method: 'FeinwerkDataExploration.getTrend', format: 'json', filter_limit: -1 },
     {
-      definition: JSON.stringify(toDefinition(state)),
+      // the trend follows the rows, never the pivot
+      definition: JSON.stringify(toDefinition(state, true)),
       comparisons: column === null ? '' : JSON.stringify([
         { segment: column.segment, period: column.period, date: column.date },
       ]),

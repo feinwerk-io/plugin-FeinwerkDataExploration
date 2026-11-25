@@ -25,7 +25,7 @@ class PluginFeedback
 {
     public const PLUGIN = 'FeinwerkDataExploration';
     /** the questions (store "topic") this plugin asks; the API accepts only these */
-    public const TOPICS = ['free_form_table', 'funnel'];
+    public const TOPICS = ['free_form_table', 'funnel', 'saved_report', 'kpi_card'];
     public const DEFAULT_STORE = 'https://plugins.feinwerk.io';
     private const TIMEOUT = 3; // seconds; the same in every plugin (feedback kit)
     /**

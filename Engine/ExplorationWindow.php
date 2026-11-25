@@ -58,6 +58,25 @@ final class ExplorationWindow
         );
     }
 
+    /**
+     * The days of a KPI card's span (2026-11-24): from the first day's start to the end of the last day, or to the last
+     * day at the span's time of day, in the website's timezone; guarded as a range of those days.
+     *
+     * @throws ExplorationException for days an exploration does not cover
+     */
+    public static function span(int $idSite, KpiSpan $span, Limits $limits): self
+    {
+        $whole = self::for($idSite, 'range', $span->firstDay . ',' . $span->lastDay, $limits);
+        if ($span->until === null) {
+            return $whole;
+        }
+        // the time of day in the website's timezone, as for() builds its bounds (Date::factory with a timezone would
+        // read the string as UTC)
+        $end = Date::factory($span->lastDay . ' ' . $span->until)->setTimezone($whole->timezone);
+        return new self($whole->timezone, $whole->start, $end, $whole->startUtc, $end->getDatetime(), $whole->includesToday,
+            $whole->firstDay, $whole->lastDay);
+    }
+
     /** Seconds results of this window may be reused: one hour, five minutes while today's data still changes. */
     public function cacheTtl(): int
     {

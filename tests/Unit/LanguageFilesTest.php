@@ -20,9 +20,6 @@ class LanguageFilesTest extends TestCase
 {
     private const LANGUAGES = ['en', 'de', 'fr', 'es', 'it'];
 
-    /** German names Matomo's word for super user through %s (Installation_SuperUser); other languages need not. */
-    private const OPTIONAL_PLACEHOLDERS = ['PremiumAskSuperUser' => ['%s']];
-
     /** @return array<string, array<string, string>> sections of lang/<language>.json */
     private static function sections(string $language): array
     {
@@ -57,6 +54,10 @@ class LanguageFilesTest extends TestCase
         }
     }
 
+    /**
+     * Exactly the placeholders of en.json, no exception: a translation with an extra %s shows it literally wherever a
+     * caller passes no value (kit addendum 2026-11-24, PremiumAskSuperUser in German).
+     */
     public function test_every_text_keeps_the_placeholders_of_english(): void
     {
         $english = self::sections('en');
@@ -67,10 +68,6 @@ class LanguageFilesTest extends TestCase
                     $expected = self::placeholders($english[$section][$key]);
                     self::assertNotSame('', trim($text), "$language: $key is empty");
                     self::assertStringNotContainsString('\\$', $text, "$language: $key has an escaped placeholder");
-                    if ($found !== $expected && isset(self::OPTIONAL_PLACEHOLDERS[$key])) {
-                        self::assertSame(self::OPTIONAL_PLACEHOLDERS[$key], $found, "$language: $key");
-                        continue;
-                    }
                     self::assertSame($expected, $found, "$language: $key");
                 }
             }

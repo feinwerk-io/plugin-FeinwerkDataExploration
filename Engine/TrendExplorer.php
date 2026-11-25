@@ -82,7 +82,7 @@ final class TrendExplorer
     }
 
     /**
-     * Rows (one per line and unit): label (and secondary_label for two dimensions) of the table row, or the title of
+     * Rows (one per line and unit): label, secondary_label and tertiary_label (one per dimension) of the table row, or the title of
      * the comparison column; time; the definition's metrics. Metadata fwde_line (0-based), fwde_key (raw keys of the
      * table row, JSON) or fwde_kind (own, segment, period, both).
      *
@@ -95,7 +95,9 @@ final class TrendExplorer
         $unit = $window->firstDay === $window->lastDay ? self::UNIT_HOUR : self::UNIT_DAY;
         $explorer = new Explorer($this->dimensions, $this->metrics, $this->limits);
         $slot = new LazySlot($this->limits);
-        $this->now = Date::now()->setTimezone($window->timezone)->toString('Y-m-d H');
+        // the website's local hour (Date::factory with a timezone converts UTC to it; setTimezone would read the UTC
+        // instant as a local time and shift it the other way)
+        $this->now = Date::factory('now', $window->timezone)->toString('Y-m-d H');
         try {
             $table = $comparisons === []
                 ? $this->rowLines($explorer, $idSite, $window, $definition, $dimensions, $segment, $unit, $slot)
@@ -110,10 +112,10 @@ final class TrendExplorer
     /** The first rows of the table (in its sort and with its text filters) per unit, without its number filters. */
     private function rowLines(Explorer $explorer, int $idSite, ExplorationWindow $window, ExplorationDefinition $definition, array $dimensions, string $segment, string $unit, LazySlot $slot): DataTable
     {
-        $twoDimensions = count($dimensions) === 2;
+        $count = count($dimensions);
         $own = $explorer->fetchRows($idSite, $window, $definition, $dimensions, $segment, $slot);
         $own = array_slice($this->inShownOrder($own, $definition, $dimensions, $idSite), 0, self::maxLines($this->limits));
-        $keys = array_map(static fn (array $row): array => Explorer::rowKeys($row, $twoDimensions), $own);
+        $keys = array_map(static fn (array $row): array => Explorer::rowKeys($row, $count), $own);
         $values = [];
         foreach ($explorer->fetchRows($idSite, $window, $definition, $dimensions, $segment, $slot, $keys, false, $this->timeDimension($idSite, $unit)) as $row) {
             $values[(int) $row['fwde_row']][(string) $row['fwde_t']] = $row;
@@ -122,9 +124,9 @@ final class TrendExplorer
         $table = new DataTable();
         $units = self::units($unit, $window->firstDay, $window->lastDay);
         foreach ($keys as $line => $rowKeys) {
-            $labels = ['label' => $dimensions[0]->formatLabel($rowKeys[0], $idSite)];
-            if ($twoDimensions) {
-                $labels['secondary_label'] = $dimensions[1]->formatLabel($rowKeys[1], $idSite);
+            $labels = [];
+            foreach ($dimensions as $i => $dimension) {
+                $labels[ExplorationDefinition::LABEL_COLUMNS[$i]] = $dimension->formatLabel($rowKeys[$i], $idSite);
             }
             $this->addLine($table, $definition, $labels, $unit, $window->firstDay, $units, $values[$line] ?? [], ['fwde_line' => $line, 'fwde_key' => json_encode($rowKeys)]);
         }
@@ -217,15 +219,15 @@ final class TrendExplorer
      */
     private function inShownOrder(array $rows, ExplorationDefinition $definition, array $dimensions, int $idSite): array
     {
-        $labelColumns = [ExplorationDefinition::SORT_LABEL => 0, ExplorationDefinition::SORT_SECONDARY_LABEL => 1];
+        $labelColumns = array_flip(ExplorationDefinition::labelColumns(count($dimensions)));
         if (!isset($labelColumns[$definition->sortColumn]) || count($rows) >= $definition->limit) {
             return $rows;
         }
         $index = $labelColumns[$definition->sortColumn];
-        $twoDimensions = count($dimensions) === 2;
+        $count = count($dimensions);
         $labels = [];
         foreach ($rows as $i => $row) {
-            $labels[$i] = $dimensions[$index]->formatLabel(Explorer::rowKeys($row, $twoDimensions)[$index], $idSite);
+            $labels[$i] = $dimensions[$index]->formatLabel(Explorer::rowKeys($row, $count)[$index], $idSite);
         }
         $collator = self::collator();
         $direction = $definition->sortOrder === 'asc' ? 1 : -1;

@@ -33,6 +33,12 @@ export interface MetricInfo {
   kind: string|null;
   /** what the metric counts (Matomo's description), for the tooltip */
   description?: string;
+  /** the metric list's heading (more metrics, 2026-11-24); from scope when missing */
+  group?: 'visits'|'goals'|'ecommerce'|'actions';
+  /** the goal of a per-goal metric */
+  idGoal?: number|null;
+  unit?: string;
+  aggregation?: string;
 }
 
 export interface Catalog {
@@ -40,13 +46,16 @@ export interface Catalog {
   metrics: MetricInfo[];
 }
 
-export type FilterOperator = 'contains'|'equals'|'notContains'|'notEquals'|'startsWith'|'endsWith'|'gt'|'lt';
+export type FilterOperator = 'contains'|'equals'|'notContains'|'notEquals'|'startsWith'|'endsWith'
+  |'notStartsWith'|'notEndsWith'|'matches'|'gt'|'gte'|'lt'|'lte';
 
 export interface RowFilter {
-  /** 'label', 'secondary_label' or a selected metric id */
+  /** 'label', 'secondary_label', 'tertiary_label' or a selected metric id */
   target: string;
   operator: FilterOperator;
   value: string;
+  /** the index of its group (filter groups, 2026-11-23) */
+  group: number;
 }
 
 /** Result as a table, a chart or both (null: the default for the result). */
@@ -58,13 +67,12 @@ export type ChartType = 'bar'|'trend'|'donut';
 /** The exact rest of a cut table ("Others", on demand): not asked, running, failed, calculated. */
 export type OthersState = 'idle'|'loading'|'failed'|'done';
 
-/** How the filters combine: "all" with AND, "any" with OR (2026-11-20). */
+/** How conditions or groups combine: "all" with AND, "any" with OR (2026-11-20). */
 export type FilterMatch = 'all'|'any';
 
 export interface ExplorationState {
   dimensions: string[];
   metrics: string[];
-  idGoal: number|null;
   sort: string;
   sortOrder: 'asc'|'desc';
   limit: number;
@@ -74,8 +82,14 @@ export interface ExplorationState {
   chartMetric: string|null;
   /** bars or the trend (trend design 3), null: bars */
   chartType: ChartType|null;
-  /** "all" joins the filters with AND, "any" with OR (2026-11-20) */
+  /** how the filter groups combine (2026-11-23; before: how the filters combine) */
   match: FilterMatch;
+  /** how the conditions of each group combine, by group index */
+  groupMatch: FilterMatch[];
+  /** the pivot dimension (rows and pivot, 2026-11-24), null: none */
+  pivot: string|null;
+  /** how many of the pivot's values become columns: 3, 5 or 10 */
+  pivotLimit: number;
 }
 
 /** Kinds of funnel steps (FunnelStep::TYPES in PHP). */

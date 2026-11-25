@@ -47,6 +47,10 @@ class QueryRunner
                 // the time limit of the instance: a server condition (503, not 400); a shorter period may fit
                 throw new ExplorationException(RoleText::key('FeinwerkDataExploration_ErrorTimeout'), [$this->limits->timeoutSeconds], 503);
             }
+            if (RegexpError::is($e, $db)) {
+                // a "matches" filter in a syntax this database does not know (the check before the query is PHP's)
+                throw new ExplorationException('FeinwerkDataExploration_ErrorFilterPatternDatabase', [], 400);
+            }
             throw $e;
         }
     }

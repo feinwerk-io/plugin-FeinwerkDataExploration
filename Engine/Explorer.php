@@ -25,17 +25,12 @@ use Piwik\Plugins\FeinwerkDataExploration\Query\QueryRunner;
 use Piwik\Segment;
 
 /**
- * Runs one exploration for one site and period and returns it as a flat DataTable: label, secondary_label (two
- * dimensions only) and the requested metrics in the requested order.
+ * Runs one exploration for one site and period and returns it as a flat DataTable: label, secondary_label and
+ * tertiary_label (one per dimension) and the requested metrics in the requested order.
  */
 final class Explorer
 {
     /** Metrics that are counts or whole seconds; all others are rates or amounts. */
-    private const INTEGER_METRICS = [
-        'nb_visits', 'nb_uniq_visitors', 'nb_actions', 'avg_time_on_site', 'nb_conversions',
-        'nb_pageviews', 'nb_uniq_pageviews', 'nb_events', 'nb_downloads', 'nb_outlinks', 'nb_searches', 'max_actions',
-    ];
-
     public function __construct(
         private readonly DimensionCatalog $dimensions,
         private readonly MetricCatalog $metrics,
@@ -62,7 +57,7 @@ final class Explorer
 
         $table = $this->toDataTable($rows, $definition, $dimensions, $idSite, !$readableColumns);
         if ($readableColumns) {
-            $this->useReadableColumnNames($table, $definition, $dimensions, $definition->scope($this->dimensions, $this->metrics, $idSite));
+            $this->useReadableColumnNames($table, $definition, $dimensions, $definition->scope($this->dimensions, $this->metrics, $idSite), $idSite);
         }
         return $table;
     }
@@ -88,8 +83,8 @@ final class Explorer
             if (count($rows) < $definition->limit && $numberFilter === []) {
                 return null;
             }
-            $twoDimensions = count($dimensions) === 2;
-            $shown = array_map(static fn (array $row): array => self::rowKeys($row, $twoDimensions), $rows);
+            $count = count($dimensions);
+            $shown = array_map(static fn (array $row): array => self::rowKeys($row, $count), $rows);
             $rest = $this->fetchRows($idSite, $window, $definition, $dimensions, $segment, $slot, null, false, null, $shown)[0] ?? [];
         } finally {
             $slot->release();
@@ -108,30 +103,103 @@ final class Explorer
      * unit (trend): $onlyKeys by fwde_row and fwde_t, or ($onlyKeys null) the totals by fwde_t. The slot is taken only
      * when a query has to run.
      *
-     * With $exceptKeys the rest of the table without those rows ("Others", one row).
+     * With $exceptKeys the rest of the table without those rows ("Others", one row). With $levelKeys the totals of these
+     * prefixes of the first k dimensions (an upper level of a report, ReportLevels), fwde_row the index into them.
      *
-     * @param list<array{0: ?string, 1: ?string}>|null $onlyKeys
-     * @param list<array{0: ?string, 1: ?string}>|null $exceptKeys
+     * @param list<list<?string>>|null $onlyKeys
+     * @param list<list<?string>>|null $exceptKeys
+     * @param list<list<?string>>|null $levelKeys tuples of one length k, 1 to the dimensions - 1
      */
-    public function fetchRows(int $idSite, ExplorationWindow $window, ExplorationDefinition $definition, array $dimensions, string $segment, LazySlot $slot, ?array $onlyKeys = null, bool $totals = false, ?DimensionDefinition $time = null, ?array $exceptKeys = null): array
+    public function fetchRows(int $idSite, ExplorationWindow $window, ExplorationDefinition $definition, array $dimensions, string $segment, LazySlot $slot, ?array $onlyKeys = null, bool $totals = false, ?DimensionDefinition $time = null, ?array $exceptKeys = null, ?array $levelKeys = null): array
     {
-        $context = new QueryContext($definition->scope($this->dimensions, $this->metrics, $idSite), $window->timezone, $window->startUtc, $window->endUtc);
+        $cacheKey = function (ResultCache $cache, QueryContext $context, string $version) use ($idSite, $segment, $definition, $onlyKeys, $totals, $time, $exceptKeys, $levelKeys): string {
+            if ($levelKeys !== null) {
+                return $cache->firstLevelKey($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $levelKeys, $version);
+            }
+            if ($exceptKeys !== null) {
+                return $cache->othersKey($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $exceptKeys, $version);
+            }
+            if ($time !== null) {
+                return $cache->trendKey($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $onlyKeys, $time->id, $version);
+            }
+            if ($totals) {
+                return $cache->totalsKey($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $version);
+            }
+            return $onlyKeys !== null
+                ? $cache->restrictedKey($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $onlyKeys, $version)
+                : $cache->key($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $version);
+        };
+        $build = function (ExplorationQueryBuilder $builder, QueryContext $context, array $resolvedFilters, QueryRunner $runner) use ($idSite, $definition, $dimensions, $onlyKeys, $totals, $time, $exceptKeys, $levelKeys): array {
+            if ($levelKeys !== null) {
+                return $builder->buildLevel($definition, $dimensions, $idSite, $context, $resolvedFilters, $levelKeys);
+            }
+            if ($exceptKeys !== null) {
+                return $builder->buildOthers($definition, $dimensions, $idSite, $context, $resolvedFilters, $exceptKeys);
+            }
+            if ($time !== null) {
+                return $builder->buildTrend($definition, $dimensions, $idSite, $context, $resolvedFilters, $time, $onlyKeys);
+            }
+            return $totals
+                ? $builder->buildTotals($definition, $dimensions, $idSite, $context, $resolvedFilters)
+                : $builder->build($definition, $dimensions, $idSite, $context, $resolvedFilters, $onlyKeys === null && GroupingQuirk::applies($runner->serverVersion()), $onlyKeys);
+        };
+        return $this->run($idSite, $window, $definition, $dimensions, $segment, $slot, $definition->scope($this->dimensions, $this->metrics, $idSite), $cacheKey, $build);
+    }
+
+    /**
+     * A pivot query (rows and pivot, 2026-11-24), guarded and cached as fetchRows():
+     * - "values": the pivot's values with every metric, the first metric's largest first, cut at $limit (null: every
+     *   value in the key's order), key column fwde_k{n+1} for n row dimensions;
+     * - "cells": the rows $rowKeys (fwde_row) by pivot value among $pivotKeys (fwde_p, the index in $pivotKeys);
+     * - "others": the rows $rowKeys over every other pivot value (fwde_p NULL);
+     * - "othersTotal": every other pivot value together (one row).
+     * In action scope when the pivot is an action dimension, as an exploration with it as one more row dimension.
+     *
+     * @param DimensionDefinition[] $dimensions the row dimensions
+     * @param list<list<?string>> $rowKeys raw keys of the shown rows (rowKeys())
+     * @param list<?string> $pivotKeys raw keys of the pivot values shown as columns
+     */
+    public function fetchPivot(string $kind, int $idSite, ExplorationWindow $window, ExplorationDefinition $definition, array $dimensions, DimensionDefinition $pivot, string $segment, LazySlot $slot, array $rowKeys = [], array $pivotKeys = [], ?int $limit = null): array
+    {
+        $cacheKey = static fn (ResultCache $cache, QueryContext $context, string $version): string => $cache->pivotKey(
+            $kind, $idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, [$rowKeys, $pivotKeys, $limit], $version
+        );
+        $build = static function (ExplorationQueryBuilder $builder, QueryContext $context, array $resolvedFilters, QueryRunner $runner) use ($kind, $idSite, $definition, $dimensions, $pivot, $rowKeys, $pivotKeys, $limit): array {
+            switch ($kind) {
+                case 'values':
+                    return $builder->buildPivotValues($definition, $dimensions, $pivot, $idSite, $context, $resolvedFilters, $limit, GroupingQuirk::applies($runner->serverVersion()));
+                case 'cells':
+                case 'others':
+                    return $builder->buildPivotCells($definition, $dimensions, $pivot, $idSite, $context, $resolvedFilters, $rowKeys, $pivotKeys, $kind === 'others');
+                case 'othersTotal':
+                    return $builder->buildPivotTotals($definition, $dimensions, $pivot, $idSite, $context, $resolvedFilters, $pivotKeys);
+            }
+            throw new \InvalidArgumentException('Unknown pivot query ' . $kind);
+        };
+        return $this->run($idSite, $window, $definition, $dimensions, $segment, $slot, $this->pivotScope($definition, $pivot, $idSite), $cacheKey, $build);
+    }
+
+    /** The scope of the pivot's queries: action when the table or the pivot dimension is one. */
+    public function pivotScope(ExplorationDefinition $definition, DimensionDefinition $pivot, int $idSite): string
+    {
+        return $pivot->scope === DimensionCatalog::SCOPE_ACTION ? DimensionCatalog::SCOPE_ACTION : $definition->scope($this->dimensions, $this->metrics, $idSite);
+    }
+
+    /**
+     * Runs one query of an exploration: from the cache, else in the slot, after the cost guard, with the text filters
+     * on coded dimensions resolved.
+     *
+     * @param callable(ResultCache, QueryContext, string): string $cacheKey
+     * @param callable(ExplorationQueryBuilder, QueryContext, array, QueryRunner): array $build the query
+     */
+    private function run(int $idSite, ExplorationWindow $window, ExplorationDefinition $definition, array $dimensions, string $segment, LazySlot $slot, string $scope, callable $cacheKey, callable $build): array
+    {
+        $context = new QueryContext($scope, $window->timezone, $window->startUtc, $window->endUtc);
         $segmentObject = new Segment($segment, [$idSite], $window->start, $window->end);
 
         $cache = new ResultCache();
-        $version = self::pluginVersion();
-        if ($exceptKeys !== null) {
-            $cacheKey = $cache->othersKey($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $exceptKeys, $version);
-        } elseif ($time !== null) {
-            $cacheKey = $cache->trendKey($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $onlyKeys, $time->id, $version);
-        } elseif ($totals) {
-            $cacheKey = $cache->totalsKey($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $version);
-        } elseif ($onlyKeys !== null) {
-            $cacheKey = $cache->restrictedKey($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $onlyKeys, $version);
-        } else {
-            $cacheKey = $cache->key($idSite, $context->windowStartUtc, $context->windowEndUtc, $segment, $definition, $version);
-        }
-        $rows = $cache->fetch($cacheKey);
+        $key = $cacheKey($cache, $context, self::pluginVersion());
+        $rows = $cache->fetch($key);
         if ($rows !== null) {
             return $rows;
         }
@@ -147,17 +215,8 @@ final class Explorer
             $this->metrics
         );
         $resolvedFilters = $this->resolveLabelFilters($definition, $dimensions, $idSite, $context, $runner, $window->cacheTtl());
-        if ($exceptKeys !== null) {
-            $query = $builder->buildOthers($definition, $dimensions, $idSite, $context, $resolvedFilters, $exceptKeys);
-        } elseif ($time !== null) {
-            $query = $builder->buildTrend($definition, $dimensions, $idSite, $context, $resolvedFilters, $time, $onlyKeys);
-        } else {
-            $query = $totals
-                ? $builder->buildTotals($definition, $dimensions, $idSite, $context, $resolvedFilters)
-                : $builder->build($definition, $dimensions, $idSite, $context, $resolvedFilters, $onlyKeys === null && GroupingQuirk::applies($runner->serverVersion()), $onlyKeys);
-        }
-        $rows = $runner->fetchAll($query);
-        $cache->save($cacheKey, $rows, $window->cacheTtl());
+        $rows = $runner->fetchAll($build($builder, $context, $resolvedFilters, $runner));
+        $cache->save($key, $rows, $window->cacheTtl());
         return $rows;
     }
 
@@ -171,9 +230,10 @@ final class Explorer
      */
     private function compare(int $idSite, string $period, string $date, ExplorationDefinition $definition, array $dimensions, string $segment, ExplorationWindow $window, array $rows, array $comparisons, bool $readableColumns, LazySlot $slot): DataTable
     {
-        $twoDimensions = count($dimensions) === 2;
+        $count = count($dimensions);
+        $labelColumns = ExplorationDefinition::labelColumns($count);
         $dateIndex = array_search('date', $definition->dimensionIds, true);
-        $ownKeys = array_map(static fn (array $row): array => self::rowKeys($row, $twoDimensions), $rows);
+        $ownKeys = array_map(static fn (array $row): array => self::rowKeys($row, $count), $rows);
         $ownTotals = $this->fetchRows($idSite, $window, $definition, $dimensions, $segment, $slot, null, true)[0] ?? [];
 
         $columns = [];
@@ -227,13 +287,13 @@ final class Explorer
         $own = $this->toDataTable($rows, $definition, $dimensions, $idSite, !$readableColumns);
         $table = new DataTable();
         $total = ['label' => Piwik::translate('General_Total')];
-        if ($twoDimensions) {
-            $total['secondary_label'] = '';
+        foreach (array_slice($labelColumns, 1) as $labelColumn) {
+            $total[$labelColumn] = '';
         }
         // the total row has every column of the rows (exports take their column order from the first row)
         foreach ($definition->metricIds as $metricId) {
             $total[$metricId] = self::metricValue($metricId, $ownTotals[$metricId] ?? null);
-            if (in_array($metricId, ComparisonTable::SHARE_METRICS, true)) {
+            if (MetricCatalog::byId($metricId)->hasShare()) {
                 $total[$metricId . '__share'] = null;
             }
         }
@@ -243,7 +303,7 @@ final class Explorer
                 $value = self::metricValue($metricId, $column['totals'][$metricId] ?? null);
                 $total[$metricId . $suffix] = $value;
                 if ($column['kind'] === ComparisonTable::KIND_SEGMENT) {
-                    if (in_array($metricId, ComparisonTable::SHARE_METRICS, true)) {
+                    if (MetricCatalog::byId($metricId)->hasShare()) {
                         $total[$metricId . $suffix . '__share'] = null;
                     }
                 } else {
@@ -260,13 +320,13 @@ final class Explorer
 
         foreach ($own->getRows() as $index => $row) {
             $values = $row->getColumns();
-            $out = ['label' => $values['label']];
-            if ($twoDimensions) {
-                $out['secondary_label'] = $values['secondary_label'];
+            $out = [];
+            foreach ($labelColumns as $labelColumn) {
+                $out[$labelColumn] = $values[$labelColumn];
             }
             foreach ($definition->metricIds as $metricId) {
                 $out[$metricId] = $values[$metricId];
-                if (in_array($metricId, ComparisonTable::SHARE_METRICS, true)) {
+                if (MetricCatalog::byId($metricId)->hasShare()) {
                     $out[$metricId . '__share'] = ComparisonTable::share($values[$metricId], $total[$metricId] ?? null);
                 }
             }
@@ -277,7 +337,7 @@ final class Explorer
                     $value = $outside ? null : self::metricValue($metricId, $column['values'][$index][$metricId] ?? null);
                     $out[$metricId . $suffix] = $value;
                     if ($column['kind'] === ComparisonTable::KIND_SEGMENT) {
-                        if (in_array($metricId, ComparisonTable::SHARE_METRICS, true)) {
+                        if (MetricCatalog::byId($metricId)->hasShare()) {
                             $out[$metricId . $suffix . '__share'] = ComparisonTable::share($value, $total[$metricId . $suffix]);
                         }
                     } else {
@@ -314,12 +374,9 @@ final class Explorer
         $ownTitle = ComparisonTitles::segment($idSite, $segment)
             . ($comparesPeriods ? ', ' . ComparisonTitles::period($idSite, $period, $date) : '');
 
-        $names = ['label' => $dimensions[0]->name];
-        if (isset($dimensions[1])) {
-            $names['secondary_label'] = $dimensions[1]->name;
-        }
+        $names = self::labelNames($dimensions);
         foreach ($definition->metricIds as $metricId) {
-            $metric = $this->metricName($metricId, $scope);
+            $metric = $this->metricName($metricId, $scope, $idSite);
             $names[$metricId] = Piwik::translate('FeinwerkDataExploration_ColumnFor', [$metric, $ownTitle]);
             $names[$metricId . '__share'] = Piwik::translate('FeinwerkDataExploration_ColumnShare', [$metric, $ownTitle]);
             foreach ($columns as $i => $column) {
@@ -340,17 +397,41 @@ final class Explorer
         }
     }
 
-    private function metricName(string $metricId, string $scope): string
+    /** The metric's name in the user's language; a goal's metric with the goal's name ("Newsletter: Conversions"). */
+    public function metricName(string $metricId, string $scope, int $idSite): string
     {
-        $metric = $this->metrics->get($metricId);
-        $key = $scope === QueryContext::SCOPE_ACTION && $metric->nameInActionScopeKey !== null ? $metric->nameInActionScopeKey : $metric->nameKey;
-        return Piwik::translate($key);
+        $metric = $this->metrics->get($metricId, $idSite) ?? $this->metrics->get($metricId);
+        return $metric->label([Piwik::class, 'translate'], $scope === QueryContext::SCOPE_ACTION);
     }
 
-    /** @return array{0: ?string, 1: ?string} the raw keys of a row as fetchRows() returns it */
-    public static function rowKeys(array $row, bool $twoDimensions): array
+    /**
+     * The raw keys of a row as fetchRows() returns it: one per dimension, at least two (one dimension keeps a null
+     * second key, so keys of one- and two-dimension tables stay what they were before the third dimension).
+     *
+     * @return list<?string>
+     */
+    public static function rowKeys(array $row, int $count): array
     {
-        return [self::raw($row['fwde_k1'] ?? null), $twoDimensions ? self::raw($row['fwde_k2'] ?? null) : null];
+        $keys = [];
+        for ($i = 1; $i <= max(2, $count); $i++) {
+            $keys[] = $i <= $count ? self::raw($row['fwde_k' . $i] ?? null) : null;
+        }
+        return $keys;
+    }
+
+    /**
+     * The dimension names of the label columns (exports).
+     *
+     * @param DimensionDefinition[] $dimensions
+     * @return array<string, string> label column => name
+     */
+    public static function labelNames(array $dimensions): array
+    {
+        $names = [];
+        foreach (array_values($dimensions) as $i => $dimension) {
+            $names[ExplorationDefinition::LABEL_COLUMNS[$i]] = $dimension->name;
+        }
+        return $names;
     }
 
     private static function shiftKeys(array $keys, int $index, int $days): array
@@ -378,26 +459,23 @@ final class Explorer
     /** A metric as the table writes it; a row missing in a column counts 0 for counts and sums, nothing otherwise. */
     public static function metricValue(string $metricId, $value)
     {
+        $metric = MetricCatalog::byId($metricId);
+        $integer = $metric !== null && $metric->isInteger();
         if ($value === null) {
-            return in_array($metricId, ComparisonTable::SHARE_METRICS, true) ? (in_array($metricId, self::INTEGER_METRICS, true) ? 0 : 0.0) : null;
+            return $metric !== null && $metric->zeroForMissing() ? ($integer ? 0 : 0.0) : null;
         }
-        return in_array($metricId, self::INTEGER_METRICS, true) ? (int) $value : (float) $value;
+        return $integer ? (int) $value : (float) $value;
     }
 
     /**
      * Renames the columns to what the user sees: dimension names and metric names (visit metrics next to an action
      * dimension by their "with this action" name).
      */
-    private function useReadableColumnNames(DataTable $table, ExplorationDefinition $definition, array $dimensions, string $scope): void
+    private function useReadableColumnNames(DataTable $table, ExplorationDefinition $definition, array $dimensions, string $scope, int $idSite): void
     {
-        $names = ['label' => $dimensions[0]->name];
-        if (isset($dimensions[1])) {
-            $names['secondary_label'] = $dimensions[1]->name;
-        }
+        $names = self::labelNames($dimensions);
         foreach ($definition->metricIds as $metricId) {
-            $metric = $this->metrics->get($metricId);
-            $key = $scope === QueryContext::SCOPE_ACTION && $metric->nameInActionScopeKey !== null ? $metric->nameInActionScopeKey : $metric->nameKey;
-            $names[$metricId] = Piwik::translate($key);
+            $names[$metricId] = $this->metricName($metricId, $scope, $idSite);
         }
 
         foreach ($table->getRows() as $row) {
@@ -436,7 +514,7 @@ final class Explorer
             if (!in_array($filter['operator'], ExplorationDefinition::TEXT_OPERATORS, true)) {
                 continue;
             }
-            $dimension = $dimensions[$filter['target'] === ExplorationDefinition::SORT_LABEL ? 0 : 1];
+            $dimension = $dimensions[(int) array_search($filter['target'], ExplorationDefinition::LABEL_COLUMNS, true)];
             if ($dimension->filtersByLabel()) {
                 $resolved[$i] = $resolver->resolve($dimension, $filter['operator'], (string) $filter['value'], $idSite);
             }
@@ -447,16 +525,16 @@ final class Explorer
     /**
      * @param bool $withSegments add each row's Matomo segment as row metadata (not in exports)
      */
-    private function toDataTable(array $rows, ExplorationDefinition $definition, array $dimensions, int $idSite, bool $withSegments): DataTable
+    public function toDataTable(array $rows, ExplorationDefinition $definition, array $dimensions, int $idSite, bool $withSegments): DataTable
     {
         $table = new DataTable();
         foreach ($rows as $row) {
-            $columns = ['label' => $dimensions[0]->formatLabel(self::raw($row['fwde_k1']), $idSite)];
-            if (isset($dimensions[1])) {
-                $columns['secondary_label'] = $dimensions[1]->formatLabel(self::raw($row['fwde_k2']), $idSite);
+            $columns = [];
+            foreach ($dimensions as $i => $dimension) {
+                $columns[ExplorationDefinition::LABEL_COLUMNS[$i]] = $dimension->formatLabel(self::raw($row['fwde_k' . ($i + 1)]), $idSite);
             }
             foreach ($definition->metricIds as $metricId) {
-                $columns[$metricId] = in_array($metricId, self::INTEGER_METRICS, true) ? (int) $row[$metricId] : (float) $row[$metricId];
+                $columns[$metricId] = MetricCatalog::byId($metricId)->isInteger() ? (int) $row[$metricId] : (float) $row[$metricId];
             }
             $tableRow = new DataTable\Row([DataTable\Row::COLUMNS => $columns]);
             if ($withSegments) {
@@ -472,7 +550,7 @@ final class Explorer
                 foreach ($dimensions as $i => $dimension) {
                     $raw = self::raw($row['fwde_k' . ($i + 1)]);
                     if ($raw !== null && !$dimension->filtersByLabel()) {
-                        $tableRow->setMetadata($i === 0 ? 'fwde_value' : 'fwde_value2', $raw);
+                        $tableRow->setMetadata($i === 0 ? 'fwde_value' : 'fwde_value' . ($i + 1), $raw);
                     }
                 }
             }

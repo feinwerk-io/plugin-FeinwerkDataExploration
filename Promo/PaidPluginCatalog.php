@@ -18,7 +18,7 @@ namespace Piwik\Plugins\FeinwerkDataExploration\Promo;
  * The list is what the store sells today, in its order (plugins.feinwerk.io session, 2026-11-16); never parked plugins
  * (FeinwerkAdCostImport). Like the connector, it recommends only what this Matomo can install: per plugin the lowest
  * Matomo version of its stable build on the 5 and the 6 line ('' = no stable build on that line yet; store DB,
- * 2026-11-16) and the lowest PHP version of those builds (plugin.json require.php). Names and one-liners live in lang/*.json (keys PaidPlugin<Stem>Name / PaidPlugin<Stem>Text),
+ * 2026-11-24: every paid plugin has one for Matomo 6) and the lowest PHP version of those builds (plugin.json require.php). Names and one-liners live in lang/*.json (keys PaidPlugin<Stem>Name / PaidPlugin<Stem>Text),
  * the store URLs only here (Peter, 2026-11-11, Matomo Marketplace). No prices (they change), no pictures, nothing
  * requested from outside. Refresh the list and the texts from the store with each release; when the connector is
  * connected its live list wins.
@@ -31,15 +31,15 @@ final class PaidPluginCatalog
      * betas and release candidates count.
      */
     public const PLUGINS = [
-        'FeinwerkChannelGrouping' => ['ChannelGrouping', '5.3.0', '', '8.1.0'],
-        'FeinwerkSearchReport' => ['SearchReport', '5.0.0', '', '8.1.0'],
-        'FeinwerkConversionsApi' => ['ConversionsApi', '5.0.0', '', '8.1.0'],
-        'FeinwerkTrackingSpamScore' => ['TrackingSpamScore', '5.0.0', '', '8.1.0'],
-        'FeinwerkTrackingRouter' => ['TrackingRouter', '5.0.0', '', '7.4.0'],
+        'FeinwerkChannelGrouping' => ['ChannelGrouping', '5.3.0', '6.0.0-b1', '8.1.0'],
+        'FeinwerkSearchReport' => ['SearchReport', '5.0.0', '6.0.0-b1', '8.1.0'],
+        'FeinwerkConversionsApi' => ['ConversionsApi', '5.0.0', '6.0.0-b1', '8.1.0'],
+        'FeinwerkTrackingSpamScore' => ['TrackingSpamScore', '5.0.0', '6.0.0-b1', '8.1.0'],
+        'FeinwerkTrackingRouter' => ['TrackingRouter', '5.0.0', '6.0.0-b1', '7.4.0'],
         'FeinwerkSentinelPro' => ['SentinelPro', '5.0.0', '6.0.0-b1', '8.1.0'],
-        'FeinwerkVisitJourney' => ['VisitJourney', '5.12.0', '', '8.1.0'],
+        'FeinwerkVisitJourney' => ['VisitJourney', '5.12.0', '6.0.0-b1', '8.1.0'],
         'FeinwerkEmailReportsPro' => ['EmailReportsPro', '5.0.0', '6.0.0-b1', '8.1.0'],
-        'FeinwerkAuthSaml' => ['AuthSaml', '5.0.0', '', '8.1.0'],
+        'FeinwerkAuthSaml' => ['AuthSaml', '5.0.0', '6.0.0-b1', '8.1.0'],
     ];
 
     /** the store's public plugin pages: STORE . {de|en} . '/plugins/' . slug */

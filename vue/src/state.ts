@@ -3,24 +3,27 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 import {
-  Catalog, ChartType, ChartView, ExplorationState, FilterOperator, RowFilter,
+  Catalog, ChartType, ChartView, ExplorationState,
 } from './types';
+import {
+  filterGroupsDefinition, filterParam, matchParam, parseFilterParam,
+} from './filterGroups';
+import { labelColumns } from './labels';
+import { parsePivot } from './pivot';
+
+// the filter rules live in filterGroups.ts (filter groups, 2026-11-23); the page imports them here
+export {
+  isValidFilter, MAX_FILTERS, MAX_FILTER_TEXT, MAX_GROUPS, MAX_PATTERN, NUMBER_OPERATORS,
+  TEXT_OPERATORS,
+} from './filterGroups';
 
 export const DEFAULT_DIMENSIONS = ['channelType'];
 export const DEFAULT_METRICS = ['nb_visits', 'bounce_rate', 'nb_conversions'];
 export const LIMIT_OPTIONS = [10, 25, 50, 100, 250, 500, 1000];
-export const MAX_METRICS = 5;
-/** dimensions of the free plugin (ExplorationDefinition::MAX_DIMENSIONS) */
-export const MAX_DIMENSIONS = 2;
-export const MAX_FILTERS = 5;
-/** Long enough for a stored URL ("filter to this value" in the row menu). */
-export const MAX_FILTER_TEXT = 1000;
-export const TEXT_OPERATORS: FilterOperator[] = [
-  'contains', 'equals', 'notContains', 'notEquals', 'startsWith', 'endsWith',
-];
-export const NUMBER_OPERATORS: FilterOperator[] = ['gt', 'lt'];
-/** Shown in percent, sent to the API as fractions. */
-export const RATE_METRICS = ['bounce_rate', 'conversion_rate'];
+/** ExplorationDefinition::MAX_METRICS (more metrics, 2026-11-24) */
+export const MAX_METRICS = 10;
+/** row dimensions (ExplorationDefinition::MAX_DIMENSIONS; three since rows and pivot) */
+export const MAX_DIMENSIONS = 3;
 export const VIEWS: ChartView[] = ['table', 'chart', 'both'];
 export const CHART_TYPES: ChartType[] = ['bar', 'trend', 'donut'];
 
@@ -39,52 +42,41 @@ function knownIds(value: unknown, known: string[], max: number): string[] {
   return ids;
 }
 
-function labelTargets(dimensionCount: number): string[] {
-  return dimensionCount === 2 ? ['label', 'secondary_label'] : ['label'];
-}
+/** the all-goals metrics an older link narrowed to one goal with fwdeGoal */
+const ALL_GOALS_METRICS = ['nb_conversions', 'conversion_rate', 'revenue'];
 
-export function isValidFilter(
-  filter: RowFilter,
-  dimensionCount: number,
-  metrics: string[],
-): boolean {
-  if (TEXT_OPERATORS.includes(filter.operator)) {
-    const text = filter.value.trim();
-    return labelTargets(dimensionCount).includes(filter.target)
-      && text !== '' && text.length <= MAX_FILTER_TEXT;
+/**
+ * The hash of a link from before more metrics (2026-11-24) with a goal chosen (fwdeGoal=N): the
+ * all-goals metrics become goal N's own metrics wherever the hash names metrics (list, sorting,
+ * chart, row filter targets), the same numbers. Unchanged when the website no longer has goal N:
+ * then the metrics stay "all goals".
+ */
+function withGoalMetrics(
+  hash: Record<string, unknown>,
+  metricIds: string[],
+): Record<string, unknown> {
+  const goal = Number(hash.fwdeGoal);
+  if (!Number.isInteger(goal) || goal <= 0 || !metricIds.includes(`goal_${goal}_nb_conversions`)) {
+    return hash;
   }
-  if (NUMBER_OPERATORS.includes(filter.operator)) {
-    return metrics.includes(filter.target)
-      && filter.value.trim() !== '' && Number.isFinite(Number(filter.value));
-  }
-  return false;
-}
-
-/** "target~operator~value;…" with the value URI-encoded; only the first two "~" separate. */
-function parseFilters(value: unknown, dimensionCount: number, metrics: string[]): RowFilter[] {
-  const filters: RowFilter[] = [];
-  String(value || '').split(';').forEach((entry) => {
-    const first = entry.indexOf('~');
-    const second = first < 0 ? -1 : entry.indexOf('~', first + 1);
-    if (second < 0 || filters.length >= MAX_FILTERS) {
-      return;
-    }
-    let text: string;
-    try {
-      text = decodeURIComponent(entry.substring(second + 1));
-    } catch (e) {
-      return;
-    }
-    const filter = {
-      target: entry.substring(0, first),
-      operator: entry.substring(first + 1, second) as FilterOperator,
-      value: text,
-    };
-    if (isValidFilter(filter, dimensionCount, metrics)) {
-      filters.push({ ...filter, value: filter.value.trim() });
+  const map = (id: string) => (ALL_GOALS_METRICS.includes(id) ? `goal_${goal}_${id}` : id);
+  const mapped: Record<string, unknown> = { ...hash };
+  ['fwdeMetrics', 'fwdeSort', 'fwdeChart'].forEach((key) => {
+    if (hash[key]) {
+      mapped[key] = String(hash[key]).split(',').map(map).join(',');
     }
   });
-  return filters;
+  if (hash.fwdeFilters) {
+    // groups by "|", an optional "all:"/"any:" prefix, conditions by ";": "target~operator~value"
+    mapped.fwdeFilters = String(hash.fwdeFilters).split('|').map((group) => {
+      const prefix = (group.match(/^(all|any):/) || [''])[0];
+      return prefix + group.substring(prefix.length).split(';').map((condition) => {
+        const cut = condition.indexOf('~');
+        return cut < 0 ? condition : map(condition.substring(0, cut)) + condition.substring(cut);
+      }).join(';');
+    }).join('|');
+  }
+  return mapped;
 }
 
 /** The count that fits a dimension's actions, e.g. pageviews for page URLs. */
@@ -113,12 +105,13 @@ export function defaultMetricsFor(dimensionId: string, catalog: Catalog): string
  * The exploration state from the hash parameters; invalid parts fall back to valid values.
  */
 export function parseState(
-  hash: Record<string, unknown>,
+  rawHash: Record<string, unknown>,
   catalog: Catalog,
   limits: Limits,
 ): ExplorationState {
   const dimensionIds = catalog.dimensions.map((d) => d.id);
   const metricIds = catalog.metrics.map((m) => m.id);
+  const hash = withGoalMetrics(rawHash, metricIds);
 
   let dimensions = knownIds(hash.fwdeDims, dimensionIds, MAX_DIMENSIONS);
   if (!dimensions.length) {
@@ -133,27 +126,34 @@ export function parseState(
   }
 
   const view = String(hash.fwdeView) as ChartView;
-  const goal = Number(hash.fwdeGoal);
   const limit = Number(hash.fwdeLimit);
-  const sortColumns = [...metrics, ...labelTargets(dimensions.length)];
+  const sortColumns = [...metrics, ...labelColumns(dimensions.length)];
   const sort = String(hash.fwdeSort || '');
 
   return {
     dimensions,
     metrics,
-    idGoal: Number.isInteger(goal) && goal > 0 ? goal : null,
     sort: sortColumns.includes(sort) ? sort : metrics[0],
     sortOrder: hash.fwdeOrder === 'asc' ? 'asc' : 'desc',
     limit: LIMIT_OPTIONS.includes(limit) && limit <= limits.maxRows ? limit : limits.defaultRows,
-    filters: parseFilters(hash.fwdeFilters, dimensions.length, metrics),
+    ...parseFilterParam(hash.fwdeFilters, hash.fwdeMatch, dimensions.length, metrics),
     view: VIEWS.includes(view) ? view : null,
     chartMetric: metrics.includes(String(hash.fwdeChart)) ? String(hash.fwdeChart) : null,
     chartType: CHART_TYPES.includes(hash.fwdeChartType as ChartType)
       ? hash.fwdeChartType as ChartType
       : null,
-    match: hash.fwdeMatch === 'any' ? 'any' : 'all',
+    ...parsePivot(hash.fwdePivot, hash.fwdePivotLimit, dimensions, metrics.length, catalog),
   };
 }
+
+/**
+ * Every key toHashParams writes: the page reloads when one of them changes (a key missing here
+ * would change the link and nothing else).
+ */
+export const STATE_HASH_KEYS = [
+  'fwdeDims', 'fwdeMetrics', 'fwdeGoal', 'fwdeSort', 'fwdeOrder', 'fwdeLimit', 'fwdeFilters',
+  'fwdeView', 'fwdeChart', 'fwdeChartType', 'fwdeMatch', 'fwdePivot', 'fwdePivotLimit',
+];
 
 /**
  * All parameters, empty ones too: the hash is merged, so an omitted parameter would keep its old
@@ -163,43 +163,40 @@ export function toHashParams(state: ExplorationState): Record<string, string> {
   return {
     fwdeDims: state.dimensions.join(','),
     fwdeMetrics: state.metrics.join(','),
-    fwdeGoal: state.idGoal === null ? '' : String(state.idGoal),
+    // the older goal choice: always cleared, the goal's own metrics replace it
+    fwdeGoal: '',
     fwdeSort: state.sort,
     fwdeOrder: state.sortOrder,
     fwdeLimit: String(state.limit),
-    fwdeFilters: state.filters
-      .map((f) => `${f.target}~${f.operator}~${encodeURIComponent(f.value)}`)
-      .join(';'),
+    fwdeFilters: filterParam(state.filters, state.groupMatch),
     fwdeView: state.view || '',
     fwdeChart: state.chartMetric || '',
     fwdeChartType: state.chartType || '',
-    fwdeMatch: state.match === 'any' ? 'any' : '',
+    fwdeMatch: matchParam(state.filters, state.match),
+    fwdePivot: state.pivot || '',
+    fwdePivotLimit: state.pivot ? String(state.pivotLimit) : '',
   };
 }
 
 /**
- * The definition for FeinwerkDataExploration.getExploration.
+ * The definition for FeinwerkDataExploration.getExploration. While Matomo compares segments or
+ * periods the pivot stays in the state but is not sent (pivot and comparison are exclusive, the
+ * comparison wins).
  */
-export function toDefinition(state: ExplorationState): Record<string, unknown> {
+export function toDefinition(state: ExplorationState, comparing = false): Record<string, unknown> {
   const definition: Record<string, unknown> = {
     dimensions: state.dimensions,
     metrics: state.metrics,
     sort: state.sort,
     sortOrder: state.sortOrder,
     limit: state.limit,
-    filters: state.filters.map((f) => {
-      let { value }: { value: string|number } = f;
-      if (NUMBER_OPERATORS.includes(f.operator)) {
-        value = RATE_METRICS.includes(f.target) ? Number(f.value) / 100 : Number(f.value);
-      }
-      return { target: f.target, operator: f.operator, value };
-    }),
   };
-  if (state.match === 'any') {
-    definition.match = 'any';
+  const filterGroups = filterGroupsDefinition(state);
+  if (filterGroups) {
+    definition.filterGroups = filterGroups;
   }
-  if (state.idGoal !== null) {
-    definition.idGoal = state.idGoal;
+  if (state.pivot && !comparing) {
+    definition.pivot = { dimension: state.pivot, limit: state.pivotLimit };
   }
   return definition;
 }

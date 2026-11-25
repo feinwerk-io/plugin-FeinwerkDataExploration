@@ -10,6 +10,7 @@
 namespace Piwik\Plugins\FeinwerkDataExploration\Engine;
 
 use Piwik\Piwik;
+use Piwik\Plugins\UsersManager\Model as UsersModel;
 use Piwik\Site;
 use Piwik\Plugins\FeinwerkDataExploration\SystemSettings;
 
@@ -50,6 +51,41 @@ final class AccessPolicy
     {
         try {
             return Piwik::isUserHasWriteAccess($idSite);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Whether another user may use explorations on the website by the plugin's minimum role (saved reports,
+     * 2026-11-24: the owner of a scheduled report or of an Email Reports Pro run). Reads the user's roles without an
+     * access check; never anonymous.
+     */
+    public static function canUseAs(string $login, int $idSite): bool
+    {
+        if ($login === '' || $login === 'anonymous') {
+            return false;
+        }
+        try {
+            $model = new UsersModel();
+            $user = $model->getUser($login);
+            if (empty($user)) {
+                return false;
+            }
+            if (!empty($user['superuser_access'])) {
+                return true;
+            }
+            $role = self::minimumRole();
+            if ($role === 'superuser') {
+                return false;
+            }
+            $needed = ['view' => 1, 'write' => 2, 'admin' => 3][$role] ?? 1;
+            foreach ($model->getSitesAccessFromUser($login) as $access) {
+                if ((int) $access['site'] === $idSite && (['view' => 1, 'write' => 2, 'admin' => 3][$access['access']] ?? 0) >= $needed) {
+                    return true;
+                }
+            }
+            return false;
         } catch (\Throwable $e) {
             return false;
         }

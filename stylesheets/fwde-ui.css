@@ -16,6 +16,7 @@
     --fwde-ui-on-accent: #fff;
     --fwde-ui-focus: #1976d2;
     --fwde-ui-disabled: #9aa5b1;
+    --fwde-ui-danger: #c0322e;
     --fwde-ui-shadow: rgba(0, 0, 0, .22);
     --fwde-ui-backdrop: rgba(0, 0, 0, .35);
 }
@@ -32,6 +33,7 @@
     --fwde-ui-on-accent: #0b1620;
     --fwde-ui-focus: #8fc0f5;
     --fwde-ui-disabled: #66717c;
+    --fwde-ui-danger: #ef7f7c;
     --fwde-ui-shadow: rgba(0, 0, 0, .6);
     --fwde-ui-backdrop: rgba(0, 0, 0, .55);
 }
@@ -49,6 +51,7 @@
         --fwde-ui-on-accent: #0b1620;
         --fwde-ui-focus: #8fc0f5;
         --fwde-ui-disabled: #66717c;
+        --fwde-ui-danger: #ef7f7c;
         --fwde-ui-shadow: rgba(0, 0, 0, .6);
         --fwde-ui-backdrop: rgba(0, 0, 0, .55);
     }
@@ -246,4 +249,19 @@ html.fwde-sidepanel-open body {
     .fwde-sidepanel-leave-active {
         transition: none;
     }
+}
+
+/* A filter the user changed but left without a usable value: the panel's Apply names what is missing below the row and
+   frames the field (UI review 2026-11-23; Matomo 6's danger colours, which Matomo 5 does not have) */
+.fwde-sidepanel .fwde-filters__error {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--fwde-ui-danger, #c0322e);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.fwde-page input.fwde-input[aria-invalid="true"] {
+    border-color: var(--fwde-ui-danger, #c0322e);
+    box-shadow: 0 0 0 1px var(--fwde-ui-danger, #c0322e);
 }

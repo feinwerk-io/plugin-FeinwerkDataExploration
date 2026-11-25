@@ -12,28 +12,6 @@
       :search-label="translate('FeinwerkDataExploration_SearchMetrics')"
       @toggle="toggle"
     />
-    <div
-      v-if="hasGoalMetric && goals.length"
-      class="fwde-picker__goal"
-    >
-      <label
-        class="fwde-field__label"
-        :for="goalSelectId"
-      >{{ translate('FeinwerkDataExploration_Goal') }}</label>
-      <select
-        :id="goalSelectId"
-        class="browser-default fwde-select"
-        :value="state.idGoal === null ? '' : String(state.idGoal)"
-        @change="onGoalChange"
-      >
-        <option value="">{{ translate('FeinwerkDataExploration_AllGoals') }}</option>
-        <option
-          v-for="goal in goals"
-          :key="goal.id"
-          :value="String(goal.id)"
-        >{{ goal.name }}</option>
-      </select>
-    </div>
   </div>
 </template>
 
@@ -43,47 +21,59 @@ import { translate } from 'CoreHome';
 import SearchableList, { ListItem } from './SearchableList.vue';
 import { Catalog, ExplorationState } from './types';
 import { metricReasons } from './availability';
-import { Goal } from './api';
 
-const SCOPE_KEYS: Record<string, string> = {
-  visit: 'FeinwerkDataExploration_MetricGroupVisits',
-  goal: 'FeinwerkDataExploration_MetricGroupGoals',
-  action: 'FeinwerkDataExploration_MetricGroupActions',
+const GROUP_KEYS: Record<string, string> = {
+  visits: 'FeinwerkDataExploration_MetricGroupVisits',
+  goals: 'FeinwerkDataExploration_MetricGroupGoals',
+  ecommerce: 'Goals_Ecommerce',
+  actions: 'FeinwerkDataExploration_MetricGroupActions',
 };
+const SCOPE_GROUPS: Record<string, string> = { visit: 'visits', goal: 'goals', action: 'actions' };
+/** the list's order (more metrics, 2026-11-24): each goal's own heading follows "Goals" */
+const GROUP_ORDER = ['visits', 'goals', 'goal', 'ecommerce', 'actions'];
+/** the metrics of all goals together: the list says so */
+const ALL_GOALS_METRICS = ['nb_conversions', 'conversion_rate', 'revenue'];
 
 export default defineComponent({
   components: { SearchableList },
   props: {
     catalog: { type: Object as PropType<Catalog>, required: true },
     state: { type: Object as PropType<ExplorationState>, required: true },
-    goals: { type: Array as PropType<Goal[]>, required: true },
     actionScope: { type: Boolean, required: true },
   },
-  emits: ['change', 'goal'],
-  data() {
-    return { goalSelectId: `fwde-goal-${Math.random().toString(36).substring(2, 8)}` };
-  },
+  emits: ['change'],
   computed: {
     items(): ListItem[] {
       const reasons = metricReasons(this.state, this.catalog);
-      return this.catalog.metrics.map((m) => ({
-        key: m.id,
-        label: this.actionScope && m.nameInActionScope ? m.nameInActionScope : m.name,
-        group: translate(SCOPE_KEYS[m.scope]),
-        reason: reasons[m.id],
-        description: m.description,
-      }));
-    },
-    hasGoalMetric(): boolean {
-      return this.catalog.metrics
-        .some((m) => m.scope === 'goal' && this.state.metrics.includes(m.id));
+      const entries = this.catalog.metrics.map((m, index) => {
+        const group = m.group || SCOPE_GROUPS[m.scope];
+        let label = this.actionScope && m.nameInActionScope ? m.nameInActionScope : m.name;
+        let heading = translate(GROUP_KEYS[group]);
+        let rank = GROUP_ORDER.indexOf(group);
+        if (m.idGoal) {
+          // a goal's metric is named "<goal name>: <column>" (MetricDefinition::label): the goal
+          // becomes the heading, the search finds it there too
+          const cut = m.name.lastIndexOf(': ');
+          heading = translate('FeinwerkDataExploration_MetricGroupGoal', m.name.substring(0, cut));
+          label = m.name.substring(cut + 2);
+          rank = GROUP_ORDER.indexOf('goal');
+        } else if (ALL_GOALS_METRICS.includes(m.id)) {
+          label = translate('FeinwerkDataExploration_MetricAllGoals', label);
+        }
+        const item: ListItem = {
+          key: m.id,
+          label,
+          group: heading,
+          reason: reasons[m.id],
+          description: m.description,
+        };
+        return { rank, index, item };
+      });
+      return entries.sort((a, b) => a.rank - b.rank || a.index - b.index).map((e) => e.item);
     },
   },
   methods: {
     translate,
-    onGoalChange(event: Event) {
-      this.$emit('goal', (event.target as HTMLSelectElement).value);
-    },
     toggle(id: string) {
       const metrics = this.state.metrics.includes(id)
         ? this.state.metrics.filter((m) => m !== id)

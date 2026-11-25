@@ -31,13 +31,19 @@ use Piwik\Version;
  * Demo mode (PromoLine::demo(), test instances): the connector's list topped up from the whole fallback list,
  * installed plugins and build floors ignored, every entry in the rotation, × keeps one away for the session.
  * Store links open in a new tab with the house campaign parameters; admins read one line that their super user can
- * install it. The order turns by one plugin each day; in the browser the first one not hidden shows, its x hides it
- * for 30 days and the next follows (javascripts/promocard.js).
+ * install it. The order turns by one plugin each day; in the browser the first one not hidden shows. Its x empties
+ * the place (the banner below the result, place `fwde-banner`) for PAUSE_DAYS and keeps that plugin away for
+ * ITEM_DAYS, so the next one shows after the pause (Peter, 2026-11-24: "Ein × blendet alles 30 Tage aus"; kit
+ * PageFilterReport d4ce520, javascripts/promocard.js version 5). Demo mode keeps the plain rotation.
  */
 final class PremiumPromo
 {
     /** how many candidates a placement carries for the rotation */
     public const MAX = 3;
+    /** days the place stays empty after any x on the banner (Peter, 2026-11-24) */
+    public const PAUSE_DAYS = 30;
+    /** days the closed plugin stays away: longer than the pause, so the next plugin shows after it */
+    public const ITEM_DAYS = 90;
     public const CONNECTOR = 'FeinwerkMarketplaceConnector';
     public const HELPER = 'Piwik\\Plugins\\FeinwerkMarketplaceConnector\\Promotions';
 
@@ -250,7 +256,7 @@ final class PremiumPromo
      * The banner's widget prop for the current user (WidgetProps): null without plugins or on any error, so a failing
      * promotion never breaks the page.
      *
-     * @return array{plugins: array<int, array<string, string>>, days: int, demo: bool, note: string}|null
+     * @return array{plugins: array<int, array<string, string>>, days: int, pauseDays: int, demo: bool, note: string}|null
      */
     public static function bannerProps(): ?array
     {
@@ -269,13 +275,14 @@ final class PremiumPromo
     }
 
     /**
-     * What the page gets: the plugins in today's order, the days × hides one (demo: this browser session, 0), and for
-     * anyone who cannot install plugins the line who can. The German sentence takes Matomo's own word for the super
-     * user (Installation_SuperUser); the English one, also the fallback of other languages, has its own.
+     * What the page gets (vue/src/PremiumBanner.vue): the plugins in today's order; a pausable place, so any x empties
+     * it for pauseDays (PAUSE_DAYS) and keeps the closed plugin away for days (ITEM_DAYS); demo mode keeps the plain
+     * rotation for this browser session (days 0, pauseDays 0); for anyone who cannot install plugins the line who can
+     * (a whole sentence in every language, no placeholder, so no caller can leave a literal %s).
      *
      * @param array<int, array<string, string>> $plugins valid() entries
      * @param callable $translate like Piwik::translate(string $key, array $args = [])
-     * @return array{plugins: array<int, array<string, string>>, days: int, demo: bool, note: string}|null
+     * @return array{plugins: array<int, array<string, string>>, days: int, pauseDays: int, demo: bool, note: string}|null
      */
     public static function forBanner(array $plugins, bool $demo, bool $superUser, callable $translate): ?array
     {
@@ -285,12 +292,10 @@ final class PremiumPromo
 
         return [
             'plugins' => array_values($plugins),
-            'days' => PromoLine::dismissDays($demo),
+            'days' => $demo ? PromoLine::dismissDays(true) : self::ITEM_DAYS,
+            'pauseDays' => $demo ? 0 : self::PAUSE_DAYS,
             'demo' => $demo,
-            'note' => $superUser ? '' : (string) $translate(
-                'FeinwerkDataExploration_PremiumAskSuperUser',
-                [(string) $translate('Installation_SuperUser')]
-            ),
+            'note' => $superUser ? '' : (string) $translate('FeinwerkDataExploration_PremiumAskSuperUser'),
         ];
     }
 }

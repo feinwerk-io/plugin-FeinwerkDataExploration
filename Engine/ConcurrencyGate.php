@@ -22,8 +22,16 @@ final class ConcurrencyGate
 {
     public const LOCK_NAMESPACE = 'fwDataExploration';
 
-    public function __construct(private readonly ?LockBackend $backend = null)
+    private const RETRY_MICROSECONDS = 250000;
+
+    /** @var callable fn(): void the pause between two rounds of tries */
+    private $sleep;
+
+    public function __construct(private readonly ?LockBackend $backend = null, ?callable $sleep = null)
     {
+        $this->sleep = $sleep ?? static function (): void {
+            usleep(self::RETRY_MICROSECONDS);
+        };
     }
 
     /**
@@ -33,10 +41,17 @@ final class ConcurrencyGate
     public function acquire(Limits $limits): Lock
     {
         $backend = $this->backend ?? StaticContainer::get(LockBackend::class);
-        for ($slot = 1; $slot <= max(1, $limits->maxConcurrent); $slot++) {
-            $lock = new Lock($backend, self::LOCK_NAMESPACE);
-            if ($lock->acquireLock('slot' . $slot, self::ttl($limits))) {
-                return $lock;
+        // with a wait (saved reports) four rounds a second until it passes, the page tries once
+        $rounds = 1 + $limits->slotWait * (int) (1000000 / self::RETRY_MICROSECONDS);
+        for ($round = 1; $round <= $rounds; $round++) {
+            for ($slot = 1; $slot <= max(1, $limits->maxConcurrent); $slot++) {
+                $lock = new Lock($backend, self::LOCK_NAMESPACE);
+                if ($lock->acquireLock('slot' . $slot, self::ttl($limits))) {
+                    return $lock;
+                }
+            }
+            if ($round < $rounds) {
+                ($this->sleep)();
             }
         }
         // every slot taken: a server condition, the client may retry later (503, not 400)
