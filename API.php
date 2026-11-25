@@ -31,9 +31,11 @@ use Piwik\Plugins\FeinwerkDataExploration\Engine\KpiExplorer;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\ReportLevels;
 use Piwik\Plugins\FeinwerkDataExploration\Query\QueryRunner;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\LimitsProvider;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\Remember;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\TextColumns;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\TrendExplorer;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\ExplorationException;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\FilterSuggestions;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedStateDefinition;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedReportUnavailable;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedReportTable;
@@ -74,7 +76,9 @@ class API extends \Piwik\Plugin\API
      * "operator": "gt", "value": 100}]}]}. 1 to 5 groups, at most 10 conditions in all, every group with at least one.
      * - A text condition: target "label" (first dimension), "secondary_label" (second dimension) or "tertiary_label"
      *   (third dimension), each only when the definition has that dimension;
-     *   operator contains, equals, notContains, notEquals, startsWith, endsWith, notStartsWith, notEndsWith or matches;
+     *   operator contains, equals, notContains, notEquals, startsWith, endsWith, notStartsWith, notEndsWith, matches,
+     *   empty or notEmpty; empty and notEmpty take no value (one sent is ignored): empty is what the table shows as
+     *   "... not defined" or "Unknown" (no value, an empty value, or a code labelled like them), notEmpty all other rows;
      *   value a text of 1 to 1,000 characters (trimmed), compared case-insensitively with the row's value as shown. The
      *   negated operators (notContains, notEquals, notStartsWith, notEndsWith) keep rows without a value, the others drop
      *   them. matches takes a regular expression of at most 200 characters in the dialect of the database (MySQL 8:
@@ -119,7 +123,10 @@ class API extends \Piwik\Plugin\API
      *                            Refused together with a pivot (HTTP 400, naming pivot and comparisons)
      * @return DataTable label, secondary_label (two or three dimensions), tertiary_label (three dimensions) and the
      *                   metric columns; rows carry a "segment" metadata for the visits behind them where the dimensions
-     *                   have one
+     *                   have one. To repeat "filter to this value" a client takes per label column the stored value
+     *                   fwde_value, fwde_value2, fwde_value3 (sent where it differs from the label) with "equals", or
+     *                   the label; a row whose dimension has no value carries fwde_no_value true and fwde_empty_labels
+     *                   (the label columns without a value), which take the condition "empty" instead
      * @unsanitized the definition and the comparisons are JSON and segments are parsed by Matomo's Segment class
      */
     public function getExploration(int $idSite, string $period, string $date, string $definition, string $segment = '', int $readableColumns = 0, string $comparisons = ''): DataTable
@@ -303,6 +310,40 @@ class API extends \Piwik\Plugin\API
             ];
         }
         return $dimensions;
+    }
+
+    /**
+     * Suggestions for a filter's value (2026-11-25): the values of one dimension as the exploration's table shows them,
+     * from Matomo's archived report of that dimension for the period (never from the raw data), most visited first; the
+     * dimensions whose every value the plugin knows (weekday, hour, visitorType, visitConverted, channelType) from that
+     * list in its order. A dimension without a Matomo report, or a report that is not available, gives an empty list.
+     *
+     * @param int $idSite one website
+     * @param string $period day, week, month, year or range, as the exploration
+     * @param string $date a date, or for a range two dates "YYYY-MM-DD,YYYY-MM-DD", as the exploration
+     * @param string $dimension a dimension id of getAvailableDimensions, for example browser, pageUrl or campaignName
+     * @param string $text the typed text, matched literally and case-insensitively anywhere in the value (at most 100
+     *                     characters are used); empty for the most visited values
+     * @return list<string> at most 15 values (a fixed list all of its values, hour 24)
+     * @throws ExplorationException 400 for a period or date an exploration does not take (as getExploration: the
+     *                              message names it) and for a dimension the website does not offer (the message names
+     *                              it)
+     */
+    public function getFilterSuggestions(int $idSite, string $period, string $date, string $dimension, string $text = ''): array
+    {
+        self::checkAccess($idSite);
+        // the exploration's own period rules: Matomo's reports are asked for at most its longest period
+        ExplorationWindow::for($idSite, trim($period), trim($date), (new LimitsProvider())->get());
+        $definition = (new DimensionCatalog())->get($idSite, trim($dimension));
+        if ($definition === null) {
+            throw new ExplorationException('FeinwerkDataExploration_ErrorUnknownDimension', [trim($dimension)]);
+        }
+        $text = mb_substr(trim($text), 0, FilterSuggestions::MAX_TEXT);
+        // a pause in typing asks again for the same text: Matomo's report is read once in five minutes
+        $key = 'fwde_suggest_' . sha1((string) json_encode([PluginManager::getInstance()->getLoadedPlugin('FeinwerkDataExploration')
+            ->getVersion(), Piwik::getCurrentUserLogin(), $idSite, trim($period), trim($date), $definition->id, mb_strtolower($text)]));
+        return (new Remember())->get($key, 300, fn (): array => (new FilterSuggestions())
+            ->suggest($definition, $idSite, trim($period), trim($date), $text));
     }
 
     /**

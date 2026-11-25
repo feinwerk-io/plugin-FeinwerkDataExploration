@@ -18,8 +18,13 @@ export const MAX_PATTERN = 200;
 /** in the order the filter panel offers them: each condition next to its negation */
 export const TEXT_OPERATORS: FilterOperator[] = [
   'contains', 'notContains', 'equals', 'notEquals', 'startsWith', 'notStartsWith', 'endsWith',
-  'notEndsWith', 'matches',
+  'notEndsWith', 'matches', 'empty', 'notEmpty',
 ];
+/**
+ * conditions without a value (Peter, 2026-11-25: "Es muss auch eine Bedingung 'nicht leer'
+ * geben"): empty is what the table shows as "... not defined" or "Unknown"
+ */
+export const VALUELESS_OPERATORS: FilterOperator[] = ['empty', 'notEmpty'];
 export const NUMBER_OPERATORS: FilterOperator[] = ['gt', 'gte', 'lt', 'lte'];
 
 /** A condition without its group: what a filter row in the panel holds. */
@@ -36,6 +41,9 @@ export function isValidFilter(
   dimensionCount: number,
   metrics: string[],
 ): boolean {
+  if (VALUELESS_OPERATORS.includes(filter.operator)) {
+    return labelColumns(dimensionCount).includes(filter.target);
+  }
   if (TEXT_OPERATORS.includes(filter.operator)) {
     const text = filter.value.trim();
     const max = filter.operator === 'matches' ? MAX_PATTERN : MAX_FILTER_TEXT;
@@ -62,10 +70,12 @@ function parseCondition(entry: string): Condition|null {
     return null;
   }
   try {
+    const operator = entry.substring(first + 1, second) as FilterOperator;
     return {
       target: entry.substring(0, first),
-      operator: entry.substring(first + 1, second) as FilterOperator,
-      value: decodeURIComponent(entry.substring(second + 1)),
+      operator,
+      // "is empty" and "is not empty" have no value; one in the link is ignored
+      value: VALUELESS_OPERATORS.includes(operator) ? '' : decodeURIComponent(entry.substring(second + 1)),
     };
   } catch (e) {
     return null;

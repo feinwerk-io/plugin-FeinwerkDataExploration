@@ -34,18 +34,27 @@ class RowFilterTest extends SystemTestCase
         $rows = $this->explore($dimensions, []);
         $this->assertGreaterThan(0, $rows->getRowsCount());
 
+        $empty = 0;
         foreach ($rows->getRows() as $row) {
-            if ($row->getMetadata('fwde_no_value')) {
-                continue;
-            }
-            $filters = [['target' => 'label', 'operator' => 'equals', 'value' => $this->filterValue($row, 'fwde_value', 'label')]];
+            // a row without a value ("... not defined") is found by "is empty" on its empty columns (2026-11-25)
+            $emptyLabels = (array) ($row->getMetadata('fwde_empty_labels') ?: []);
+            $empty += $emptyLabels === [] ? 0 : 1;
+            $filters = [in_array('label', $emptyLabels, true)
+                ? ['target' => 'label', 'operator' => 'empty']
+                : ['target' => 'label', 'operator' => 'equals', 'value' => $this->filterValue($row, 'fwde_value', 'label')]];
             if (count($dimensions) === 2) {
-                $filters[] = ['target' => 'secondary_label', 'operator' => 'equals', 'value' => $this->filterValue($row, 'fwde_value2', 'secondary_label')];
+                $filters[] = in_array('secondary_label', $emptyLabels, true)
+                    ? ['target' => 'secondary_label', 'operator' => 'empty']
+                    : ['target' => 'secondary_label', 'operator' => 'equals', 'value' => $this->filterValue($row, 'fwde_value2', 'secondary_label')];
             }
             $found = $this->explore($dimensions, $filters);
             $label = $row->getColumn('label') . ' | ' . $row->getColumn('secondary_label');
             $this->assertSame(1, $found->getRowsCount(), $label);
             $this->assertSame($row->getColumn('nb_visits'), $found->getFirstRow()->getColumn('nb_visits'), $label);
+        }
+        if (in_array('referrerName', $dimensions, true)) {
+            // the direct visits have no referrer name: that row is checked too
+            $this->assertGreaterThan(0, $empty);
         }
     }
 
@@ -60,6 +69,8 @@ class RowFilterTest extends SystemTestCase
             'site search keyword' => [['siteSearchKeyword']],
             'page title x page URL' => [['pageTitle', 'pageUrl']],
             'browser (label filter on a coded dimension)' => [['browser']],
+            'referrer name, rows without a value' => [['referrerName']],
+            'page title x referrer name' => [['pageTitle', 'referrerName']],
         ];
     }
 

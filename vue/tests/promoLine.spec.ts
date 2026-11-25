@@ -72,6 +72,51 @@ describe('tip line (Feinwerk promotion kit)', () => {
       .toEqual(['_blank', 'Your Matomo super user can install it.']);
   });
 
+  // kit f7a8448 (promo.js 6, _promo.twig; Peter, 2026-11-25: "Kurzer Linktext"): the connector link carries its full
+  // and its short form, promo.js shows the short one only on a line too narrow for the full one (fwpromo-line--short).
+  // tests/js/promo.check.js measures the kit's markup, so the link must hold exactly these two spans.
+  const connector = {
+    ...promo,
+    id: 'connector',
+    link: 'Install the Feinwerk Connector from the Matomo Marketplace',
+    linkShort: 'Install the connector',
+    url: 'index.php?module=FeinwerkDataExploration&action=connectorInstaller',
+    external: false,
+    note: '',
+  };
+
+  it('gives a link with a short form both texts and the full text as its title', () => {
+    const line = mount(PromoLine, { props: { promo: connector, dismissLabel: 'Hide' } });
+    const link = line.find('a.fwpromo-line__link');
+    expect(link.element.innerHTML).toBe('<span class="fwpromo-line__link-full">Install the Feinwerk Connector from the'
+      + ' Matomo Marketplace</span><span class="fwpromo-line__link-short">Install the connector</span>');
+    expect(link.attributes('title')).toBe('Install the Feinwerk Connector from the Matomo Marketplace');
+    expect([link.attributes('target'), link.attributes('rel')]).toEqual([undefined, undefined]);
+  });
+
+  it('adds the admin note to the full text in the title of a link with a short form', () => {
+    const line = mount(PromoLine, {
+      props: {
+        promo: {
+          ...connector, external: true, note: 'Ask your super user.', url: 'https://plugins.matomo.org/FeinwerkMarketplaceConnector',
+        },
+        dismissLabel: 'Hide',
+      },
+    });
+    const link = line.find('a.fwpromo-line__link');
+    expect(link.attributes('title')).toBe('Install the Feinwerk Connector from the Matomo Marketplace. Ask your super user.');
+    expect(link.findAll('span').map((span) => span.classes())).toEqual([['fwpromo-line__link-full'], ['fwpromo-line__link-short']]);
+  });
+
+  it('keeps a link without a short form as plain text with no title', () => {
+    for (const linkShort of [undefined, '']) {
+      const line = mount(PromoLine, { props: { promo: { ...promo, linkShort }, dismissLabel: 'Hide' } });
+      const link = line.find('a.fwpromo-line__link');
+      expect(link.element.innerHTML).toBe('Learn more');
+      expect(link.attributes('title')).toBeUndefined();
+    }
+  });
+
   it('marks a demo notice, so the kit script hides it for the browser session only', () => {
     const line = mount(PromoLine, {
       props: { promo: { ...promo, dismissDays: 0, demo: true }, dismissLabel: 'Hide' },

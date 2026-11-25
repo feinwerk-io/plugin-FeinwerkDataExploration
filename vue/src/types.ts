@@ -47,7 +47,7 @@ export interface Catalog {
 }
 
 export type FilterOperator = 'contains'|'equals'|'notContains'|'notEquals'|'startsWith'|'endsWith'
-  |'notStartsWith'|'notEndsWith'|'matches'|'gt'|'gte'|'lt'|'lte';
+  |'notStartsWith'|'notEndsWith'|'matches'|'empty'|'notEmpty'|'gt'|'gte'|'lt'|'lte';
 
 export interface RowFilter {
   /** 'label', 'secondary_label', 'tertiary_label' or a selected metric id */

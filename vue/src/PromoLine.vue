@@ -12,6 +12,10 @@
   logo of the kit's templates/_feinwerkLogo.twig (kit 2c5b91f; Peter, 2026-11-17:
   "feinwerk logo immer dabei"): inline SVG and text, nothing loaded, colours in
   stylesheets/feinwerklogo.css, only the round mark on a narrow line (promo.css, promo.js).
+  promo.linkShort (the connector message, kit f7a8448): the link's short form for a line too
+  narrow for the full one (Peter, 2026-11-25: "Kurzer Linktext"; promo.js 6 sets
+  fwpromo-line--short, promo.css shows it), the full text then in the link's title, as in the
+  kit's templates/_promo.twig.
 -->
 <template>
   <div
@@ -32,8 +36,15 @@
       :href="promo.url"
       :target="promo.external === false ? undefined : '_blank'"
       :rel="promo.external === false ? undefined : 'noopener'"
-      :title="promo.note || undefined"
-    >{{ promo.link }}</a>
+      :title="linkTitle || undefined"
+    >
+      <template v-if="promo.linkShort"><span
+        class="fwpromo-line__link-full"
+      >{{ promo.link }}</span><span
+        class="fwpromo-line__link-short"
+      >{{ promo.linkShort }}</span></template>
+      <template v-else>{{ promo.link }}</template>
+    </a>
     <button
       type="button"
       class="fwpromo-line__dismiss fwpromo-dismiss"
@@ -57,10 +68,12 @@ export interface PromoVariables {
   dismissDays: number;
   /** demo mode of a test instance: the kit script hides the notice for the browser session only */
   demo?: boolean;
-  /** false: a link inside Matomo (the connector in the instance's own Marketplace), same tab */
+  /** false: a link inside Matomo (the connector, Campaign Manager's overview), same tab */
   external?: boolean;
   /** the connector message for an admin: who can install it (the link's title) */
   note?: string;
+  /** the connector message: the link's short form for a narrow line ('' or missing: none) */
+  linkShort?: string;
 }
 
 export default defineComponent({
@@ -71,6 +84,19 @@ export default defineComponent({
       default: null,
     },
     dismissLabel: { type: String, required: true },
+  },
+  computed: {
+    /** the admin note; with a short form the full link text first (kit _promo.twig, version 6) */
+    linkTitle(): string {
+      if (!this.promo) {
+        return '';
+      }
+      const note = this.promo.note || '';
+      if (!this.promo.linkShort) {
+        return note;
+      }
+      return note ? `${this.promo.link}. ${note}` : this.promo.link;
+    },
   },
 });
 </script>

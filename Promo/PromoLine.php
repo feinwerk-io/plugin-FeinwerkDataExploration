@@ -9,6 +9,7 @@
 
 namespace Piwik\Plugins\FeinwerkDataExploration\Promo;
 
+use Piwik\Cache;
 use Piwik\Common;
 use Piwik\Config;
 use Piwik\Container\StaticContainer;
@@ -84,6 +85,8 @@ final class PromoLine
             'title' => 'FeinwerkDataExploration_PromoConnectorTitle',
             'text' => 'FeinwerkDataExploration_PromoConnectorText',
             'link' => 'FeinwerkDataExploration_PromoConnectorLink',
+            // on a line too narrow for the full link (Peter, 2026-11-25: "Kurzer Linktext")
+            'linkShort' => 'FeinwerkDataExploration_PromoConnectorLinkShort',
             'urls' => [],
             'product' => 'FeinwerkMarketplaceConnector',
             'placement' => 'line',
@@ -120,6 +123,30 @@ final class PromoLine
 
     /** paid plugins prefer this message for their tip line (docs/promotions.md); free plugins rotate (null) */
     public const PREFERRED = null;
+
+    /**
+     * The campaigns tip leads to the free Feinwerk Campaign Manager in three steps (Peter's decision 8 of 2026-11-23 in
+     * Campaign Manager's design, relayed by its session: "Tip line `campaigns` in the other plugins becomes a three-step
+     * funnel"; texts approved by Peter on 2026-11-25, his choice: "Texte so übernehmen (Recommended)"). campaigns():
+     * not installed: install it (once the store lists it, else today's tip); installed and not connected: its
+     * campaign overview; connected: no campaigns tip. The message id stays 'campaigns', so one x hides every step.
+     */
+    public const CAMPAIGNS_MESSAGE = 'campaigns';
+    public const CAMPAIGN_MANAGER = 'FeinwerkCampaignManager';
+    /** Campaign Manager's shared interface: isConnected(): bool, overviewUrl(int $idSite, string $period, string $date) */
+    public const CAMPAIGN_MANAGER_CONNECTION = 'Piwik\\Plugins\\FeinwerkCampaignManager\\Platform\\Connection';
+    /**
+     * true once plugins.feinwerk.io lists Campaign Manager publicly: listed on 2026-11-25 (Peter, question dialog: "Erst
+     * nach dem Listing (Recommended)"; his listing go in the store session: "Ja, (a) und (b)")
+     */
+    public const CAMPAIGN_MANAGER_LISTED = true;
+    public const CAMPAIGNS_PLATFORM = 'platform';
+    public const CAMPAIGNS_INSTALL = 'install';
+    public const CAMPAIGNS_OPEN = 'open';
+    public const CAMPAIGNS_NONE = 'none';
+    /** the connector's helper for a plugin's window on its Feinwerk Plugins screen (asked for on 2026-11-25) */
+    private const CONNECTOR_INSTALL_URL = 'pluginInstallUrl';
+    private const CAMPAIGNS_CACHE = 'fwpromo.campaigns.';
 
     /**
      * The off switches, in this order (docs/promo-kit.md, "Off switches"): promotions = 0 in the plugin's own config
@@ -268,13 +295,15 @@ final class PromoLine
      * website with ecommerce.
      *
      * @param callable(string): bool $isInstalled
+     * @param string $campaignsStage the campaigns tip's step (campaigns()): none leaves the campaigns message out
      * @return string[] message ids in the order of MESSAGES
      */
     public static function candidates(
         callable $isInstalled,
         bool $isEcommerceSite = false,
         bool $demo = false,
-        bool $wordpress = false
+        bool $wordpress = false,
+        string $campaignsStage = self::CAMPAIGNS_PLATFORM
     ): array {
         // Matomo for WordPress (Peter, 2026-11-17: "Dort nicht werben"): the connector can neither install nor update
         // there yet, so no connector message, in demo too
@@ -289,6 +318,9 @@ final class PromoLine
                 continue;
             }
             if (!empty($message['ecommerce']) && !$isEcommerceSite) {
+                continue;
+            }
+            if ($id === self::CAMPAIGNS_MESSAGE && $campaignsStage === self::CAMPAIGNS_NONE) {
                 continue;
             }
             if ($message['product'] === null || !$isInstalled($message['product'])) {
@@ -396,7 +428,9 @@ final class PromoLine
      * @param callable(string): string $translate
      * @param array{superUser: bool, marketplace: bool}|null $user for the connector message: is the user a super user,
      *                                                         may this Matomo install from its Marketplace (null: neither)
-     * @return array{id: string, placement: string, title: string, text: string, link: string, url: string, external: bool, note: string, dismissDays: int, demo: bool}
+     * @param array{stage: string, openUrl: string, installUrl: string}|null $campaigns for the campaigns message: its step
+     *                                                         (campaigns()); null or platform: today's tip
+     * @return array{id: string, placement: string, title: string, text: string, link: string, linkShort: string, url: string, external: bool, note: string, dismissDays: int, demo: bool}
      */
     public static function variables(
         string $id,
@@ -404,12 +438,29 @@ final class PromoLine
         callable $translate,
         string $placement = 'line',
         bool $demo = false,
-        ?array $user = null
+        ?array $user = null,
+        ?array $campaigns = null
     ): array {
         if (!isset(self::MESSAGES[$id])) {
             throw new \InvalidArgumentException('message');
         }
         $message = self::MESSAGES[$id];
+        $step = $id === self::CAMPAIGNS_MESSAGE && $campaigns !== null ? self::campaignsStep($campaigns, $language) : null;
+        if ($step !== null) {
+            return [
+                'id' => $id,
+                'placement' => $placement,
+                'title' => $translate($step['title']),
+                'text' => $translate($step['text']),
+                'link' => $translate($step['link']),
+                'linkShort' => '',
+                'url' => $step['url'],
+                'external' => $step['external'],
+                'note' => '',
+                'dismissDays' => self::dismissDays($demo),
+                'demo' => $demo,
+            ];
+        }
         $url = $id === self::CONNECTOR_MESSAGE ? null : self::url($id, $language);
         $external = true;
         $note = '';
@@ -430,12 +481,140 @@ final class PromoLine
             'title' => $translate($message['title']),
             'text' => $translate($message['text']),
             'link' => $translate($message['link']),
+            'linkShort' => isset($message['linkShort']) ? (string) $translate($message['linkShort']) : '',
             'url' => $url,
             'external' => $external,
             'note' => $note,
             'dismissDays' => self::dismissDays($demo),
             'demo' => $demo,
         ];
+    }
+
+    /**
+     * The campaigns tip's step. Campaign Manager active: open its overview, or none once it is connected (demo: open);
+     * installed but switched off: none (the admin chose so; demo: today's tip); not installed: install once the store
+     * lists it, else today's tip (platform). Pure.
+     */
+    public static function campaignsStage(bool $installed, bool $active, bool $connected, bool $listed, bool $demo = false): string
+    {
+        if ($active) {
+            return $connected && !$demo ? self::CAMPAIGNS_NONE : self::CAMPAIGNS_OPEN;
+        }
+        if ($installed) {
+            return $demo ? self::CAMPAIGNS_PLATFORM : self::CAMPAIGNS_NONE;
+        }
+
+        return $listed ? self::CAMPAIGNS_INSTALL : self::CAMPAIGNS_PLATFORM;
+    }
+
+    /**
+     * Texts and link of a campaigns step; null for today's tip. open: Campaign Manager's overview in the same tab;
+     * install: the connector's window for it where the connector offers one (super users), else its store page in a
+     * new tab. Pure.
+     *
+     * @param array{stage: string, openUrl: string, installUrl: string} $campaigns
+     * @return array{title: string, text: string, link: string, url: string, external: bool}|null
+     */
+    public static function campaignsStep(array $campaigns, string $language): ?array
+    {
+        $key = 'FeinwerkDataExploration_PromoCampaigns';
+        if (($campaigns['stage'] ?? '') === self::CAMPAIGNS_OPEN && ($campaigns['openUrl'] ?? '') !== '') {
+            return ['title' => $key . 'OpenTitle', 'text' => $key . 'OpenText', 'link' => $key . 'OpenLink',
+                'url' => $campaigns['openUrl'], 'external' => false];
+        }
+        if (($campaigns['stage'] ?? '') !== self::CAMPAIGNS_INSTALL) {
+            return null;
+        }
+        if (($campaigns['installUrl'] ?? '') !== '') {
+            return ['title' => $key . 'Title', 'text' => $key . 'InstallText', 'link' => $key . 'InstallLink',
+                'url' => $campaigns['installUrl'], 'external' => false];
+        }
+
+        return ['title' => $key . 'Title', 'text' => $key . 'InstallText', 'link' => $key . 'StoreLink',
+            'url' => 'https://plugins.feinwerk.io/' . ($language === 'de' ? 'de' : 'en') . '/plugins/' . self::CAMPAIGN_MANAGER
+                . '?mtm_campaign=plugin-promo&mtm_source=' . self::PLUGIN . '&mtm_content=' . self::CAMPAIGNS_MESSAGE,
+            'external' => true];
+    }
+
+    /**
+     * The campaigns tip's step for this website and request, read once per request (Campaign Manager's interface
+     * through class_exists and isPluginActivated, as its session asks). Today's tip on any error. Never throws.
+     *
+     * @return array{stage: string, openUrl: string, installUrl: string}
+     */
+    public static function campaigns(int $idSite): array
+    {
+        $platform = ['stage' => self::CAMPAIGNS_PLATFORM, 'openUrl' => '', 'installUrl' => ''];
+        try {
+            $cache = Cache::getTransientCache();
+            $cacheKey = self::CAMPAIGNS_CACHE . $idSite;
+            if ($cache->contains($cacheKey)) {
+                return $cache->fetch($cacheKey);
+            }
+            $manager = PluginManager::getInstance();
+            $installed = $manager->isPluginInstalled(self::CAMPAIGN_MANAGER);
+            $class = self::CAMPAIGN_MANAGER_CONNECTION;
+            $active = $installed && $manager->isPluginActivated(self::CAMPAIGN_MANAGER) && class_exists($class);
+            $connected = $active && (bool) $class::isConnected();
+            $demo = self::demo();
+            $stage = self::campaignsStage($installed, $active, $connected, self::CAMPAIGN_MANAGER_LISTED, $demo);
+            $openUrl = '';
+            if ($stage === self::CAMPAIGNS_OPEN) {
+                $openUrl = $idSite > 0 ? (string) $class::overviewUrl($idSite, self::requestPeriod(), self::requestDate()) : '';
+                if (strpos($openUrl, 'index.php?') !== 0) {
+                    // no website to open (or an unexpected answer): no campaigns tip here
+                    $openUrl = '';
+                    $stage = $demo ? self::CAMPAIGNS_PLATFORM : self::CAMPAIGNS_NONE;
+                }
+            }
+            $info = [
+                'stage' => $stage,
+                'openUrl' => $openUrl,
+                'installUrl' => $stage === self::CAMPAIGNS_INSTALL ? self::connectorInstallUrl(self::CAMPAIGN_MANAGER) : '',
+            ];
+            $cache->save($cacheKey, $info);
+
+            return $info;
+        } catch (\Throwable $e) {
+            return $platform;
+        }
+    }
+
+    /** The request's period for a link into Matomo: one of Matomo's periods, else day. */
+    private static function requestPeriod(): string
+    {
+        $period = (string) Common::getRequestVar('period', 'day', 'string');
+
+        return in_array($period, ['day', 'week', 'month', 'year', 'range'], true) ? $period : 'day';
+    }
+
+    /** The request's date for a link into Matomo: a date, a range or a keyword, else yesterday. */
+    private static function requestDate(): string
+    {
+        $date = (string) Common::getRequestVar('date', 'yesterday', 'string');
+
+        return preg_match('/^[0-9A-Za-z,\-]{1,40}$/', $date) ? $date : 'yesterday';
+    }
+
+    /**
+     * The connector's link to a plugin's window inside Matomo (connector helper pluginInstallUrl(), super users, once
+     * it offers one); '' without it.
+     */
+    private static function connectorInstallUrl(string $plugin): string
+    {
+        try {
+            $helper = ltrim(self::CONNECTOR_SWITCH, '\\');
+            if (!PluginManager::getInstance()->isPluginActivated(self::CONNECTOR) || !class_exists($helper)
+                || !method_exists($helper, self::CONNECTOR_INSTALL_URL)
+            ) {
+                return '';
+            }
+            $url = (string) call_user_func([$helper, self::CONNECTOR_INSTALL_URL], $plugin);
+
+            return strpos($url, 'index.php?') === 0 ? $url : '';
+        } catch (\Throwable $e) {
+            return '';
+        }
     }
 
     /** Whether the current user may see promotions at all: switches on, admin of a website or super user. */
@@ -473,6 +652,7 @@ final class PromoLine
                 'marketplace' => $superUser && self::marketplaceUsable(),
                 'installer' => $superUser
                     && ConnectorInstaller::decide(ConnectorInstaller::environment()) !== ConnectorInstaller::HIDDEN,
+                'campaigns' => self::campaigns($idSite),
             ],
             [self::class, 'isInstalled'],
             [Piwik::class, 'translate'],
@@ -485,7 +665,8 @@ final class PromoLine
      * - Matomo for WordPress: no connector message (Peter, 2026-11-17, "Dort nicht werben");
      * - a super user whose Matomo cannot install from its Marketplace gets no connector message either (Peter,
      *   2026-11-17, "Dann keine Nachricht": a ZIP download would promise what the instance cannot do);
-     * - an admin gets the note who can install it.
+     * - an admin gets the note who can install it;
+     * - the campaigns tip follows its step (campaigns(): none leaves it out).
      *
      * @param array{day: int, ecommerce: bool, demo: bool, wordpress: bool, superUser: bool, marketplace: bool} $env
      * @param callable(string): bool $isInstalled
@@ -493,7 +674,14 @@ final class PromoLine
      */
     public static function lineFor(array $env, callable $isInstalled, callable $translate, string $language): ?array
     {
-        $candidates = self::candidates($isInstalled, $env['ecommerce'], $env['demo'], $env['wordpress']);
+        $campaigns = $env['campaigns'] ?? null;
+        $candidates = self::candidates(
+            $isInstalled,
+            $env['ecommerce'],
+            $env['demo'],
+            $env['wordpress'],
+            (string) ($campaigns['stage'] ?? self::CAMPAIGNS_PLATFORM)
+        );
         if ($env['superUser'] && !$env['marketplace']) {
             $candidates = array_values(array_diff($candidates, [self::CONNECTOR_MESSAGE]));
         }
@@ -505,6 +693,6 @@ final class PromoLine
             ? ['superUser' => $env['superUser'], 'marketplace' => $env['marketplace'], 'installer' => $env['installer'] ?? false]
             : null;
 
-        return self::variables($id, $language, $translate, 'line', $env['demo'], $user);
+        return self::variables($id, $language, $translate, 'line', $env['demo'], $user, $campaigns);
     }
 }

@@ -10,6 +10,12 @@ import { CATALOG, LIMITS } from './fixtures';
 
 vi.mock('CoreHome', () => ({
   translate: (key: string) => key,
+  // suggestions for a filter's value (2026-11-25)
+  AjaxHelper: {
+    fetch: (params: { method: string, text: string }) => Promise.resolve(
+      params.method === 'FeinwerkDataExploration.getFilterSuggestions' ? [`${params.text}efox`, `${params.text}ebird`] : [],
+    ),
+  },
 }));
 
 const mounted: Array<{ unmount: () => void }> = [];
@@ -143,6 +149,67 @@ describe('filters in the side panel with Apply (UI item 4)', () => {
     await settle();
     expect(document.querySelectorAll('section.fwde-sidepanel .fwde-filters__row')).toHaveLength(1);
     expect(document.activeElement?.closest('.fwde-filters__row')).not.toBeNull();
+  });
+});
+
+describe('"is empty" and "is not empty" in the panel (2026-11-25)', () => {
+  afterEach(() => {
+    mounted.splice(0).forEach((wrapper) => wrapper.unmount());
+    while (document.body.firstChild) {
+      document.body.removeChild(document.body.firstChild);
+    }
+  });
+
+  it('offers them for a dimension, shows no value field and applies them', async () => {
+    const wrapper = panel('label~contains~fire');
+    await wrapper.setProps({ open: true });
+    await settle();
+    const operator = inPanel<HTMLSelectElement>('.fwde-filters__field--operator select');
+    expect(Array.from(operator?.options || []).map((o) => o.value)).toEqual(expect.arrayContaining(['empty', 'notEmpty']));
+    if (operator) {
+      operator.value = 'notEmpty';
+      operator.dispatchEvent(new Event('change'));
+    }
+    await settle();
+    expect(inPanel('.fwde-filters__field--value')).toBeNull();
+    // what "empty" means, under the condition (UI review 2026-11-25, W2)
+    expect(inPanel('.fwde-filters__help')?.textContent).toContain('FeinwerkDataExploration_FilterEmptyHelp');
+    (inPanel<HTMLElement>('.fwde-filters__apply') as HTMLElement).click();
+    await settle();
+    const [[applied]] = wrapper.emitted('apply') as [[{ filters: { operator: string, value: string }[] }]];
+    expect(applied.filters.map((f) => [f.operator, f.value])).toEqual([['notEmpty', '']]);
+  });
+});
+
+describe('suggestions under the value field (2026-11-25)', () => {
+  afterEach(() => {
+    mounted.splice(0).forEach((wrapper) => wrapper.unmount());
+    while (document.body.firstChild) {
+      document.body.removeChild(document.body.firstChild);
+    }
+  });
+
+  it('lists Matomo\'s values for the typed text, none for a pattern', async () => {
+    const wrapper = panel('label~contains~fire');
+    await wrapper.setProps({ open: true });
+    await settle();
+    const input = inPanel<HTMLInputElement>('.fwde-filters__field--value input') as HTMLInputElement;
+    type(input, 'fir');
+    await new Promise((resolve) => { setTimeout(resolve, 400); });
+    await settle();
+    const list = input.getAttribute('list');
+    expect(list).toBeTruthy();
+    // one list id from the start, so the browser opens the list as soon as options arrive (W1)
+    expect(list).toMatch(/^fwde-suggest-\d+$/);
+    const options = Array.from(document.querySelectorAll<HTMLOptionElement>(`#${list} option`)).map((o) => o.value);
+    expect(options).toEqual(['firefox', 'firebird']);
+    expect(input.getAttribute('autocomplete')).toBe('off');
+
+    const operator = inPanel<HTMLSelectElement>('.fwde-filters__field--operator select') as HTMLSelectElement;
+    operator.value = 'matches';
+    operator.dispatchEvent(new Event('change'));
+    await settle();
+    expect(inPanel<HTMLInputElement>('.fwde-filters__field--value input')?.getAttribute('list')).toBeNull();
   });
 });
 

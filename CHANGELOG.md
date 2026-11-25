@@ -1,5 +1,26 @@
 # Changelog
 
+## 6.2.0
+
+- Filters: new conditions "is empty" and "is not empty" for every dimension, for example to keep only rows with a
+  campaign name. Empty is what the table shows as "not defined" or "Unknown". For the API: the operators empty and
+  notEmpty, without a value.
+- On a row without a value ("not defined" or "Unknown"), "Filter to this value" now selects it with "is empty".
+- The filter panel uses its whole width.
+- Filters suggest values while you type: from Matomo's reports of the period, the most visited first; weekday, hour,
+  visitor type and channel type list all their values at once. For the API: getFilterSuggestions.
+- KPI cards on the dashboard: the widget's header names the card, the card shows its metric, the change as a tinted
+  label, the compared days and the last value as dots on the line, dates in words in the tooltips, and it lines up with
+  Matomo's widgets.
+- Saved explorations on the dashboard and in the menu show their name once, and their footer without the support link.
+- Fixed: a saved exploration with a rate (such as the conversion rate) next to revenue shows its table on its menu
+  page and as a dashboard widget; before, Matomo showed an error message there instead.
+- Tips from Feinwerk: without Feinwerk Campaign Manager, the campaigns tip below the result offers this free plugin;
+  with it installed, the tip opens its campaign overview; once it is connected, or switched off, that tip no longer
+  shows.
+- Tips from Feinwerk: on a narrow screen the tip on the Feinwerk Connector shows a short link text, so the line stays
+  within the screen; the full text appears when you point at the link.
+
 ## 6.1.0
 
 - KPI cards: save an exploration as a KPI card and put one number on your dashboard. Choose its metric, what it is

@@ -16,7 +16,7 @@
       :id-site="idSite"
       topic="saved_report"
       :question="translate('FeinwerkDataExploration_FeedbackQuestion_saved_report')"
-      :feedback="feedback"
+      :feedback="shownFeedback"
     />
   </div>
 </template>
@@ -45,7 +45,19 @@ export default defineComponent({
   },
   data() {
     // an embed (Widgetize) shows no footer: its request does not say so, the page's address does
-    return { embedded: embeddedPage(window.location.search) };
+    return { embedded: embeddedPage(window.location.search), inDashboard: false };
+  },
+  computed: {
+    /** a dashboard widget has no support link (house rule), the report's own menu page keeps it */
+    shownFeedback(): FeedbackSettings {
+      return this.inDashboard ? { ...this.feedback, supportUrl: '' } : this.feedback;
+    },
+  },
+  mounted() {
+    // Matomo's dashboard puts a header (.widgetTop) over each widget; a menu page has none
+    const el = this.$el as HTMLElement|null;
+    const widget = el && el.closest ? el.closest('.widget') : null;
+    this.inDashboard = !!(widget && widget.querySelector('.widgetTop'));
   },
   methods: { translate },
 });

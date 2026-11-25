@@ -51,6 +51,20 @@
     display: none;
 }
 
+/* a link with a short form (Peter, 2026-11-25: "Kurzer Linktext"): the full text, the short one only where the full
+   link does not fit even without the sentence (fwpromo-line--short, javascripts/promo.js 6) */
+.fwpromo-line .fwpromo-line__link-short {
+    display: none;
+}
+
+.fwpromo-line.fwpromo-line--short .fwpromo-line__link-full {
+    display: none;
+}
+
+.fwpromo-line.fwpromo-line--short .fwpromo-line__link-short {
+    display: inline;
+}
+
 /* only the round mark when the line is too short for the word mark (javascripts/promo.js) */
 .fwpromo-line--compact .fwlogo .fwlogo__word {
     display: none;

@@ -27,7 +27,9 @@
     max-width: 100%;
     padding-top: 8px;
     padding-bottom: 8px;
-    line-height: 1.4;
+    /* 8 + 20 + 8 = Matomo's 36 px: the label sits where a native button has it (1.4 of Matomo's 12 px left it 2 px high,
+       Campaign Score's UI review 2026-11-25) */
+    line-height: 20px;
     white-space: normal;
 }
 

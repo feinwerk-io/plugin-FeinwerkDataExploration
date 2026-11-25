@@ -84,6 +84,34 @@ class SavedReportMetadataTest extends IntegrationTestCase
         }
     }
 
+    /**
+     * Gallery shots of 2026-11-25: a saved exploration with a rate next to revenue failed as a widget ("Trying to round
+     * unsupported operands ... 11.85% (string)"): Matomo's table relates every metric of getMetrics() to the website's
+     * total from API.get, where Goals answers conversion_rate as a formatted string. Only metrics that add up across rows
+     * have such a share; the metadata keeps every metric in the saved order.
+     */
+    public function testATableWithARateAndRevenueRendersAsAWidget(): void
+    {
+        FakeAccess::clearAccess(false, [], [1], 'anna', [1]);
+        $id = (int) API::getInstance()->addSavedExploration(1, 'Rate and revenue',
+            '{"fwdeDims":"browser","fwdeMetrics":"nb_visits,conversion_rate,revenue"}', '', 1)['id'];
+        FakeAccess::$superUser = true;
+        $_GET = ['module' => 'FeinwerkDataExploration', 'action' => 'getSavedReport', 'idSite' => 1, 'period' => 'day',
+            'date' => self::DAY, 'idSaved' => $id, 'widget' => 1] + $_GET;
+        try {
+            $html = \Piwik\ViewDataTable\Factory::build('table', 'FeinwerkDataExploration.getSavedReport', 'FeinwerkDataExploration.getSavedReport', true)
+                ->render();
+        } finally {
+            unset($_GET['module'], $_GET['action'], $_GET['period'], $_GET['date'], $_GET['idSaved'], $_GET['widget']);
+        }
+        $this->assertStringContainsString('Firefox', $html);
+        $this->assertStringNotContainsString('unsupported operands', $html);
+
+        $metadata = array_values(array_filter(CoreApi::getInstance()->getReportMetadata(1),
+            fn ($report) => ($report['parameters']['idSaved'] ?? 0) === $id));
+        $this->assertSame(['nb_visits', 'conversion_rate', 'revenue'], array_keys($metadata[0]['metrics']));
+    }
+
     public function tearDown(): void
     {
         unset($_GET['idSite']);

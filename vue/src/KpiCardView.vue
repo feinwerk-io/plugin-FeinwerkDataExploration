@@ -4,8 +4,9 @@
 -->
 
 <template>
-  <div class="fwde-page fwde-kpi">
+  <div :class="['fwde-page', 'fwde-kpi', { 'fwde-kpi--in-widget': hasHeader }]">
     <div
+      v-if="!hasHeader"
       class="fwde-kpi__title"
       :title="card.metricName"
     >{{ card.title }}</div>
@@ -37,28 +38,30 @@
       v-else-if="card.comparisonNote"
       class="fwde-kpi__note"
     >{{ card.comparisonNote }}</p>
-    <svg
+    <div
       v-if="card.line && card.line.length > 1"
       class="fwde-kpi__spark"
-      :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
-      preserveAspectRatio="none"
-      role="img"
-      :aria-label="lineLabel"
     >
-      <path
-        class="fwde-kpi__line"
-        :d="path"
+      <svg
+        :viewBox="`0 0 ${WIDTH} ${HEIGHT}`"
+        preserveAspectRatio="none"
+        role="img"
+        :aria-label="lineLabel"
+      >
+        <path
+          class="fwde-kpi__line"
+          :d="path"
+        />
+      </svg>
+      <!-- round dots over the stretched line: the compared days hollow, the last value filled -->
+      <span
+        v-for="dot in dots"
+        :key="dot.day"
+        :class="['fwde-kpi__dot', `fwde-kpi__dot--${dot.kind}`]"
+        :style="{ left: `${dot.left}%`, top: `${dot.top}%` }"
+        :title="dot.title"
       />
-      <line
-        v-for="mark in marks"
-        :key="mark.day"
-        class="fwde-kpi__mark"
-        :x1="mark.x"
-        :x2="mark.x"
-        :y1="HEIGHT - 4"
-        :y2="HEIGHT"
-      ><title>{{ mark.title }}</title></line>
-    </svg>
+    </div>
     <p
       v-else-if="card.lineNote"
       class="fwde-kpi__note"
@@ -84,7 +87,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { NumberFormatter, translate } from 'CoreHome';
+import { Matomo, NumberFormatter, translate } from 'CoreHome';
 import FeedbackBar from './FeedbackBar.vue';
 import { embeddedPage } from './embed';
 import { FeedbackSettings } from './feedback';
@@ -97,6 +100,17 @@ import {
 const WIDTH = 300;
 const HEIGHT = 44;
 const PAD = 3;
+
+/** a day of the card (YYYY-MM-DD) in words in Matomo's language, e.g. "Wed, Nov 4" (UI W7) */
+function dayText(day: string): string {
+  try {
+    return new Intl.DateTimeFormat(Matomo.language || 'en', {
+      weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC',
+    }).format(new Date(`${day}T00:00:00Z`));
+  } catch (e) {
+    return day;
+  }
+}
 
 /**
  * A KPI card (2026-11-24): its title, the number for the dashboard's period ("so far" when it
@@ -120,10 +134,21 @@ export default defineComponent({
   },
   data() {
     // an embedded dashboard loads the card with its own module: the page's address tells
-    return { WIDTH, HEIGHT, embedded: embeddedPage(window.location.search) };
+    return {
+      WIDTH, HEIGHT, embedded: embeddedPage(window.location.search), hasHeader: false,
+    };
+  },
+  mounted() {
+    // on a dashboard Matomo's widget header names the card (Peter, 2026-11-25: the widget looked
+    // crowded with the name twice); an embed of the card alone has no header and keeps the name
+    const widget = (this.$el as HTMLElement).closest ? (this.$el as HTMLElement).closest('.widget') : null;
+    this.hasHeader = !!(widget && widget.querySelector('.widgetTop'));
   },
   computed: {
-    /** the metric under the title, unless the title already is its name (UI review 2026-11-24) */
+    /**
+     * the metric above the number, unless the card's name (in the card or in the dashboard's
+     * header) already is its name (UI review 2026-11-24)
+     */
     showMetric(): boolean {
       const fold = (text: string) => text.trim().toLocaleLowerCase();
       return fold(this.card.metricName) !== '' && fold(this.card.title) !== fold(this.card.metricName);
@@ -157,7 +182,9 @@ export default defineComponent({
         return '';
       }
       const days = comparison.spans.filter((span) => span.value !== null)
-        .map((span) => (span.firstDay === span.lastDay ? span.firstDay : `${span.firstDay}/${span.lastDay}`));
+        .map((span) => (span.firstDay === span.lastDay
+          ? dayText(span.firstDay)
+          : `${dayText(span.firstDay)}/${dayText(span.lastDay)}`));
       return `${formatMetric(this.card.metric, comparison.baseline, this.formatters)} (${days.join(', ')})`;
     },
     values(): (number|null)[] {
@@ -172,18 +199,25 @@ export default defineComponent({
     path(): string {
       return linePath(this.values, this.x, this.y);
     },
-    marks(): { day: string, x: number, title: string }[] {
-      return (this.card.line || []).map((point, i) => ({ point, i }))
-        .filter(({ point }) => point.baseline && point.value !== null)
+    /** the compared days (hollow) and the last value (filled), in percent of the line's box */
+    dots(): { day: string, kind: string, left: number, top: number, title: string }[] {
+      const line = this.card.line || [];
+      const last = line.length - 1;
+      return line.map((point, i) => ({ point, i }))
+        .filter(({ point, i }) => point.value !== null && (point.baseline || i === last))
         .map(({ point, i }) => ({
           day: point.day,
-          x: this.x(i),
-          title: `${point.day}: ${formatMetric(this.card.metric, point.value as number, this.formatters)}`,
+          kind: i === last ? 'end' : 'day',
+          left: Math.round((this.x(i) / WIDTH) * 10000) / 100,
+          top: Math.round((this.y(point.value as number) / HEIGHT) * 10000) / 100,
+          title: `${dayText(point.day)}: ${formatMetric(this.card.metric, point.value as number, this.formatters)}`,
         }));
     },
     lineLabel(): string {
       const line = this.card.line || [];
-      return line.length ? `${this.card.metricName}: ${line[0].day} ${line[line.length - 1].day}` : '';
+      return line.length
+        ? `${this.card.metricName}: ${dayText(line[0].day)}/${dayText(line[line.length - 1].day)}`
+        : '';
     },
   },
   methods: {

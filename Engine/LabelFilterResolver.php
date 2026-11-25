@@ -18,7 +18,8 @@ use Piwik\Plugins\FeinwerkDataExploration\Definition\ExplorationDefinition;
  */
 final class LabelFilterResolver
 {
-    private const STATIC_DOMAINS = [
+    /** the coded dimensions whose every value the plugin knows (also the filter suggestions, FilterSuggestions) */
+    public const STATIC_DOMAINS = [
         'weekday' => [1, 2, 3, 4, 5, 6, 7],
         'hour' => [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
         'visitorType' => [0, 1],
@@ -37,7 +38,9 @@ final class LabelFilterResolver
     /**
      * @param string $operator a text operator; for notContains, notEquals, notStartsWith and notEndsWith the positive
      *                         matches (of contains, equals, startsWith, endsWith) are returned, the query builder
-     *                         negates them; matches tests the regular expression on the label
+     *                         negates them; matches tests the regular expression on the label; empty and notEmpty
+     *                         return the empty values (no value, an empty one, a code labelled like them), the query
+     *                         builder negates them for notEmpty
      * @return array{values: list<string>, includeNull: bool}
      */
     public function resolve(DimensionDefinition $dimension, string $operator, string $value, int $idSite): array
@@ -48,9 +51,19 @@ final class LabelFilterResolver
 
         $values = [];
         $includeNull = false;
+        $emptyLabel = in_array($operator, ExplorationDefinition::VALUELESS_OPERATORS, true) ? $dimension->formatLabel(null, $idSite) : null;
         foreach ($domain as $raw) {
             $raw = $raw === null ? null : (string) $raw;
             $label = $dimension->formatLabel($raw, $idSite);
+            if ($emptyLabel !== null) {
+                // "is empty": what the table shows like a missing value ("... not defined", "Unknown")
+                if ($raw === null) {
+                    $includeNull = true;
+                } elseif ($raw === '' || $label === $emptyLabel) {
+                    $values[] = $raw;
+                }
+                continue;
+            }
             // a regular expression matches the label as shown, case-insensitive by its flags; the pattern is never
             // lowercased ("\D" would become "\d")
             $matches = $operator === 'matches'
@@ -66,6 +79,10 @@ final class LabelFilterResolver
             }
         }
 
+        if ($emptyLabel !== null) {
+            // a missing value is empty also where none occurs in the window
+            $includeNull = true;
+        }
         return ['values' => array_values(array_unique($values)), 'includeNull' => $includeNull];
     }
 

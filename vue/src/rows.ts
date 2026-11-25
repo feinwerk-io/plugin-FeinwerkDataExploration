@@ -27,11 +27,27 @@ function rowLabelIndexes(row: ResultRow, dimensionCount: number): number[] {
     .filter((i) => i === 0 || (i < dimensionCount && row[LABEL_COLUMNS[i]] !== undefined));
 }
 
-/** The row's dimension values as "equals" conditions of the given group. */
+/** the label columns the API marks as without a value ("… not defined") */
+function emptyLabels(row: ResultRow): string[] {
+  const marked = (row as unknown as { fwde_empty_labels?: unknown }).fwde_empty_labels;
+  return Array.isArray(marked) ? marked.map(String) : [];
+}
+
+/**
+ * The row's dimension values as "equals" conditions of the given group; a column without a value
+ * as "is empty" (2026-11-25).
+ */
 function rowConditions(state: ExplorationState, row: ResultRow, group: number): RowFilter[] {
-  return rowLabelIndexes(row, state.dimensions.length).map((i) => ({
-    target: LABEL_COLUMNS[i], operator: 'equals', value: filterValue(row, i), group,
-  }));
+  const empty = emptyLabels(row);
+  return rowLabelIndexes(row, state.dimensions.length).map((i): RowFilter => (
+    empty.includes(LABEL_COLUMNS[i])
+      ? {
+        target: LABEL_COLUMNS[i], operator: 'empty', value: '', group,
+      }
+      : {
+        target: LABEL_COLUMNS[i], operator: 'equals', value: filterValue(row, i), group,
+      }
+  ));
 }
 
 /**
@@ -80,14 +96,18 @@ export function rowFilterState(
 }
 
 /**
- * Whether "filter to this value" can select the row: not a row without a stored value ("… not
- * defined", marked by the API), not a value longer than a filter takes.
+ * Whether "filter to this value" can select the row: not a value longer than a filter takes. A row
+ * without a value ("… not defined") is selected by "is empty" on its empty columns (2026-11-25);
+ * without the API's list of those columns (an older answer) it cannot.
  */
 export function canFilterTo(row: ResultRow): boolean {
-  if (row.fwde_no_value) {
+  const empty = emptyLabels(row);
+  if (row.fwde_no_value && empty.length === 0) {
     return false;
   }
-  const values = rowLabelIndexes(row, LABEL_COLUMNS.length).map((i) => filterValue(row, i));
+  const values = rowLabelIndexes(row, LABEL_COLUMNS.length)
+    .filter((i) => !empty.includes(LABEL_COLUMNS[i]))
+    .map((i) => filterValue(row, i));
   return values.every((value) => value.length <= MAX_FILTER_TEXT);
 }
 

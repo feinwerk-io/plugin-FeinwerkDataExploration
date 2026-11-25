@@ -21,6 +21,7 @@ use Piwik\Widget\WidgetsList;
 use Piwik\Plugins\CoreVisualizations\Visualizations\HtmlTable;
 use Piwik\Plugins\CoreVisualizations\Visualizations\JqplotGraph\Bar;
 use Piwik\Plugins\CoreVisualizations\Visualizations\JqplotGraph\Pie;
+use Piwik\Plugins\FeinwerkDataExploration\Catalog\MetricCatalog;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\ExplorationDefinition;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\KpiCardSettings;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationRules;
@@ -137,9 +138,26 @@ class SavedReport extends Report
         return $this->saved !== null;
     }
 
+    /**
+     * The metrics that add up across rows (aggregation "sum"). Matomo's table relates each metric of getMetrics() to the
+     * report's and the website's total (HtmlTable::setRowPercentagesRecursively): a rate or an average has no such
+     * share, and the website's conversion_rate comes from Goals as a formatted string ("11.85%"), which made the table
+     * fail next to revenue (gallery shots, 2026-11-25). The report metadata lists every metric in the saved order
+     * (configureReportMetadata()), getAllMetrics() too.
+     */
     public function getMetrics()
     {
-        return $this->metricNames;
+        return array_filter(
+            $this->metricNames,
+            static fn (string $id): bool => (MetricCatalog::meta($id)['aggregation'] ?? '') === 'sum',
+            ARRAY_FILTER_USE_KEY
+        );
+    }
+
+    /** Every metric of the saved exploration, in its order (Matomo's charts check their columns against it). */
+    public function getAllMetrics()
+    {
+        return array_keys($this->metricNames);
     }
 
     protected function getMetricsDocumentation()
@@ -177,6 +195,8 @@ class SavedReport extends Report
             return;
         }
         $metadata = $this->buildReportMetadata();
+        // every metric, also rates and averages, which getMetrics() leaves out for the table's shares
+        $metadata['metrics'] = $this->metricNames;
         if ($this->goalMetrics !== []) {
             $metadata['metricsGoal'] = $this->goalMetrics;
         }
@@ -293,6 +313,13 @@ class SavedReport extends Report
         // row evolution and the goals view would ask other periods or Matomo's archives, which an exploration has not
         $view->config->disable_row_evolution = true;
         $view->config->show_goals = false;
+        // a dashboard widget (widget=1) has a header with the name: no second title (Peter, 2026-11-25: the widget did
+        // not look good yet); the report's own menu page keeps its title and Matomo's card, and so does Matomo 6's
+        // Widgetize embed of the container, whose child draws its own header (own_report_header=1, the only place
+        // for the name there)
+        if (Common::getRequestVar('widget', 0, 'int') === 1 && Common::getRequestVar('own_report_header', 0, 'int') !== 1) {
+            $view->config->show_title = false;
+        }
         $view->config->show_table_all_columns = false;
         if ($this->dimension !== null) {
             $view->config->addTranslation('label', $this->dimension->getName());
