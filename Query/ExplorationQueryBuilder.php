@@ -579,6 +579,14 @@ final class ExplorationQueryBuilder
      */
     private static function textFilterSql(string $key, string $operator, string $value, array &$bind): string
     {
+        // "is empty" and "is not empty" (2026-11-25): no value or an empty one; as text, so a DATE or a number key is
+        // never compared with '' (MySQL 8 refuses an invalid DATE literal, a number would read '' as 0)
+        if ($operator === 'empty') {
+            return "((" . $key . ") IS NULL OR CAST((" . $key . ") AS CHAR) = '')";
+        }
+        if ($operator === 'notEmpty') {
+            return "((" . $key . ") IS NOT NULL AND CAST((" . $key . ") AS CHAR) <> '')";
+        }
         if ($operator === 'equals' || $operator === 'notEquals') {
             $bind[] = $value;
             return $operator === 'equals' ? '(' . $key . ') = ?' : '((' . $key . ') IS NULL OR (' . $key . ') <> ?)';
@@ -611,7 +619,8 @@ final class ExplorationQueryBuilder
         $placeholders = implode(', ', array_fill(0, count($values), '?'));
         array_push($bind, ...$values);
 
-        if (!in_array($operator, self::NEGATED_TEXT_OPERATORS, true)) {
+        // notEmpty negates the empty values the resolver returns, and drops a missing value with them
+        if (!in_array($operator, self::NEGATED_TEXT_OPERATORS, true) && $operator !== 'notEmpty') {
             if ($values === []) {
                 return $resolved['includeNull'] ? '((' . $key . ') IS NULL)' : '1 = 0';
             }

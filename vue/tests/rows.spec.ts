@@ -159,10 +159,23 @@ describe('canFilterTo', () => {
     expect(MAX_FILTER_TEXT).toBe(1000);
   });
 
-  it('cannot filter to a row without a stored value ("… not defined")', () => {
+  // UI review 2026-11-25 (F4): "is empty" selects a row without a value ("… not defined")
+  it('filters to a row without a value with "is empty" on its empty columns', () => {
     expect(canFilterTo({ label: 'Firefox', nb_visits: 3 })).toBe(true);
-    // the API sends the marker as JSON true
-    const noValue = { label: 'Referrer name not defined', fwde_no_value: true, nb_visits: 3 };
-    expect(canFilterTo(noValue as unknown as ResultRow)).toBe(false);
+    // the API sends the marker as JSON true and the empty label columns as a list
+    const noValue = {
+      label: 'Unknown', secondary_label: 'Germany', fwde_no_value: true,
+      fwde_empty_labels: ['label'], nb_visits: 3,
+    };
+    expect(canFilterTo(noValue as unknown as ResultRow)).toBe(true);
+    const state = parseState({ fwdeDims: 'browser,country', fwdeMetrics: 'nb_visits' }, CATALOG, LIMITS);
+    expect(filtersForRow(state, noValue as unknown as ResultRow)).toEqual([
+      {
+        target: 'label', operator: 'empty', value: '', group: 0,
+      },
+      {
+        target: 'secondary_label', operator: 'equals', value: 'Germany', group: 0,
+      },
+    ]);
   });
 });

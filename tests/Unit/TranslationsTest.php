@@ -22,9 +22,16 @@ class TranslationsTest extends TestCase
 {
     /**
      * Keys built at run time from these prefixes ('Setting' . ucfirst($name); 'PaidPlugin' . $stem . 'Name|Text' in
-     * Promo/PaidPluginCatalog, whose own test checks every such key in both languages).
+     * Promo/PaidPluginCatalog, whose own test checks every such key in both languages; 'PromoCampaigns' . 'OpenText'
+     * and the other campaigns steps in Promo/PromoLine::campaignsStep(), checked by PromoLineTest).
      */
-    private const DYNAMIC_PREFIXES = ['Setting', 'PaidPlugin'];
+    private const DYNAMIC_PREFIXES = ['Setting', 'PaidPlugin', 'PromoCampaigns'];
+
+    /**
+     * Promotion copy of the Feinwerk kit, taken verbatim (kit PageFilterReport f7a8448, texts approved by Peter on
+     * 2026-11-25: "Texte so übernehmen"), which says "Conversions" where Matomo's German interface says "Konversionen".
+     */
+    private const KIT_COPY = ['PromoCampaignsInstallText', 'PromoCampaignsOpenText'];
 
     private static function keys(string $language): array
     {
@@ -101,6 +108,9 @@ class TranslationsTest extends TestCase
     public function testGermanTextsUseMatomosTerms(): void
     {
         foreach (self::keys('de') as $key => $text) {
+            if (in_array($key, self::KIT_COPY, true)) {
+                continue;
+            }
             // product names keep their spelling (the tip line names "Feinwerk Conversions API")
             $text = str_replace('Conversions API', '', $text);
             foreach (['/\bConversions?\b/u', '/\bEvents?\b/u', '/Event-/u', '/Seitenaufruf/u'] as $word) {

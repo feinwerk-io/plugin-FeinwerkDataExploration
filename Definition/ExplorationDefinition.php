@@ -47,7 +47,13 @@ final class ExplorationDefinition
     public const MAX_PATTERN = 200;
     public const TEXT_OPERATORS = [
         'contains', 'equals', 'notContains', 'notEquals', 'startsWith', 'endsWith', 'notStartsWith', 'notEndsWith', 'matches',
+        'empty', 'notEmpty',
     ];
+    /**
+     * Conditions without a value (Peter, 2026-11-25): empty is what the table shows as "... not defined" or "Unknown",
+     * a missing or empty value and, for a coded dimension, a code with the same label.
+     */
+    public const VALUELESS_OPERATORS = ['empty', 'notEmpty'];
     public const NUMBER_OPERATORS = ['gt', 'gte', 'lt', 'lte'];
 
     /**
@@ -237,6 +243,10 @@ final class ExplorationDefinition
         $operator = is_array($filter) ? ($filter['operator'] ?? null) : null;
         $value = is_array($filter) ? ($filter['value'] ?? null) : null;
 
+        if (in_array($operator, self::VALUELESS_OPERATORS, true) && in_array($target, $labelTargets, true)) {
+            // a value sent with them is ignored
+            return ['target' => $target, 'operator' => $operator, 'value' => '', 'group' => $group];
+        }
         if (in_array($operator, self::TEXT_OPERATORS, true) && in_array($target, $labelTargets, true) && is_string($value)) {
             $value = trim($value);
             if ($operator === 'matches' && $value !== '' && (mb_strlen($value) > self::MAX_PATTERN || !self::isPattern($value))) {

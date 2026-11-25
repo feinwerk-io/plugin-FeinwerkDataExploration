@@ -307,6 +307,19 @@ class PromoLineTest extends TestCase
         }
     }
 
+    /** Only the connector message has a short link for narrow lines (Peter, 2026-11-25: "Kurzer Linktext"). */
+    public function test_the_connector_message_has_a_short_link(): void
+    {
+        $translate = static function (string $key): string {
+            return '[' . $key . ']';
+        };
+        $connector = PromoLine::variables('connector', 'de', $translate, 'line', false, ['superUser' => true, 'marketplace' => true]);
+        self::assertSame('[FeinwerkDataExploration_PromoConnectorLinkShort]', $connector['linkShort']);
+        foreach (['campaigns', 'hosting', 'capi', 'sentinel'] as $id) {
+            self::assertSame('', PromoLine::variables($id, 'de', $translate)['linkShort'], $id);
+        }
+    }
+
     public function test_variables_of_the_templates(): void
     {
         $translate = static function (string $key): string {
@@ -318,6 +331,7 @@ class PromoLineTest extends TestCase
             'title' => '[FeinwerkDataExploration_PromoCampaignsTitle]',
             'text' => '[FeinwerkDataExploration_PromoCampaignsText]',
             'link' => '[FeinwerkDataExploration_PromoCampaignsLink]',
+            'linkShort' => '',
             'url' => PromoLine::url('campaigns', 'en'),
             'external' => true,
             'note' => '',
@@ -360,7 +374,17 @@ class PromoLineTest extends TestCase
             $keys[] = $message['title'];
             $keys[] = $message['text'];
             $keys[] = $message['link'];
+            if (isset($message['linkShort'])) {
+                $keys[] = $message['linkShort'];
+            }
         }
+        // the campaigns steps build their keys at run time (tests/Unit/TranslationsTest.php leaves that prefix to us)
+        foreach ([['open', 'index.php?a=1', ''], ['install', '', 'index.php?b=1'], ['install', '', '']] as [$stage, $open, $install]) {
+            $step = PromoLine::campaignsStep(['stage' => $stage, 'openUrl' => $open, 'installUrl' => $install], 'en');
+            array_push($keys, $step['title'], $step['text'], $step['link']);
+        }
+        self::assertContains('FeinwerkDataExploration_PromoConnectorLinkShort', $keys);
+        self::assertContains('FeinwerkDataExploration_PromoCampaignsOpenText', $keys);
         foreach (['en', 'de'] as $language) {
             $texts = json_decode((string) file_get_contents(__DIR__ . '/../../../lang/' . $language . '.json'), true);
             foreach ($keys as $key) {
@@ -384,6 +408,79 @@ class PromoLineTest extends TestCase
             self::assertFalse(PromoLine::marketplaceUsableBy([$switch => false] + $all), $switch);
         }
     }
+
+    /**
+     * Peter's decision 8 of 2026-11-23 (Campaign Manager): the campaigns tip in three steps. Active: its overview, none
+     * once connected; installed but switched off: none; not installed: install once listed, else today's tip. Demo
+     * always shows a step.
+     */
+    public function test_the_campaigns_step_for_each_state(): void
+    {
+        $stage = [PromoLine::class, 'campaignsStage'];
+        // installed, active, connected, listed
+        self::assertSame(PromoLine::CAMPAIGNS_PLATFORM, $stage(false, false, false, false));
+        self::assertSame(PromoLine::CAMPAIGNS_INSTALL, $stage(false, false, false, true));
+        self::assertSame(PromoLine::CAMPAIGNS_OPEN, $stage(true, true, false, false));
+        self::assertSame(PromoLine::CAMPAIGNS_OPEN, $stage(true, true, false, true));
+        self::assertSame(PromoLine::CAMPAIGNS_NONE, $stage(true, true, true, true));
+        self::assertSame(PromoLine::CAMPAIGNS_NONE, $stage(true, false, false, true), 'switched off by the admin');
+        self::assertSame(PromoLine::CAMPAIGNS_OPEN, $stage(true, true, true, true, true), 'demo: connected still shows');
+        self::assertSame(PromoLine::CAMPAIGNS_PLATFORM, $stage(true, false, false, true, true), 'demo: switched off');
+        self::assertTrue(PromoLine::CAMPAIGN_MANAGER_LISTED, 'listed in the store since 2026-11-25: the install step is on');
+    }
+
+    /** Texts and links of each step: the overview in the same tab; install through the connector or the store page. */
+    public function test_the_campaigns_step_texts_and_links(): void
+    {
+        $key = 'FeinwerkDataExploration_PromoCampaigns';
+        $open = PromoLine::campaignsStep(['stage' => 'open', 'openUrl' => 'index.php?module=CoreHome&x=1', 'installUrl' => ''], 'de');
+        self::assertSame([$key . 'OpenTitle', $key . 'OpenText', $key . 'OpenLink', 'index.php?module=CoreHome&x=1', false],
+            array_values($open));
+        $connector = PromoLine::campaignsStep(['stage' => 'install', 'openUrl' => '', 'installUrl' => 'index.php?module=FeinwerkMarketplaceConnector&action=index&fwmc_open=FeinwerkCampaignManager'], 'en');
+        self::assertSame([$key . 'Title', $key . 'InstallText', $key . 'InstallLink', false],
+            [$connector['title'], $connector['text'], $connector['link'], $connector['external']]);
+        $store = PromoLine::campaignsStep(['stage' => 'install', 'openUrl' => '', 'installUrl' => ''], 'de');
+        self::assertSame([$key . 'StoreLink', true], [$store['link'], $store['external']]);
+        self::assertSame('https://plugins.feinwerk.io/de/plugins/FeinwerkCampaignManager?mtm_campaign=plugin-promo'
+            . '&mtm_source=FeinwerkDataExploration&mtm_content=campaigns', $store['url']);
+        self::assertStringStartsWith('https://plugins.feinwerk.io/en/plugins/', PromoLine::campaignsStep(['stage' => 'install', 'openUrl' => '', 'installUrl' => ''], 'fr')['url']);
+        self::assertNull(PromoLine::campaignsStep(['stage' => 'platform', 'openUrl' => '', 'installUrl' => ''], 'de'), 'today\'s tip');
+        self::assertNull(PromoLine::campaignsStep(['stage' => 'open', 'openUrl' => '', 'installUrl' => ''], 'de'), 'no overview, no step');
+
+        $translate = static function (string $key): string {
+            return $key;
+        };
+        $platform = PromoLine::variables('campaigns', 'de', $translate);
+        self::assertSame([$key . 'Link', true], [$platform['link'], $platform['external']], 'without a step: today\'s tip');
+        $line = PromoLine::variables('campaigns', 'de', $translate, 'campaigns', false, null, ['stage' => 'open', 'openUrl' => 'index.php?a=1', 'installUrl' => '']);
+        self::assertSame([$key . 'OpenLink', 'index.php?a=1', false, 'campaigns'], [$line['link'], $line['url'], $line['external'], $line['placement']]);
+    }
+
+    /** The tip line follows the step: none leaves campaigns out on every day, open leads to the overview. */
+    public function test_the_line_follows_the_campaigns_step(): void
+    {
+        $nothing = static function (): bool {
+            return false;
+        };
+        $translate = static function (string $key): string {
+            return $key;
+        };
+        $env = ['ecommerce' => false, 'demo' => false, 'wordpress' => false, 'superUser' => false, 'marketplace' => false];
+        $seen = static function (array $campaigns) use ($env, $nothing, $translate): array {
+            $lines = [];
+            for ($day = 0; $day < 24; $day++) {
+                $line = PromoLine::lineFor(['day' => $day, 'campaigns' => $campaigns] + $env, $nothing, $translate, 'de');
+                $lines[$line['id']] = $line;
+            }
+
+            return $lines;
+        };
+        self::assertArrayNotHasKey('campaigns', $seen(['stage' => 'none', 'openUrl' => '', 'installUrl' => '']));
+        $open = $seen(['stage' => 'open', 'openUrl' => 'index.php?module=CoreHome', 'installUrl' => '']);
+        self::assertSame(['index.php?module=CoreHome', false], [$open['campaigns']['url'], $open['campaigns']['external']]);
+        $old = $seen(['stage' => 'platform', 'openUrl' => '', 'installUrl' => '']);
+        self::assertStringStartsWith('https://campaigns.feinwerk.io/de/matomo?', $old['campaigns']['url']);
+    }
 }
 
 /** A connector release with the UI setting switched off. */
@@ -398,4 +495,5 @@ class PromotionsOff
 /** A connector release before the UI setting. */
 class PromotionsWithoutSwitch
 {
+
 }

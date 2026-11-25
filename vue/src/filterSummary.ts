@@ -18,6 +18,8 @@ export const OPERATOR_KEYS: Record<string, string> = {
   notStartsWith: 'FeinwerkDataExploration_OperatorNotStartsWith',
   notEndsWith: 'FeinwerkDataExploration_OperatorNotEndsWith',
   matches: 'FeinwerkDataExploration_OperatorMatches',
+  empty: 'FeinwerkDataExploration_OperatorEmpty',
+  notEmpty: 'FeinwerkDataExploration_OperatorNotEmpty',
   gt: 'FeinwerkDataExploration_OperatorGt',
   gte: 'FeinwerkDataExploration_OperatorGte',
   lt: 'FeinwerkDataExploration_OperatorLt',
@@ -64,6 +66,9 @@ export function filterSummary(
   );
   return state.filters.map((filter) => {
     const condition = translate(OPERATOR_KEYS[filter.operator] || filter.operator);
+    if (filter.operator === 'empty' || filter.operator === 'notEmpty') {
+      return `${labels[filter.target] || filter.target} ${condition}`;
+    }
     const isMetric = state.metrics.includes(filter.target);
     let value = isMetric ? String(filter.value) : `"${filter.value}"`;
     if (isRate(filter.target)) {

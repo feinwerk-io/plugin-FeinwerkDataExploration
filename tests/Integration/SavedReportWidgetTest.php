@@ -65,6 +65,8 @@ class SavedReportWidgetTest extends IntegrationTestCase
         $this->assertCount(2, $widgets);
         $this->assertSame(['getSavedReport', 'reportFooter'], [$widgets[0]->getAction(), $widgets[1]->getAction()]);
         $this->assertSame($shared, $widgets[1]->getParameters()['idSaved']);
+        // no fixed showtitle: the title is decided per request (testTitleOnTheMenuPageNotInADashboard)
+        $this->assertArrayNotHasKey('showtitle', $widgets[0]->getParameters());
         // not in the menu: a widget under Explorations without a page of its own
         $this->assertSame(['FeinwerkDataExploration_Explorations', null],
             [$this->container('anna', $private)->getCategoryId(), $this->container('anna', $private)->getSubcategoryId() ?: null]);
@@ -82,6 +84,8 @@ class SavedReportWidgetTest extends IntegrationTestCase
         $this->assertStringContainsString('vue-entry="FeinwerkDataExploration.SavedReportFooter"', $html);
         $this->assertStringContainsString('fwdeSaved=' . $shared, html_entity_decode($html));
         $this->assertStringContainsString('subcategory=FeinwerkDataExploration_FreeFormTable', html_entity_decode($html));
+        // the support link: the page hides it in a dashboard widget only (house rule; release review 2026-11-25)
+        $this->assertStringContainsString('"supportUrl":"https:', html_entity_decode($html));
 
         // another user's private exploration: nothing
         $_GET['idSaved'] = $private;
@@ -163,6 +167,31 @@ class SavedReportWidgetTest extends IntegrationTestCase
             $views[] = $this->container('anna', (int) substr($id, strlen('fwdeSavedContainer')))->getWidgetConfigs()[0]->getViewDataTable();
         }
         $this->assertSame(['graphVerticalBar', 'graphVerticalBar', 'graphPie', 'table', 'table'], $views);
+    }
+
+    /**
+     * UI review 2026-11-25 (F1): the report's own menu page shows its title and Matomo's card; a dashboard widget or an
+     * embed (widget=1), whose header names it, shows no second title.
+     */
+    public function testTitleOnTheMenuPageNotInADashboard(): void
+    {
+        $id = $this->save('anna', 'Team view', 1);
+        FakeAccess::$superUser = true;
+        $_GET += ['period' => 'day', 'date' => '2026-03-27', 'idSaved' => $id, 'showtitle' => 1];
+        try {
+            $menuPage = \Piwik\ViewDataTable\Factory::build('table', 'FeinwerkDataExploration.getSavedReport', 'FeinwerkDataExploration.getSavedReport', true);
+            $_GET['widget'] = 1;
+            $dashboard = \Piwik\ViewDataTable\Factory::build('table', 'FeinwerkDataExploration.getSavedReport', 'FeinwerkDataExploration.getSavedReport', true);
+            // Matomo 6's Widgetize embed of a container: the child draws its own header, the only place for the name
+            // (release review 2026-11-25)
+            $_GET['own_report_header'] = 1;
+            $embed = \Piwik\ViewDataTable\Factory::build('table', 'FeinwerkDataExploration.getSavedReport', 'FeinwerkDataExploration.getSavedReport', true);
+        } finally {
+            unset($_GET['showtitle'], $_GET['widget'], $_GET['own_report_header']);
+        }
+        $this->assertTrue($menuPage->config->show_title);
+        $this->assertFalse($dashboard->config->show_title);
+        $this->assertTrue($embed->config->show_title);
     }
 
     private function save(string $login, string $name, int $shared, string $menu = ''): int

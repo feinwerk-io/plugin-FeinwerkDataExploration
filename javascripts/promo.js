@@ -18,11 +18,14 @@
  * Version 5 (2026-11-24, Conversions API's UI review): a compact line shows its sentence only when it fits whole, else
  * none (a phone at 390 px showed "UTM-Builder und Nam..."); lines an older copy measured first are measured again
  * (data-fwpromo-fit holds the version); after an x with nothing after it the focus goes to the control before it.
+ * Version 6 (2026-11-25, Campaign Manager's UI review; Peter: "Kurzer Linktext"): a link with a short form
+ * (.fwpromo-line__link-short) shows it where the full link does not fit even without the sentence
+ * (fwpromo-line--short); a phone at 390 px was made wider than the screen by the connector's long link.
  */
 (function () {
     'use strict';
 
-    var VERSION = 5;
+    var VERSION = 6;
     if ((window.fwpromoKit || 0) >= VERSION) {
         return;
     }
@@ -106,7 +109,7 @@
         if (!logo || !text) {
             return;
         }
-        line.classList.remove('fwpromo-line--compact', 'fwpromo-line--bare');
+        line.classList.remove('fwpromo-line--compact', 'fwpromo-line--bare', 'fwpromo-line--short');
         if (text.clientWidth < 160 || logo.scrollWidth > logo.clientWidth + 1) {
             line.classList.add('fwpromo-line--compact');
         }
@@ -115,6 +118,12 @@
             || (line.classList.contains('fwpromo-line--compact') && text.scrollWidth > text.clientWidth + 1)
         ) {
             line.classList.add('fwpromo-line--bare');
+        }
+        // version 6: still wider than its place without the sentence: the link's short form, the full one in its title
+        if (line.classList.contains('fwpromo-line--bare') && line.querySelector('.fwpromo-line__link-short')
+            && line.scrollWidth > line.clientWidth + 1
+        ) {
+            line.classList.add('fwpromo-line--short');
         }
     }
 

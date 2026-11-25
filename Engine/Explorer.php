@@ -543,8 +543,10 @@ final class Explorer
                     $tableRow->setMetadata('segment', $segment);
                 }
                 if (self::hasNoValue($row, count($dimensions))) {
-                    // "… not defined": a row filter cannot select it, the page disables "filter to this value"
+                    // "… not defined": "filter to this value" selects it with "is empty" on the empty columns
+                    // (fwde_empty_labels, 2026-11-25), "is" on the others
                     $tableRow->setMetadata('fwde_no_value', true);
+                    $tableRow->setMetadata('fwde_empty_labels', self::emptyLabels($row, count($dimensions)));
                 }
                 // "filter to this value" matches the stored value; the label Matomo shows is URL- and HTML-decoded
                 foreach ($dimensions as $i => $dimension) {
@@ -564,8 +566,23 @@ final class Explorer
     }
 
     /**
-     * The visits behind a row: the segments of its dimensions joined by AND, or null when one of them has none.
+     * The label columns of a row whose dimension has no value.
+     *
+     * @return list<string>
      */
+    private static function emptyLabels(array $row, int $dimensionCount): array
+    {
+        $labels = [];
+        for ($i = 1; $i <= $dimensionCount; $i++) {
+            $raw = self::raw($row['fwde_k' . $i]);
+            if ($raw === null || $raw === '') {
+                $labels[] = ExplorationDefinition::LABEL_COLUMNS[$i - 1];
+            }
+        }
+        return $labels;
+    }
+
+    /** Whether one of the row's dimensions has no value ("... not defined"). */
     private static function hasNoValue(array $row, int $dimensionCount): bool
     {
         for ($i = 1; $i <= $dimensionCount; $i++) {
@@ -577,6 +594,9 @@ final class Explorer
         return false;
     }
 
+    /**
+     * The visits behind a row: the segments of its dimensions joined by AND, or null when one of them has none.
+     */
     private static function rowSegment(array $row, array $dimensions): ?string
     {
         $parts = [];

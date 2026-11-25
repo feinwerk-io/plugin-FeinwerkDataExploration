@@ -51,11 +51,12 @@ Feinwerk Data Exploration answers them directly from the raw data of your websit
   Behaviour, Acquisition, Ecommerce, Goals or Explorations. Reports are calculated from the raw data when they are
   shown, nothing is archived.
 - **Filters:** every Matomo segment, plus row filters: a dimension contains, does not contain, is, is not, starts
-  with, does not start with, ends with or does not end with a text, or matches a regular expression; a metric is
-  greater than, at least, less than or at most a number. Conditions combine in groups, each group meeting all or any of
-  its conditions and the rows all or any of the groups, for example (A and B) or C: up to 10 conditions in up to 5
-  groups. The filters are edited in a panel at the side and run once with "Apply"; the left column lists the applied
-  ones.
+  with, does not start with, ends with or does not end with a text, matches a regular expression, is empty or is not
+  empty (empty is what the table shows as "not defined" or "Unknown"); a metric is greater than, at least, less than
+  or at most a number. Conditions combine in groups, each group meeting all or any of its conditions and the rows all
+  or any of the groups, for example (A and B) or C: up to 10 conditions in up to 5 groups. The filters are edited in
+  a panel at the side and run once with "Apply"; the left column lists the applied ones. While you type a value, the
+  panel suggests values from Matomo's reports of the period, the most visited first.
 - **Open from your reports:** "Open in exploration" under the standard reports (channels, referrers, keywords,
   continents, countries, devices, browsers and their versions, page URLs, events, campaigns and more) opens the exploration with that report's dimension, period and segment, and "Explore
   this row" on a report row opens it on that row's visits, ready to break them down by another dimension.
@@ -162,14 +163,17 @@ feedback = 0
 With `enable_internet_features = 0` in Matomo's `[General]` section nothing is sent either, and the question is not
 shown. "Support" opens the Feinwerk contact form in a new tab.
 
-**Tips from Feinwerk:** below the result, users with admin access to at least one website and super users see one
-short line with a tip on another Feinwerk offer, for example Feinwerk Campaigns or Matomo hosting. It appears only in
+**Tips from Feinwerk:** below the result, users with admin access to at least one website and super users see one short
+line with a tip on another Feinwerk offer, for example Feinwerk Campaign Manager or Matomo hosting. It appears only in
 Matomo's interface, never in exports, API results, email reports or embedded widgets, and never for a Feinwerk plugin
-you already have installed. "×" hides a tip for 30 days in your browser. The tips are part of the plugin: nothing is
-loaded from outside and nothing is sent. Links to feinwerk.io open in a new tab and carry only the campaign
-parameters `mtm_campaign`, `mtm_source` and `mtm_content`; the tip on the Feinwerk Marketplace Connector opens its
-installer under Administration (super users; with `connector_installer = 0` their Matomo Marketplace) or
-plugins.matomo.org (other administrators); where Matomo's Marketplace is switched off, super users get no tip on it.
+you already have installed. Without Feinwerk Campaign Manager, the campaigns tip offers this free plugin (for super
+users in the Feinwerk Connector's window inside Matomo where the connector offers one, otherwise on its store page);
+with it installed, the tip opens its campaign overview; once it is connected, or switched off, that tip no longer shows.
+"×" hides a tip for 30 days in your browser. The tips are part of the plugin: nothing is loaded from outside and nothing
+is sent. Links to feinwerk.io open in a new tab and carry only the campaign parameters `mtm_campaign`, `mtm_source` and
+`mtm_content`; the tip on the Feinwerk Marketplace Connector opens its installer under Administration (super users; with
+`connector_installer = 0` their Matomo Marketplace) or plugins.matomo.org (other administrators); where Matomo's
+Marketplace is switched off, super users get no tip on it.
 
 The same users also see a recommendation for a paid Feinwerk plugin this Matomo does not have yet, below the result of
 **Explorations → Free-form table**: one plugin at a time and a different one first each day; while it shows, the tip

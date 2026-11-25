@@ -3,7 +3,7 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 import {
-  filterGroupsDefinition, filterParam, groupsOf, matchParam, parseFilterParam,
+  filterGroupsDefinition, filterParam, groupsOf, isValidFilter, matchParam, parseFilterParam,
 } from '../src/filterGroups';
 import { parseState } from '../src/state';
 import { CATALOG, LIMITS } from './fixtures';
@@ -79,6 +79,18 @@ describe('filter groups in the link (2026-11-23)', () => {
     );
     expect(parsed.filters.map((f) => f.operator)).toEqual(['notStartsWith', 'notEndsWith', 'matches', 'gte', 'lte']);
     expect(parsed.filters[2].value).toBe('^x(y|z)');
+  });
+
+  // Peter, 2026-11-25: "Es muss auch eine Bedingung 'nicht leer' geben" (2A)
+  it('reads and writes "is empty" and "is not empty" without a value', () => {
+    const parsed = parseFilterParam('label~notEmpty~;label~empty~x;nb_visits~notEmpty~', '', 1, METRICS);
+    expect(parsed.filters.map((f) => [f.target, f.operator, f.value])).toEqual([
+      ['label', 'notEmpty', ''],
+      ['label', 'empty', ''],
+    ]);
+    expect(filterParam(parsed.filters, parsed.groupMatch)).toBe('label~notEmpty~;label~empty~');
+    expect(isValidFilter({ target: 'label', operator: 'notEmpty', value: '' }, 1, METRICS)).toBe(true);
+    expect(isValidFilter({ target: 'nb_visits', operator: 'notEmpty', value: '' }, 1, METRICS)).toBe(false);
   });
 
   it('builds the API\'s filterGroups, rates as fractions', () => {

@@ -3,6 +3,7 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 import { mount } from '@vue/test-utils';
+import { nextTick } from 'vue';
 import KpiCardView from '../src/KpiCardView.vue';
 import { KpiCardData } from '../src/kpi';
 
@@ -77,7 +78,7 @@ describe('KPI card (2026-11-24)', () => {
     const wrapper = view();
     const d = wrapper.find('path.fwde-kpi__line').attributes('d') || '';
     expect((d.match(/M/g) || []).length).toBe(2);
-    expect(wrapper.findAll('.fwde-kpi__mark')).toHaveLength(3);
+    expect(wrapper.findAll('.fwde-kpi__dot--day')).toHaveLength(3);
     expect(d).not.toContain('NaN');
   });
 
@@ -117,5 +118,51 @@ describe('KPI card (2026-11-24)', () => {
     expect(view().find('.fwde-kpi__metric').text()).toBe('Visits');
     expect(view({ title: 'visits' }).find('.fwde-kpi__metric').exists()).toBe(false);
     expect(view({ title: ' Visits ' }).find('.fwde-kpi__metric').exists()).toBe(false);
+  });
+
+  // Peter, 2026-11-25: "Auch das Dashboard Widget sieht noch nicht so gut aus": the dashboard's widget
+  // header names the card, so the card names its metric only (UI review D1)
+  it('on a dashboard shows the metric under the widget header, not the name again', async () => {
+    const widget = document.createElement('div');
+    widget.className = 'widget';
+    widget.innerHTML = '<div class="widgetTop">Newsletter visits</div><div class="widgetContent"></div>';
+    document.body.appendChild(widget);
+    const props = {
+      idSite: 1, exploreUrl: 'index.php?x', feedback: { enabled: false, supportUrl: '', version: '' },
+    };
+    const dashboard = mount(KpiCardView, {
+      props: { ...props, card },
+      attachTo: widget.querySelector('.widgetContent') as HTMLElement,
+    });
+    await nextTick();
+    expect(dashboard.find('.fwde-kpi__title').exists()).toBe(false);
+    expect(dashboard.find('.fwde-kpi__metric').text()).toBe('Visits');
+    dashboard.unmount();
+    // a card named like its metric needs no line above its number
+    const named = mount(KpiCardView, {
+      props: { ...props, card: { ...card, title: 'Visits' } },
+      attachTo: widget.querySelector('.widgetContent') as HTMLElement,
+    });
+    await nextTick();
+    expect(named.find('.fwde-kpi__title').exists()).toBe(false);
+    expect(named.find('.fwde-kpi__metric').exists()).toBe(false);
+    named.unmount();
+    document.body.removeChild(widget);
+  });
+
+  it('marks the last value and the compared days on the line, with dates in words', () => {
+    const wrapper = view();
+    const end = wrapper.findAll('.fwde-kpi__dot--end');
+    expect(end).toHaveLength(1);
+    expect(end[0].attributes('style')).toContain('left: 99%');
+    const days = wrapper.findAll('.fwde-kpi__dot--day');
+    // the fourth day (value 3) at its place on the line, its date in words, never as 2026-11-04
+    expect(days[0].attributes('style')).toMatch(/left: 11\.1\d*%/);
+    expect(days[0].attributes('title')).toMatch(/Nov.*4.*: 3$/);
+    expect(days[0].attributes('title')).not.toContain('2026-11-04');
+    expect(wrapper.find('.fwde-kpi__baseline').attributes('title')).not.toMatch(/2026-/);
+    // also the line's label for screen readers (UI review 2026-11-25, W4)
+    expect(wrapper.find('.fwde-kpi__spark svg').attributes('aria-label')).toMatch(/^Visits: .*Nov.*1.*Nov.*30/);
+    expect(wrapper.find('.fwde-kpi__spark svg').attributes('aria-label')).not.toMatch(/2026-/);
   });
 });

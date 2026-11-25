@@ -3,6 +3,7 @@
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
 import { mount } from '@vue/test-utils';
+import { nextTick } from 'vue';
 import SavedReportFooter from '../src/SavedReportFooter.vue';
 import KpiCardView from '../src/KpiCardView.vue';
 import { embeddedPage } from '../src/embed';
@@ -67,6 +68,26 @@ describe('footers in an embed', () => {
   it('shows the footers on Matomo\'s own pages', () => {
     at('?module=CoreHome&action=index&idSite=1');
     expect(mount(SavedReportFooter, { props }).find('a.fwde-saved-footer__open').exists()).toBe(true);
+  });
+
+  // release review 2026-11-25: the support link goes in a dashboard widget only (house rule), the
+  // report's own menu page keeps it
+  it('has the support link on the menu page, not in a dashboard widget', async () => {
+    at('?module=CoreHome&action=index&idSite=1');
+    const page = mount(SavedReportFooter, { props });
+    expect(page.find('.fwde-feedback__support').exists()).toBe(true);
+    const widget = document.createElement('div');
+    widget.className = 'widget';
+    widget.innerHTML = '<div class="widgetTop">Team view</div><div class="widgetContent"></div>';
+    document.body.appendChild(widget);
+    const dashboard = mount(SavedReportFooter, {
+      props, attachTo: widget.querySelector('.widgetContent') as HTMLElement,
+    });
+    await nextTick();
+    expect(dashboard.find('.fwde-feedback__support').exists()).toBe(false);
+    expect(dashboard.find('a.fwde-saved-footer__open').exists()).toBe(true);
+    dashboard.unmount();
+    document.body.removeChild(widget);
   });
 
   it('shows no card footer in an embedded dashboard', () => {

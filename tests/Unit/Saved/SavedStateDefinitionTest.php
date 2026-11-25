@@ -102,6 +102,17 @@ class SavedStateDefinitionTest extends TestCase
         $this->assertNotFalse(json_encode($definition));
     }
 
+    /** "is empty" and "is not empty" (2026-11-25) have no value; one sent with them is ignored */
+    public function testValuelessConditions(): void
+    {
+        $definition = $this->definition(['fwdeDims' => 'campaignName', 'fwdeMetrics' => 'nb_visits',
+            'fwdeFilters' => 'label~notEmpty~;label~empty~x;nb_visits~notEmpty~']);
+        $this->assertSame([
+            ['target' => 'label', 'operator' => 'notEmpty', 'value' => ''],
+            ['target' => 'label', 'operator' => 'empty', 'value' => ''],
+        ], $definition['filterGroups']['groups'][0]['filters']);
+    }
+
     public function testAChosenGoalBecomesTheGoalsOwnMetrics(): void
     {
         $definition = $this->definition(['fwdeDims' => 'browser', 'fwdeMetrics' => 'nb_visits,nb_conversions,conversion_rate',

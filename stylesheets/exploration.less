@@ -1712,8 +1712,10 @@
   font-weight: 600;
 }
 
+// the filters use the side panel's whole width (Peter, 2026-11-25: "filter im flyout auf die ganze breite
+// verbreitern")
 .fwde-filterpanel__form {
-  max-width: 720px;
+  max-width: none;
 }
 
 // Period and segment of the result next to its title (UI item 5): quiet chips, none while comparing
@@ -1770,12 +1772,16 @@
 
 // the footer under a saved exploration's report, on its menu page and in its dashboard widget (saved reports, 2026-11-24)
 .fwde-saved-footer {
-  margin: 8px 0 4px;
-
-  .fwde-saved-footer__open {
-    display: inline-block;
-    margin-bottom: 4px;
-  }
+  // under the report's table, at the inset of its footer icons (Peter, 2026-11-25)
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 8px 17px 10px;
+  border-top: 1px solid @theme-color-border;
+  font-size: 13px;
 }
 
 // rows and pivot (2026-11-24): the pivot picker under the dimensions and the pivot's column groups
@@ -1813,8 +1819,9 @@
 
 // KPI card (2026-11-24): a number checked daily on the dashboard; works down to a 280 px wide column
 .fwde-kpi {
-  --fwde-good: #2e7d32;
-  --fwde-bad: #c62828;
+  // dark enough for 4.5:1 on their own tint (UI review 2026-11-25, F3)
+  --fwde-good: #1b5e20;
+  --fwde-bad: #b71c1c;
   --fwde-spark: #4a90d9;
   --fwde-spark-mark: #7a8794;
 
@@ -1825,7 +1832,21 @@
     --fwde-spark-mark: #9aa8b4;
   });
 
-  padding: 4px 2px 0;
+  // the inset of Matomo's widget header, so the card lines up with its name (Peter, 2026-11-25)
+  padding: 12px 16px 14px;
+}
+
+// under Matomo's widget header, whose own spacing is enough above the number
+.fwde-kpi--in-widget {
+  padding-top: 0;
+}
+
+// a footer that draws its own line: the feedback row sits next to the link, without a line of its own
+.fwde-kpi__footer .fwde-feedback,
+.fwde-saved-footer .fwde-feedback {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
 }
 
 .fwde-kpi__title {
@@ -1880,6 +1901,10 @@
 }
 
 .fwde-kpi__change {
+  // a tinted label (UI review D1): the change reads at a glance, also in a narrow column
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: ~"color-mix(in srgb, currentColor 12%, transparent)";
   font-weight: bold;
   white-space: nowrap;
 }
@@ -1897,10 +1922,16 @@
 }
 
 .fwde-kpi__spark {
-  display: block;
-  width: 100%;
+  position: relative;
   height: 44px;
-  margin-top: 8px;
+  margin-top: 12px;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
 }
 
 .fwde-kpi__line {
@@ -1910,10 +1941,26 @@
   vector-effect: non-scaling-stroke;
 }
 
-.fwde-kpi__mark {
-  stroke: var(--fwde-spark-mark);
-  stroke-width: 3;
-  vector-effect: non-scaling-stroke;
+// round dots over the stretched line (the SVG is stretched to the card's width, a circle in it would not be round)
+.fwde-kpi__dot {
+  position: absolute;
+  box-sizing: border-box;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.fwde-kpi__dot--day {
+  border: 2px solid var(--fwde-spark-mark);
+  // the card's surface, so the dot reads hollow (UI review 2026-11-25, W3)
+  background: @theme-color-background-contrast;
+}
+
+.fwde-kpi__dot--end {
+  width: 9px;
+  height: 9px;
+  background: var(--fwde-spark);
 }
 
 .fwde-kpi__footer {
@@ -1922,7 +1969,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 4px 12px;
-  margin-top: 8px;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid @theme-color-border;
   font-size: 12px;
 }
 

@@ -30,6 +30,16 @@ describe('filter summary in the left column (UI item 4)', () => {
     ]);
   });
 
+  it('"is empty" and "is not empty" read without a value (2026-11-25)', () => {
+    const state = parseState({
+      fwdeDims: 'browser', fwdeMetrics: 'nb_visits', fwdeFilters: 'label~notEmpty~;label~empty~',
+    }, CATALOG, LIMITS);
+    expect(filterSummary(state, CATALOG, false, translate)).toEqual([
+      'Browser FeinwerkDataExploration_OperatorNotEmpty',
+      'Browser FeinwerkDataExploration_OperatorEmpty',
+    ]);
+  });
+
   it('a number filter with its unit, by the metric name the table shows', () => {
     const state = parseState({
       fwdeDims: 'browser', fwdeMetrics: 'nb_visits,bounce_rate,avg_time_on_site',

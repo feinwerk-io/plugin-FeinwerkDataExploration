@@ -200,6 +200,10 @@ final class SavedStateDefinition
             return null;
         }
         [$target, $operator, $encoded] = $parts;
+        if (in_array($operator, ExplorationDefinition::VALUELESS_OPERATORS, true)) {
+            // "is empty" and "is not empty" (2026-11-25): no value, one given is ignored
+            return in_array($target, $labels, true) ? ['target' => $target, 'operator' => $operator, 'value' => ''] : null;
+        }
         $value = trim(rawurldecode($encoded));
         if (in_array($operator, self::TEXT_OPERATORS, true)) {
             $max = $operator === 'matches' ? self::MAX_PATTERN : self::MAX_FILTER_TEXT;

@@ -71,7 +71,10 @@
             >{{ translate(OPERATOR_KEYS[operator]) }}</option>
           </select>
         </label>
-        <label class="fwde-filters__field fwde-filters__field--value">
+        <label
+          v-if="!VALUELESS_OPERATORS.includes(row.operator)"
+          class="fwde-filters__field fwde-filters__field--value"
+        >
           <span class="fwde-field__label">
             {{ translate('FeinwerkDataExploration_FilterValue') }}{{ unitSuffix(row.target) }}
           </span>
@@ -83,14 +86,32 @@
             :value="row.value"
             :aria-invalid="row.problem ? 'true' : undefined"
             :aria-describedby="describedBy(row)"
+            :list="listId(row)"
+            autocomplete="off"
             @input="setValue(index, $event)"
+            @focus="suggest(row)"
           />
+          <!-- Matomo's values of the dimension for the typed text (2026-11-25) -->
+          <datalist
+            v-if="listId(row)"
+            :id="listId(row)"
+          >
+            <option
+              v-for="suggestion in suggestions[row.id]"
+              :key="suggestion"
+              :value="suggestion"
+            />
+          </datalist>
         </label>
         <p
           v-if="row.operator === 'matches'"
           :id="`fwde-filter-help-${row.id}`"
           class="fwde-filters__help"
         >{{ translate('FeinwerkDataExploration_FilterPatternHelp') }}</p>
+        <p
+          v-if="VALUELESS_OPERATORS.includes(row.operator)"
+          class="fwde-filters__help"
+        >{{ translate('FeinwerkDataExploration_FilterEmptyHelp') }}</p>
         <p
           v-if="row.problem"
           :id="`fwde-filter-error-${row.id}`"
@@ -167,17 +188,19 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
+import { defineComponent, markRaw, PropType } from 'vue';
 import { translate } from 'CoreHome';
 import { isRate, isSeconds } from './metricMeta';
 import SegmentedSwitch from './SegmentedSwitch.vue';
 import { filterTargets, OPERATOR_KEYS } from './filterSummary';
+import { SuggestionSource, suggestsFor } from './suggestions';
+import { labelColumns } from './labels';
 import {
   Catalog, ExplorationState, FilterMatch, FilterOperator, RowFilter,
 } from './types';
 import {
   isValidFilter, MAX_FILTERS, MAX_FILTER_TEXT, MAX_GROUPS, MAX_PATTERN, NUMBER_OPERATORS,
-  TEXT_OPERATORS,
+  TEXT_OPERATORS, VALUELESS_OPERATORS,
 } from './filterGroups';
 
 export interface Row extends RowFilter {
@@ -215,12 +238,17 @@ export default defineComponent({
       outer: 'all' as FilterMatch,
       timer: 0 as number,
       OPERATOR_KEYS,
+      VALUELESS_OPERATORS,
+      /** suggestions for each row's value, by row id (2026-11-25) */
+      suggestions: {} as Record<number, string[]>,
+      source: null as SuggestionSource|null,
       MAX_FILTERS,
       MAX_FILTER_TEXT,
       MAX_PATTERN,
     };
   },
   created() {
+    this.source = markRaw(new SuggestionSource());
     this.rows = this.state.filters.map((f) => ({
       ...f, id: nextRowId(), touched: true, problem: '',
     }));
@@ -389,17 +417,49 @@ export default defineComponent({
         [row.operator] = this.operatorsFor(row.target);
         row.value = '';
       }
+      if (this.source) {
+        this.source.cancel();
+      }
+      this.suggestions[row.id] = [];
       this.emitNow();
     },
     setOperator(index: number, event: Event) {
       this.rows[index].operator = (event.target as HTMLSelectElement).value as FilterOperator;
+      if (VALUELESS_OPERATORS.includes(this.rows[index].operator)) {
+        // "is empty" and "is not empty" have no value field (2026-11-25)
+        this.rows[index].value = '';
+      }
+      this.suggest(this.rows[index]);
       this.rows[index].touched = true;
       this.rows[index].problem = '';
       this.emitNow();
     },
+    /**
+     * the datalist of a row whose condition compares a text on a dimension: one id from the start,
+     * so the browser opens the list as soon as its options arrive (UI review 2026-11-25, W1)
+     */
+    listId(row: Row): string|undefined {
+      const onDimension = labelColumns(this.state.dimensions.length).includes(row.target);
+      return onDimension && suggestsFor(row.operator) ? `fwde-suggest-${row.id}` : undefined;
+    },
+    /** asks for suggestions for a row's value: a text condition on a dimension only */
+    suggest(row: Row) {
+      const index = labelColumns(this.state.dimensions.length).indexOf(row.target);
+      if (index < 0 || !suggestsFor(row.operator) || !this.source) {
+        if (this.source) {
+          this.source.cancel();
+        }
+        this.suggestions[row.id] = [];
+        return;
+      }
+      this.source.ask(this.state.dimensions[index], row.value, (values) => {
+        this.suggestions[row.id] = values;
+      });
+    },
     setValue(index: number, event: Event) {
       const row = this.rows[index];
       row.value = (event.target as HTMLInputElement).value;
+      this.suggest(row);
       row.touched = true;
       row.problem = '';
       window.clearTimeout(this.timer);

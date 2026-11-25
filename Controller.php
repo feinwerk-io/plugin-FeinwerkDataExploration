@@ -60,6 +60,8 @@ class Controller extends \Piwik\Plugin\Controller
         $view->idSite = $idSite;
         $view->exploreUrl = 'index.php?' . Url::getQueryStringFromParameters(['module' => 'CoreHome', 'action' => 'index'] + $params)
             . '#?' . Url::getQueryStringFromParameters($hash);
+        // the page drops the support link in a dashboard widget only (house rule "Feedback under every report"), the
+        // report's menu page keeps it (SavedReportFooter.vue)
         $view->feedback = PluginFeedback::clientProps(
             StaticContainer::get(PluginFeedback::class)->isEnabled(),
             (string) StaticContainer::get(Translator::class)->getCurrentLanguage(),
