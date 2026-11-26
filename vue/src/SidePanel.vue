@@ -69,7 +69,7 @@
  * @link    https://matomo.org
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
-import { defineComponent } from 'vue';
+import { defineComponent, PropType } from 'vue';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), '
   + 'select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -87,6 +87,11 @@ export default defineComponent({
     closeLabel: { type: String, required: true },
     /** classes for the panel and the backdrop, e.g. the page's scope for its own styles */
     scopeClass: { type: String, default: '' },
+    /**
+     * where the focus goes when it opens: its first control ("first"), or the dialog itself
+     * ("panel") when that control acts on change (UI review 2026-11-26 F5)
+     */
+    initialFocus: { type: String as PropType<'first'|'panel'>, default: 'first' },
   },
   emits: ['update:open'],
   data() {
@@ -127,7 +132,7 @@ export default defineComponent({
       document.addEventListener('keydown', this.onDocumentKeydown, true);
       this.$nextTick(() => {
         const panel = this.$refs.panel as HTMLElement | undefined;
-        const first = this.focusables(true)[0];
+        const first = this.initialFocus === 'panel' ? undefined : this.focusables(true)[0];
         if (first) {
           first.focus();
         } else if (panel) {

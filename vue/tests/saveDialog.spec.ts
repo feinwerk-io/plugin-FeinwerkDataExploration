@@ -130,3 +130,56 @@ describe('saving in the side panel (UI item 2)', () => {
     expect(panel()).toBeNull();
   });
 });
+
+// archived saved explorations (design 2026-11-25): a change that starts the history again says so before saving
+describe('the save panel and an archived history', () => {
+  it('warns when a change cannot keep the history, only when changing a saved one', async () => {
+    const current = {
+      id: 4, name: 'Pages', shared: true, owner: 'anna', canEdit: true, canDelete: true, kind: 'table' as const,
+      updated: '2026-11-19 08:30:00', state: {}, segment: '', archived: true,
+    };
+    const changing = mount(SaveDialog, {
+      props: { current, suggestedName: 'Pages', historyLostFrom: '2026-05-01' },
+      attachTo: document.body,
+    });
+    await changing.find('.fwde-savedialog__toggle').trigger('click');
+    await changing.vm.$nextTick();
+    const warning = document.querySelector('.fwde-savedialog__history');
+    expect(warning?.textContent).toContain('FeinwerkDataExploration_ArchiveHistoryLost');
+    changing.unmount();
+
+    const quiet = mount(SaveDialog, { props: { current, suggestedName: 'Pages', historyLostFrom: '' }, attachTo: document.body });
+    await quiet.find('.fwde-savedialog__toggle').trigger('click');
+    await quiet.vm.$nextTick();
+    expect(document.querySelector('.fwde-savedialog__history')).toBeNull();
+    quiet.unmount();
+  });
+
+  // UI review 2026-11-26 F1: the note is a warning above the buttons, and Enter keeps the history
+  it('keeps the history by default while the note shows', async () => {
+    const current = {
+      id: 4, name: 'Pages', shared: true, owner: 'anna', canEdit: true, canDelete: true, kind: 'table' as const,
+      updated: '2026-11-19 08:30:00', state: {}, segment: '', archived: true,
+    };
+    const wrapper = mount(SaveDialog, {
+      props: { current, suggestedName: 'Pages', historyLostFrom: 'May 26, 2026' },
+      attachTo: document.body,
+    });
+    await wrapper.find('.fwde-savedialog__toggle').trigger('click');
+    await wrapper.vm.$nextTick();
+    await wrapper.vm.$nextTick();
+    const form = document.querySelector('#fwde-savedialog-form') as HTMLFormElement;
+    const note = document.querySelector('.fwde-savedialog__history') as HTMLElement;
+    expect(note.classList.contains('alert')).toBe(true);
+    expect(note.classList.contains('alert-warning')).toBe(true);
+    expect(form.lastElementChild).toBe(note);
+    const asNew = document.querySelector('.fwde-savedialog__asnew') as HTMLButtonElement;
+    const changes = document.querySelector('.fwde-savedialog__changes') as HTMLButtonElement;
+    expect([asNew.type, asNew.classList.contains('btn')]).toEqual(['submit', true]);
+    expect([changes.type, changes.classList.contains('btn')]).toEqual(['button', false]);
+    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    changes.click();
+    expect((wrapper.emitted('save') || []).map((args) => (args[0] as { asNew: boolean }).asNew)).toEqual([true, false]);
+    wrapper.unmount();
+  });
+});

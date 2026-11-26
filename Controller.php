@@ -11,6 +11,11 @@ namespace Piwik\Plugins\FeinwerkDataExploration;
 
 use Piwik\Site;
 use Piwik\Common;
+use Piwik\Date;
+use Piwik\Period;
+use Piwik\Period\Factory as PeriodFactory;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\LimitsProvider;
+use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedReportTable;
 use Piwik\Container\StaticContainer;
 use Piwik\Nonce;
 use Piwik\Piwik;
@@ -51,8 +56,8 @@ class Controller extends \Piwik\Plugin\Controller
             // the website's own viewers see an embed: no feedback line, no link into Matomo (UI review 2026-11-24)
             return '';
         }
-        $period = Common::getRequestVar('period', 'day', 'string');
-        $date = Common::getRequestVar('date', 'yesterday', 'string');
+        [$period, $date] = self::explorablePeriod($idSite, Common::getRequestVar('period', 'day', 'string'),
+            Common::getRequestVar('date', 'yesterday', 'string'));
         $params = ['idSite' => $idSite, 'period' => $period, 'date' => $date];
         $hash = $params + ['category' => 'FeinwerkDataExploration_Explorations', 'subcategory' => 'FeinwerkDataExploration_FreeFormTable',
             'fwdeSaved' => $idSaved];
@@ -86,8 +91,8 @@ class Controller extends \Piwik\Plugin\Controller
         if (!in_array($idSaved, $visible, true)) {
             return '';
         }
-        $period = Common::getRequestVar('period', 'day', 'string');
-        $date = Common::getRequestVar('date', 'yesterday', 'string');
+        [$period, $date] = self::explorablePeriod($idSite, Common::getRequestVar('period', 'day', 'string'),
+            Common::getRequestVar('date', 'yesterday', 'string'));
         $params = ['idSite' => $idSite, 'period' => $period, 'date' => $date];
         $hash = $params + ['category' => 'FeinwerkDataExploration_Explorations', 'subcategory' => 'FeinwerkDataExploration_FreeFormTable',
             'fwdeSaved' => $idSaved];
@@ -106,6 +111,40 @@ class Controller extends \Piwik\Plugin\Controller
         $view->currencySymbol = Site::getCurrencySymbolFor($idSite);
         $view->feedback = ['supportUrl' => ''] + ($embedded ? ['enabled' => false] : []) + $feedback;
         return $view->render();
+    }
+
+    /**
+     * The period "Open in exploration" opens (UI review 2026-11-26 F2): a report's period, or for one longer than an
+     * exploration covers (archived reports answer any period) its last days as a range, ending with the period or today;
+     * several periods (a KPI card's line) and anything Matomo cannot read stay as they are.
+     *
+     * @return array{0: string, 1: string} period and date
+     */
+    private static function explorablePeriod(int $idSite, string $period, string $date): array
+    {
+        try {
+            if (Period::isMultiplePeriod($date, $period)) {
+                return [$period, $date];
+            }
+            $maxDays = (new LimitsProvider())->get()->maxDays;
+            if (SavedReportTable::periodDays($idSite, $period, $date) <= $maxDays) {
+                return [$period, $date];
+            }
+            $timezone = Site::getTimezoneFor($idSite);
+            $built = PeriodFactory::makePeriodFromQueryParams($timezone, $period, $date);
+            $end = $built->getDateEnd();
+            $today = Date::factory('today', $timezone);
+            if ($end->isLater($today)) {
+                $end = $today;
+            }
+            $start = $end->subDay($maxDays - 1);
+            if ($built->getDateStart()->isLater($start)) {
+                $start = $built->getDateStart();
+            }
+            return ['range', $start->toString() . ',' . $end->toString()];
+        } catch (\Throwable $e) {
+            return [$period, $date];
+        }
     }
 
     /**

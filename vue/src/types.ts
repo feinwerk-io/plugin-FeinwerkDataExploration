@@ -10,6 +10,8 @@ export interface PageConfig {
   defaultRows: number;
   maxDays: number;
   rawDataFrom: string|null;
+  /** the first day a changed archived exploration's history reaches again, null: nothing lost */
+  archiveHistoryFrom: string|null;
   currencySymbol: string;
   /** the 24 hour labels as the API writes them */
   hourLabels: string[];

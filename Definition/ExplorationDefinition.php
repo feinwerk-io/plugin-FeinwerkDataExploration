@@ -307,6 +307,30 @@ final class ExplorationDefinition
     }
 
     /**
+     * The same exploration as an archive's day query asks it (archived reports, 2026-11-25): every combination up to
+     * $limit, largest $sortColumn first (a stored column of Archive/StoredMetrics.php); the saved sort and row limit are
+     * applied when reading.
+     */
+    public function forArchive(int $limit, string $sortColumn): self
+    {
+        return new self($this->dimensionIds, $this->metricIds, $this->idGoal, $sortColumn, 'desc', $limit,
+            $this->filters, $this->match, $this->groupMatches, $this->pivot);
+    }
+
+    /**
+     * The same exploration with other conditions (archived reports, 2026-11-25: the archive applies only some of them).
+     * The conditions keep their shape; their `group` indexes $groupMatches.
+     *
+     * @param list<array{target: string, operator: string, value: string|float, group: int}> $filters
+     * @param list<string> $groupMatches
+     */
+    public function withFilters(array $filters, string $match, array $groupMatches): self
+    {
+        return new self($this->dimensionIds, $this->metricIds, $this->idGoal, $this->sortColumn, $this->sortOrder, $this->limit,
+            $filters, $match, $groupMatches, $this->pivot);
+    }
+
+    /**
      * The definition with a fixed key order, e.g. for cache keys and URLs.
      */
     public function normalized(): array

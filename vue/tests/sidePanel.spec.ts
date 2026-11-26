@@ -76,6 +76,16 @@ describe('side panel (UI item 2, self-contained)', () => {
     expect(document.activeElement).toBe(save);
   });
 
+  // UI review 2026-11-26 F5: a panel whose first control acts on change (the manage panel's menu
+  // select) opens with the focus on the dialog itself; Tab then reaches the controls
+  it('can open with the focus on the dialog instead of its first control', async () => {
+    const wrapper = mountPanel(false, { initialFocus: 'panel' });
+    await wrapper.setProps({ open: true });
+    await nextTick();
+    const section = panel() as HTMLElement;
+    expect(document.activeElement).toBe(section);
+  });
+
   it('Escape and Tab still work when the focused control is gone (removed from the page)', async () => {
     const wrapper = mountPanel(true);
     await nextTick();

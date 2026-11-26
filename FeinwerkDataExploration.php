@@ -36,6 +36,8 @@ class FeinwerkDataExploration extends \Piwik\Plugin
             'ScheduledReports.processReports' => 'filterSavedReports',
             // KPI cards (2026-11-24): no graph over runs of weeks or months, which a card does not answer
             'API.getReportMetadata.end' => ['function' => 'graphsOnlyForDays', 'after' => true],
+            // archived saved explorations (2026-11-25): one record builder per exploration of the archived website
+            'Archiver.addRecordBuilders' => 'addRecordBuilders',
         ];
     }
 
@@ -79,6 +81,7 @@ class FeinwerkDataExploration extends \Piwik\Plugin
     {
         (new SavedExplorationStore())->uninstall();
         Option::deleteLike(PluginFeedback::THROTTLE_OPTION_PREFIX . '%');
+        Archive\HistoryQueue::deleteOptions();
     }
 
     public function getTablesInstalled(&$allTablesInstalled)
@@ -147,6 +150,36 @@ class FeinwerkDataExploration extends \Piwik\Plugin
     public function graphsOnlyForDays(&$reports, $info): void
     {
         SavedReport::graphsOnlyForDays($reports, is_array($info) ? $info : []);
+    }
+
+    /**
+     * One record builder per archived saved exploration of the website being archived (design 2026-11-25). Matomo names
+     * the website in the request, as for its own plugins (CustomDimensions does the same). A failure here archives none
+     * of them but never stops Matomo's archiving.
+     *
+     * @param \Piwik\ArchiveProcessor\RecordBuilder[] $recordBuilders
+     */
+    public function addRecordBuilders(&$recordBuilders): void
+    {
+        $idSite = Common::getRequestVar('idSite', 0, 'int');
+        if ($idSite <= 0) {
+            $idSites = trim(Common::getRequestVar('idSites', '', 'string'));
+            $idSite = ctype_digit($idSites) ? (int) $idSites : 0;
+        }
+        if ($idSite <= 0) {
+            return;
+        }
+        try {
+            $settings = Archive\ArchiveSettings::fromConfig();
+            foreach ((new Archive\ArchivedExplorations($settings))->forSite($idSite) as $exploration) {
+                $recordBuilders[] = new Archive\ExplorationRecordBuilder($exploration, $settings);
+            }
+        } catch (\Throwable $e) {
+            \Piwik\Container\StaticContainer::get(\Psr\Log\LoggerInterface::class)->warning(
+                'Feinwerk Data Exploration: no saved explorations archived for website {idSite}: {message}',
+                ['idSite' => $idSite, 'message' => $e->getMessage()]
+            );
+        }
     }
 
     public function getClientSideTranslationKeys(&$translationKeys)

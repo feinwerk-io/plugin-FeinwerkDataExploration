@@ -64,11 +64,25 @@ final class ExplorationQueryBuilder
     private $prefixTable;
     private MetricCatalog $metrics;
 
+    /** archive mode (design 2026-11-25): rates and averages selected as their numerator and denominator */
+    private bool $archiveColumns = false;
+
     public function __construct(callable $segmentedSelect, callable $prefixTable, ?MetricCatalog $metrics = null)
     {
         $this->segmentedSelect = $segmentedSelect;
         $this->prefixTable = $prefixTable;
         $this->metrics = $metrics ?? new MetricCatalog();
+    }
+
+    /**
+     * The same builder in archive mode: each rate or average is selected as `<id>__n` and `<id>__d` (componentSql), so
+     * Matomo can add up days into any period (Archive/StoredMetrics.php).
+     */
+    public function withArchiveColumns(): self
+    {
+        $copy = clone $this;
+        $copy->archiveColumns = true;
+        return $copy;
     }
 
     /**
@@ -211,6 +225,26 @@ final class ExplorationQueryBuilder
      * @param list<list<?string>> $prefixKeys the raw keys of the prefixes, all of one length (1 to the dimensions - 1)
      * @return array{sql: string, bind: array} result columns fwde_row (the index into $prefixKeys) and the metric ids
      */
+    /**
+     * One level of an archived day (archived reports, 2026-11-25): grouped by the first $level keys while every
+     * dimension's conditions still apply (as the saved reports' upper levels), the definition's sort and limit
+     * (ExplorationDefinition::forArchive). The archive's definition holds no number condition (Archive/FilterSplit.php).
+     *
+     * @param DimensionDefinition[] $dimensions the definition's dimensions, in order
+     */
+    public function buildArchiveLevel(ExplorationDefinition $definition, array $dimensions, int $idSite, QueryContext $context, array $resolvedFilters, int $level, bool $sortOutsideGrouping): array
+    {
+        $keys = $this->keys($dimensions, $context);
+        $aliases = array_slice(array_keys($keys), 0, max(1, min($level, count($keys))));
+        $stageA = $this->stageA($definition, $dimensions, $keys, $idSite, $context, $resolvedFilters, false, null, $aliases);
+        [$sql, $bind] = $this->stageB($definition, $aliases, $stageA, $idSite, $context);
+        $sql .= ' GROUP BY ' . implode(', ', array_map(static fn (string $alias): string => 'fwde_a.' . $alias, $aliases));
+        $orderBy = ' ORDER BY ' . $this->orderBy($definition, $aliases) . ' LIMIT ' . $definition->limit;
+        // see GroupingQuirk: the outer query sorts the grouped rows only
+        $sql = $sortOutsideGrouping ? 'SELECT * FROM (' . $sql . ') AS fwde_g' . $orderBy : $sql . $orderBy;
+        return ['sql' => $sql, 'bind' => $bind];
+    }
+
     public function buildLevel(ExplorationDefinition $definition, array $dimensions, int $idSite, QueryContext $context, array $resolvedFilters, array $prefixKeys): array
     {
         $keys = $this->keys($dimensions, $context);
@@ -228,13 +262,14 @@ final class ExplorationQueryBuilder
      *
      * @return array{sql: string, bind: array} result columns fwde_k{n+1} and the metric ids
      */
-    public function buildPivotValues(ExplorationDefinition $definition, array $dimensions, DimensionDefinition $pivot, int $idSite, QueryContext $context, array $resolvedFilters, ?int $limit, bool $sortOutsideGrouping = false): array
+    public function buildPivotValues(ExplorationDefinition $definition, array $dimensions, DimensionDefinition $pivot, int $idSite, QueryContext $context, array $resolvedFilters, ?int $limit, bool $sortOutsideGrouping = false, ?string $orderColumn = null): array
     {
         [$all, $keys, $alias] = $this->withPivot($dimensions, $pivot, $context);
         $stageA = $this->stageA($definition, $all, $keys, $idSite, $context, $resolvedFilters, false, null, [$alias]);
         [$sql, $bind] = $this->stageB($definition, [$alias], $stageA, $idSite, $context);
         $sql .= ' GROUP BY fwde_a.' . $alias;
-        $orderBy = ' ORDER BY ' . ($limit === null ? $alias . ' ASC' : $definition->metricIds[0] . ' DESC, ' . $alias . ' ASC LIMIT ' . $limit);
+        // $orderColumn: the archive's stored column (archive mode selects a rate's pair, not the rate)
+        $orderBy = ' ORDER BY ' . ($limit === null ? $alias . ' ASC' : ($orderColumn ?? $definition->metricIds[0]) . ' DESC, ' . $alias . ' ASC LIMIT ' . $limit);
         // see GroupingQuirk: the outer query sorts the grouped values only
         $sql = $sortOutsideGrouping ? 'SELECT * FROM (' . $sql . ') AS fwde_g' . $orderBy : $sql . $orderBy;
         return ['sql' => $sql, 'bind' => $bind];
@@ -338,6 +373,12 @@ final class ExplorationQueryBuilder
             $select[] = 'fwde_a.' . $alias . ' AS ' . $alias;
         }
         foreach ($definition->metricIds as $metricId) {
+            $pair = $this->archiveColumns ? $this->componentSql($metricId, $isAction) : null;
+            if ($pair !== null) {
+                $select[] = $pair[0] . ' AS ' . $metricId . '__n';
+                $select[] = $pair[1] . ' AS ' . $metricId . '__d';
+                continue;
+            }
             $select[] = $this->metricSql($metricId, $isAction) . ' AS ' . $metricId;
         }
 
@@ -669,6 +710,40 @@ final class ExplorationQueryBuilder
             }
         }
         return $measures;
+    }
+
+    /**
+     * The numerator and denominator of a rate or average (design 2026-11-25), the same parts as its live expression in
+     * metricSql() without the division and rounding; null for every other metric.
+     *
+     * @return array{0: string, 1: string}|null
+     */
+    public function componentSql(string $metricId, bool $isAction): ?array
+    {
+        $actions = $isAction ? 'fwde_v.visit_total_actions' : 'fwde_a.fwde_actions';
+        $time = $isAction ? 'fwde_v.visit_total_time' : 'fwde_a.fwde_time';
+        switch ($metricId) {
+            case 'bounce_rate':
+                return ['SUM(CASE WHEN ' . $actions . ' <= 1 THEN 1 ELSE 0 END)', 'COUNT(*)'];
+            case 'avg_time_on_site':
+                return ['SUM(' . $time . ')', 'COUNT(*)'];
+            case 'nb_actions_per_visit':
+                return ['SUM(' . $actions . ')', 'COUNT(*)'];
+            case 'conversion_rate':
+                return ['SUM(CASE WHEN fwde_c.fwde_conversions > 0 THEN 1 ELSE 0 END)', 'COUNT(*)'];
+            case 'revenue_per_visit':
+                return ['COALESCE(SUM(fwde_c.fwde_rev_any), 0)', 'COUNT(*)'];
+            case 'avg_event_value':
+                return ['COALESCE(SUM(fwde_a.fwde_event_value), 0)', 'COALESCE(SUM(fwde_a.fwde_events_with_value), 0)'];
+        }
+        if (preg_match('/^goal_(\d+|ecommerceOrder|ecommerceAbandonedCart)_(conversion_rate|avg_order_revenue)$/', $metricId, $m) === 1) {
+            if ($m[2] === 'avg_order_revenue') {
+                return ['COALESCE(SUM(fwde_c.fwde_order_rev), 0)', 'COALESCE(SUM(fwde_c.fwde_orders), 0)'];
+            }
+            $count = ['ecommerceOrder' => 'fwde_orders', 'ecommerceAbandonedCart' => 'fwde_carts'][$m[1]] ?? 'fwde_conv_g' . $m[1];
+            return ['SUM(CASE WHEN fwde_c.' . $count . ' > 0 THEN 1 ELSE 0 END)', 'COUNT(*)'];
+        }
+        return null;
     }
 
     private function metricSql(string $metricId, bool $isAction): string

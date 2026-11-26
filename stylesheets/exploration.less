@@ -403,6 +403,17 @@
   font-size: 12px;
 }
 
+.fwde-manage__group + .fwde-manage__group {
+  margin-top: 16px;
+}
+
+.fwde-manage__heading {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .fwde-manage__table {
   width: 100%;
   border-collapse: collapse;
@@ -434,6 +445,45 @@
   .fwde-manage__confirm {
     display: block;
     margin-bottom: 4px;
+    white-space: normal;
+  }
+}
+
+// phones: one block per exploration, the menu place at full width (UI review 2026-11-26 F4)
+@media (max-width: 600px) {
+  .fwde-manage__table {
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+
+    tbody,
+    tr,
+    td {
+      display: block;
+      width: 100%;
+    }
+
+    tr {
+      padding: 6px 0;
+      border-bottom: 1px solid @theme-color-border;
+    }
+
+    td {
+      padding: 2px 0;
+      border-bottom: 0;
+    }
+  }
+
+  .fwde-manage__menu {
+    width: 100%;
+  }
+
+  .fwde-manage__actions {
+    text-align: left;
     white-space: normal;
   }
 }
@@ -1278,6 +1328,15 @@
 
   &:focus-visible {
     outline: 2px solid @theme-color-focus-ring;
+  }
+}
+
+// the archived report's hint on its own line under the period link (UI review 2026-11-26 F3)
+.fwde-archived-hint {
+  margin-top: 6px;
+
+  .fwde-alert-link {
+    margin-left: 0;
   }
 }
 

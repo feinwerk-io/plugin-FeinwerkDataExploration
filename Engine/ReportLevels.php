@@ -171,8 +171,11 @@ final class ReportLevels
         return $children;
     }
 
-    /** A key without case and accents (only to choose among spellings the database already put together). */
-    private static function fold(?string $key): ?string
+    /**
+     * A key without case and accents, as the database's collation compares it: to choose among spellings the database
+     * already put together, and the archive's labels (Archive/DayTree.php).
+     */
+    public static function fold(?string $key): ?string
     {
         if ($key === null) {
             return null;

@@ -11,6 +11,7 @@ namespace Piwik\Plugins\FeinwerkDataExploration\SavedReport;
 
 use Piwik\Columns\Dimension;
 use Piwik\Common;
+use Piwik\Period;
 use Piwik\Piwik;
 use Piwik\Plugin\Report;
 use Piwik\Plugin\ViewDataTable;
@@ -21,10 +22,17 @@ use Piwik\Widget\WidgetsList;
 use Piwik\Plugins\CoreVisualizations\Visualizations\HtmlTable;
 use Piwik\Plugins\CoreVisualizations\Visualizations\JqplotGraph\Bar;
 use Piwik\Plugins\CoreVisualizations\Visualizations\JqplotGraph\Pie;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\ArchivedExploration;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\ArchivedExplorations;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\ArchivedReportReader;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\ArchiveSettings;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\HistoryQueue;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\MetricCatalog;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\ExplorationDefinition;
+use Piwik\Plugins\FeinwerkDataExploration\Engine\LimitsProvider;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\KpiCardSettings;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationRules;
+use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedReportTable;
 
 /**
  * One saved exploration as a Matomo report (saved reports, 2026-11-24), never auto-loaded (it lives outside Reports/).
@@ -182,6 +190,67 @@ class SavedReport extends Report
         return $level >= 1 ? ($this->levels[$level - 1] ?? null) : null;
     }
 
+    /** the archived exploration of this report for the request's website, null when it is not archived */
+    private function archived(): ?ArchivedExploration
+    {
+        $idSite = Common::getRequestVar('idSite', 0, 'int');
+        if ($this->saved === null || $idSite <= 0) {
+            return null;
+        }
+        try {
+            return ArchivedExplorations::cachedFind($idSite, (int) $this->saved['idsaved'], ArchiveSettings::fromConfig());
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /** whether the request asks a period longer than an exploration covers (answered from the archive only) */
+    private function isLong(ArchivedExploration $archived): bool
+    {
+        $period = Common::getRequestVar('period', '', 'string');
+        $date = Common::getRequestVar('date', '', 'string');
+        if ($period === '' || $date === '' || Period::isMultiplePeriod($date, $period)) {
+            return false;
+        }
+        try {
+            return SavedReportTable::periodDays($archived->idSite, $period, $date) > (new LimitsProvider())->get()->maxDays;
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /** while the exploration's history is queued (design 2026-11-25) */
+    private function pendingNote(ArchivedExploration $archived): string
+    {
+        try {
+            return (new HistoryQueue())->isPending($archived->idSaved) ? Piwik::translate('FeinwerkDataExploration_ArchiveHistoryPending') : '';
+        } catch (\Throwable $e) {
+            return '';
+        }
+    }
+
+    /**
+     * Under a long period the archive answers alone; when it does not hold every day with visits yet the report says how
+     * many (design 2026-11-25). Empty otherwise.
+     */
+    private function coverageNote(ArchivedExploration $archived): string
+    {
+        $period = Common::getRequestVar('period', '', 'string');
+        $date = Common::getRequestVar('date', '', 'string');
+        if ($period === '' || $date === '' || Period::isMultiplePeriod($date, $period)) {
+            return '';
+        }
+        try {
+            if (SavedReportTable::periodDays($archived->idSite, $period, $date) <= (new LimitsProvider())->get()->maxDays) {
+                return '';
+            }
+            [, , $covered, $needed] = (new ArchivedReportReader())->source($archived, $period, $date, Common::getRequestVar('segment', '', 'string'));
+            return $covered < $needed ? Piwik::translate('FeinwerkDataExploration_ArchiveCoverage', [$covered, $needed]) : '';
+        } catch (\Throwable $e) {
+            return '';
+        }
+    }
+
     public function configureReportMetadata(&$availableReports, $infos)
     {
         if ($this->saved === null) {
@@ -310,9 +379,15 @@ class SavedReport extends Report
         $idSaved = (int) $this->saved['idsaved'];
         $view->requestConfig->request_parameters_to_modify['idSaved'] = $idSaved;
         $view->requestConfig->request_parameters_to_modify['reportUniqueId'] = 'FeinwerkDataExploration_getSavedReport_idSaved--' . $idSaved;
-        // row evolution and the goals view would ask other periods or Matomo's archives, which an exploration has not
+        // row evolution asks several periods at once, which a saved report does not answer (archived or not; final
+        // review 2026-11-26); the goals view would ask Matomo's goal archives, which an exploration has not
+        $archived = $this->archived();
         $view->config->disable_row_evolution = true;
         $view->config->show_goals = false;
+        $note = $archived !== null ? trim($this->pendingNote($archived) . ' ' . $this->coverageNote($archived)) : '';
+        if ($note !== '') {
+            $view->config->show_footer_message = $note;
+        }
         // a dashboard widget (widget=1) has a header with the name: no second title (Peter, 2026-11-25: the widget did
         // not look good yet); the report's own menu page keeps its title and Matomo's card, and so does Matomo 6's
         // Widgetize embed of the container, whose child draws its own header (own_report_header=1, the only place
@@ -324,10 +399,20 @@ class SavedReport extends Report
         if ($this->dimension !== null) {
             $view->config->addTranslation('label', $this->dimension->getName());
         }
+        // Matomo's flat view puts each level in a column named by its dimension (FeinwerkDataExploration_<id>) and titles
+        // only Matomo's own registered dimensions; without these, the levels' titles stayed empty or alike (Peter,
+        // 2026-11-25: "dimension1 und dimension2 namen sind immer noch gleich")
+        foreach (array_filter(array_merge([$this->dimension], $this->levels)) as $dimension) {
+            $view->config->addTranslation(str_replace('.', '_', $dimension->getId()), $dimension->getName());
+        }
         foreach ($this->metricNames as $id => $name) {
             $view->config->addTranslation($id, $name);
         }
         $view->config->columns_to_display = array_merge(['label'], array_keys($this->metricNames));
+        // a long period from the archive has no distinct metrics (unique visitors): no empty column for them
+        if ($archived !== null && $archived->distinctMetrics() !== [] && $this->isLong($archived)) {
+            $view->config->columns_to_display = array_values(array_diff($view->config->columns_to_display, $archived->distinctMetrics()));
+        }
         $state = $this->saved['state'];
         $sort = (string) ($state['fwdeSort'] ?? '');
         if ($sort !== '') {

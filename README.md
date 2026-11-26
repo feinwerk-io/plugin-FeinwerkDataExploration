@@ -66,7 +66,7 @@ Feinwerk Data Exploration answers them directly from the raw data of your websit
   of the secondary dimension); the chart shows one of the chosen metrics. In the table, counts and sums carry a bar.
 - **Export and share:** export as CSV or TSV, or copy the link: the exploration is part of the URL.
 - **Safe for your Matomo:** limits per exploration, a size check before every query and your read replica if you
-  have one; details in the FAQ.
+  have one; saved explorations are archived by Matomo in the background; details in the FAQ.
 - **Light and dark mode; English, German, French, Spanish and Italian.**
 
 **Get started:** open *Explorations › Free-form table* in the reporting menu, or click *Open in exploration* under a
@@ -80,10 +80,10 @@ Documentation: [plugins.feinwerk.io](https://plugins.feinwerk.io/en/plugins/Fein
 
 ## How it works
 
-An exploration reads Matomo's raw visit and action data for the chosen period and site; nothing is archived and
-nothing is saved as a report (results are only cached for up to an hour). A saved exploration keeps its settings, never
-its results, in a table of its own. The plugin never changes Matomo core or
-other plugins, so it survives Matomo updates.
+An exploration reads Matomo's raw visit and action data for the chosen period and site (results are cached for up to an
+hour). A saved exploration keeps its settings in a table of its own; as a report, Matomo archives it like its own
+reports, day by day, so its report covers any period. The plugin never changes Matomo core or other plugins, so it
+survives Matomo updates.
 
 When a visit dimension stands next to an action dimension (for example browser next to page URL), visit metrics
 count the visits with that action ("visits with this page"). The column titles say so, because these numbers must
@@ -225,6 +225,10 @@ The same line in the section `[FeinwerkMarketplaceConnector]` hides it for all F
   The tips from Feinwerk are part of the plugin: nothing is loaded from outside and nothing is sent.
 
 ## Known limitations
+
+- Saved reports: a condition on a metric is applied after the archive's rows per day are cut (1,000 on the first level,
+  100 below it), so a row cut on every day cannot come back; a text condition combined with a metric condition under
+  "any" sees only the value of its own level.
 
 - The sum and the average of event values can be too high when a segment combines a goal condition and an action
   condition with OR (for example "converted goal 1 OR event category is Video").

@@ -2,97 +2,109 @@
   Matomo - free/libre analytics platform
   @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
 
-  Managing the website's shared explorations (design 2026-11-20): admins of the website see every
-  shared exploration with its owner, kind and last change and may delete one for everyone after
-  confirming. Private explorations never appear here (the API never lists another user's private
-  ones). The server checks every delete (API::deleteSavedExploration). The delete call comes in as a
-  prop (SavedPicker passes it), so this component imports nothing from api.ts.
+  Managing saved explorations: the user's own ones, private and shared (Peter, 2026-11-25: "Das
+  delete über den save button ist so überhaupt nicht praktisch"), and, for admins of the website,
+  every one shared by others with its owner (design 2026-11-20). Each with its kind, last change,
+  menu place and Delete after confirming ("for everyone" when shared). Others' private explorations
+  never appear here (the API never lists them), nor shared ones the user may not change. The server
+  checks every delete (API::deleteSavedExploration). The delete call comes in as a prop (SavedPicker
+  passes it), so this component imports nothing from api.ts.
 -->
 <template>
   <div class="fwde-manage">
     <p
-      v-if="!shared.length"
+      v-if="!groups.length"
       class="fwde-manage__empty"
-    >{{ translate('FeinwerkDataExploration_ManageSharedEmpty') }}</p>
-    <table
-      v-else
-      class="fwde-manage__table"
+    >{{ translate('FeinwerkDataExploration_ManageEmpty') }}</p>
+    <section
+      v-for="group in groups"
+      :key="group.key"
+      :class="['fwde-manage__group', `fwde-manage__${group.key}`]"
     >
-      <thead>
-        <tr>
-          <th>{{ translate('General_Name') }}</th>
-          <th>{{ translate('FeinwerkDataExploration_ColumnOwner') }}</th>
-          <th>{{ translate('FeinwerkDataExploration_ColumnChanged') }}</th>
-          <th v-if="menuSections.length">{{ translate('FeinwerkDataExploration_ShowInMenu') }}</th>
-          <th>
-            <span class="fwde-visually-hidden">
-              {{ translate('FeinwerkDataExploration_RowActions') }}
-            </span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="item in shared"
-          :key="item.id"
-          :data-id="item.id"
-        >
-          <td>
-            <span class="fwde-manage__name">{{ item.name }}</span>
-            <span class="fwde-manage__kind">{{ translate(kindKey(item)) }}</span>
-          </td>
-          <td>{{ item.owner }}</td>
-          <td>{{ item.updated.slice(0, 10) }}</td>
-          <td v-if="menuSections.length">
-            <select
-              v-if="item.kind === 'table' && item.canPlace && place"
-              class="browser-default fwde-select fwde-manage__menu"
-              :aria-label="translate('FeinwerkDataExploration_ShowInMenu')"
-              :value="item.menu || ''"
-              :disabled="busy"
-              @change="changePlace(item, $event)"
-            >
-              <option value="">{{ translate('FeinwerkDataExploration_MenuNone') }}</option>
-              <option
-                v-for="section in menuSections"
-                :key="section.id"
-                :value="section.id"
-              >{{ section.name }}</option>
-            </select>
-            <span v-else-if="item.kind === 'table'">{{ sectionName(item.menu) }}</span>
-          </td>
-          <td class="fwde-manage__actions">
-            <template v-if="confirming === item.id">
-              <span class="fwde-manage__confirm">
-                {{ translate('FeinwerkDataExploration_ManageSharedConfirm', item.name) }}
-                <span
-                  v-if="item.kind !== 'funnel'"
-                  class="fwde-manage__deletehint"
-                >{{ translate('FeinwerkDataExploration_DeleteAlsoRemoves') }}</span>
+      <h3 class="fwde-manage__heading">{{ translate(group.heading) }}</h3>
+      <table class="fwde-manage__table">
+        <thead>
+          <tr>
+            <th>{{ translate('General_Name') }}</th>
+            <th v-if="group.key === 'others'">
+              {{ translate('FeinwerkDataExploration_ColumnOwner') }}
+            </th>
+            <th>{{ translate('FeinwerkDataExploration_ColumnChanged') }}</th>
+            <th v-if="menuSections.length">
+              {{ translate('FeinwerkDataExploration_ShowInMenu') }}
+            </th>
+            <th>
+              <span class="fwde-visually-hidden">
+                {{ translate('FeinwerkDataExploration_RowActions') }}
               </span>
-              <button
-                type="button"
-                class="fwde-button fwde-manage__confirm-yes"
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="item in group.items"
+            :key="item.id"
+            :data-id="item.id"
+          >
+            <td>
+              <span class="fwde-manage__name">{{ item.name }}</span>
+              <span class="fwde-manage__kind">{{ kindText(item, group.key) }}</span>
+            </td>
+            <td v-if="group.key === 'others'">{{ item.owner }}</td>
+            <td>{{ item.updated.slice(0, 10) }}</td>
+            <td v-if="menuSections.length">
+              <select
+                v-if="item.kind === 'table' && item.canPlace && place"
+                class="browser-default fwde-select fwde-manage__menu"
+                :aria-label="translate('FeinwerkDataExploration_ShowInMenu')"
+                :value="item.menu || ''"
                 :disabled="busy"
-                @click="confirmDelete(item)"
+                @change="changePlace(item, $event)"
+              >
+                <option value="">{{ translate('FeinwerkDataExploration_MenuNone') }}</option>
+                <option
+                  v-for="section in menuSections"
+                  :key="section.id"
+                  :value="section.id"
+                >{{ section.name }}</option>
+              </select>
+              <span v-else-if="item.kind === 'table'">{{ sectionName(item.menu) }}</span>
+            </td>
+            <td class="fwde-manage__actions">
+              <template v-if="confirming === item.id">
+                <span class="fwde-manage__confirm">
+                  {{ translate(item.shared
+                    ? 'FeinwerkDataExploration_ManageSharedConfirm'
+                    : 'FeinwerkDataExploration_SavedDeleteConfirm', item.name) }}
+                  <span
+                    v-if="item.kind !== 'funnel'"
+                    class="fwde-manage__deletehint"
+                  >{{ translate('FeinwerkDataExploration_DeleteAlsoRemoves') }}</span>
+                </span>
+                <button
+                  type="button"
+                  class="fwde-button fwde-manage__confirm-yes"
+                  :disabled="busy"
+                  @click="confirmDelete(item)"
+                >{{ translate('General_Delete') }}</button>
+                <button
+                  type="button"
+                  class="fwde-button fwde-manage__confirm-no"
+                  :disabled="busy"
+                  @click="ask(null, item.id)"
+                >{{ translate('General_Cancel') }}</button>
+              </template>
+              <button
+                v-else-if="item.canDelete"
+                type="button"
+                class="fwde-button fwde-manage__delete"
+                @click="ask(item.id, item.id)"
               >{{ translate('General_Delete') }}</button>
-              <button
-                type="button"
-                class="fwde-button fwde-manage__confirm-no"
-                :disabled="busy"
-                @click="ask(null, item.id)"
-              >{{ translate('General_Cancel') }}</button>
-            </template>
-            <button
-              v-else-if="item.canDelete"
-              type="button"
-              class="fwde-button fwde-manage__delete"
-              @click="ask(item.id, item.id)"
-            >{{ translate('General_Delete') }}</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
     <p
       v-if="error"
       class="fwde-manage__error"
@@ -106,6 +118,12 @@ import { defineComponent, PropType } from 'vue';
 import { translate } from 'CoreHome';
 import { MenuSection, SavedExploration } from './api';
 
+interface ManageGroup {
+  key: 'mine'|'others';
+  heading: string;
+  items: SavedExploration[];
+}
+
 export default defineComponent({
   props: {
     saved: { type: Array as PropType<SavedExploration[]>, required: true },
@@ -117,6 +135,8 @@ export default defineComponent({
       default: null,
     },
     menuSections: { type: Array as PropType<MenuSection[]>, default: () => [] },
+    /** the user's login: their own explorations come first, under "My explorations" */
+    login: { type: String, default: '' },
   },
   emits: ['deleted', 'placed'],
   data() {
@@ -127,12 +147,27 @@ export default defineComponent({
     };
   },
   computed: {
-    shared(): SavedExploration[] {
-      return this.saved.filter((item) => item.shared);
+    /** the sections with something in them: mine, then the shared ones of others I may change */
+    groups(): ManageGroup[] {
+      const mine = this.saved.filter((item) => item.owner === this.login);
+      const others = this.saved.filter((item) => item.owner !== this.login && item.shared
+        && (item.canDelete || item.canPlace));
+      const groups: ManageGroup[] = [
+        { key: 'mine', heading: 'FeinwerkDataExploration_MyExplorations', items: mine },
+        { key: 'others', heading: 'FeinwerkDataExploration_SharedByOthers', items: others },
+      ];
+      return groups.filter((group) => group.items.length > 0);
     },
   },
   methods: {
     translate,
+    /** the kind; among my own ones also whether it is shared (all of the others' ones are) */
+    kindText(item: SavedExploration, group: string): string {
+      const kind = translate(this.kindKey(item));
+      return group === 'mine' && item.shared
+        ? translate('FeinwerkDataExploration_SavedShared', kind)
+        : kind;
+    },
     kindKey(item: SavedExploration): string {
       if (item.kind === 'funnel') {
         return 'FeinwerkDataExploration_Funnel';

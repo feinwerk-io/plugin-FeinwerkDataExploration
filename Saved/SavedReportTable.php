@@ -14,6 +14,8 @@ use Piwik\DataTable\Row;
 use Piwik\Period;
 use Piwik\Period\Factory as PeriodFactory;
 use Piwik\Site;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\ArchivedExploration;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\ArchivedReportReader;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\DimensionCatalog;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\MetricCatalog;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\ExplorationDefinition;
@@ -51,25 +53,41 @@ final class SavedReportTable
      * @param KpiCardSettings|null $card a KPI card: one row with its metric for the period, or one table per day for a
      *                                   run of days (period day with a date range or lastN)
      */
-    public function build(int $idSite, string $period, string $date, ExplorationDefinition $definition, string $savedSegment, string $requestSegment, int $idSubtable = 0, ?KpiCardSettings $card = null): DataTable\DataTableInterface
+    public function build(int $idSite, string $period, string $date, ExplorationDefinition $definition, string $savedSegment, string $requestSegment, int $idSubtable = 0, ?KpiCardSettings $card = null, ?ArchivedExploration $archived = null, ?ArchivedReportReader $reader = null): DataTable\DataTableInterface
     {
         $segment = self::segment($savedSegment, $requestSegment);
         if ($card !== null) {
             return $this->card($idSite, $period, $date, $definition->withoutPivot(), $segment, $card->metric);
+        }
+        // a distinct metric (unique visitors) cannot be added up across days: periods of several days up to maxDays stay
+        // live as before (final review 2026-11-26)
+        if ($archived !== null && $archived->distinctMetrics() !== [] && $period !== 'day' && !Period::isMultiplePeriod($date, $period)
+            && self::periodDays($idSite, $period, $date) <= $this->limits->maxDays) {
+            $archived = null;
+        }
+        if ($archived !== null && !Period::isMultiplePeriod($date, $period)) {
+            // archived (design 2026-11-25): complete periods and long ones from the archive (a long incomplete one with its
+            // coverage), an incomplete one of up to maxDays days live as before, so nothing is emptier than before
+            $reader ??= new ArchivedReportReader($this->dimensions);
+            // the period's own archive, or a range of its days when that covers more (Matomo 5, see source())
+            [$fromPeriod, $fromDate, $covered, $needed] = $reader->source($archived, $period, $date, trim($requestSegment));
+            if ($covered >= $needed || self::periodDays($idSite, $period, $date) > $this->limits->maxDays) {
+                $table = $reader->read($archived, $fromPeriod, $fromDate, trim($requestSegment), $idSubtable, $archived->readFilters());
+                $table->setMetadata('fwde_archived', true);
+                if ($covered < $needed) {
+                    $table->setMetadata('fwde_archive_coverage', [$covered, $needed]);
+                }
+                $this->prefixRowSegments($table, $savedSegment);
+                $this->decorate($table, $idSite, PeriodFactory::makePeriodFromQueryParams(Site::getTimezoneFor($idSite), $period, $date), $definition, $definition->metricIds);
+                return $table;
+            }
         }
         if (count($definition->dimensionIds) < 2 && $definition->pivot === null) {
             $table = $this->explorer->explore($idSite, $period, $date, $definition, $segment);
         } else {
             $table = self::level($this->levels->tree($idSite, $period, $date, $definition, $segment), $idSubtable);
         }
-        if (trim($savedSegment) !== '') {
-            foreach ($table->getRows() as $row) {
-                $rowSegment = $row->getMetadata('segment');
-                if (is_string($rowSegment) && $rowSegment !== '') {
-                    $row->setMetadata('segment', trim($savedSegment) . ';' . $rowSegment);
-                }
-            }
-        }
+        $this->prefixRowSegments($table, $savedSegment);
         $this->decorate($table, $idSite, PeriodFactory::makePeriodFromQueryParams(Site::getTimezoneFor($idSite), $period, $date), $definition, $definition->metricIds);
         return $table;
     }
@@ -129,6 +147,27 @@ final class SavedReportTable
             $formatted[] = new SavedReportMetric($metricId, $metricId, $idSite);
         }
         $table->setMetadata(DataTable::EXTRA_PROCESSED_METRICS_METADATA_NAME, $formatted);
+    }
+
+    /** a row's visitor log keeps the exploration's own segment */
+    private function prefixRowSegments(DataTable $table, string $savedSegment): void
+    {
+        if (trim($savedSegment) === '') {
+            return;
+        }
+        foreach ($table->getRows() as $row) {
+            $rowSegment = $row->getMetadata('segment');
+            if (is_string($rowSegment) && $rowSegment !== '') {
+                $row->setMetadata('segment', trim($savedSegment) . ';' . $rowSegment);
+            }
+        }
+    }
+
+    /** the number of days of a period as asked (a year 365 or 366), before any bound to the website or today */
+    public static function periodDays(int $idSite, string $period, string $date): int
+    {
+        $built = PeriodFactory::makePeriodFromQueryParams(Site::getTimezoneFor($idSite), $period, $date);
+        return (int) round((strtotime($built->getDateEnd()->toString() . ' 00:00:00 UTC') - strtotime($built->getDateStart()->toString() . ' 00:00:00 UTC')) / 86400) + 1;
     }
 
     /**

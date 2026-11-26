@@ -74,6 +74,24 @@ class ApiSavedExplorationsTest extends IntegrationTestCase
         $this->assertFalse($byName['Bert for all']['canEdit']);
     }
 
+    /** archived saved explorations (2026-11-25): whether a report covers any period */
+    public function testArchivedField(): void
+    {
+        $this->as('anna', [1], [1]);
+        $this->api()->addSavedExploration(1, 'Table', self::STATE);
+        $this->api()->addSavedExploration(1, 'Card', json_encode(['fwdeDims' => 'browser', 'fwdeMetrics' => 'nb_visits', 'fwdeKind' => 'kpi']));
+        $byName = array_column($this->api()->getSavedExplorations(1), null, 'name');
+        $this->assertTrue($byName['Table']['archived']);
+        $this->assertFalse($byName['Card']['archived'], 'KPI cards stay live');
+
+        \Piwik\Config::getInstance()->FeinwerkDataExploration = ['archive_reports' => 0];
+        try {
+            $this->assertFalse(array_column($this->api()->getSavedExplorations(1), null, 'name')['Table']['archived']);
+        } finally {
+            \Piwik\Config::getInstance()->FeinwerkDataExploration = [];
+        }
+    }
+
     public function testOthersCannotChangeOrDeleteButSuperUsersCan(): void
     {
         $this->as('bert', [1], [1]);

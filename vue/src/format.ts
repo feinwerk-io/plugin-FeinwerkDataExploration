@@ -22,6 +22,23 @@ export function formatHour(label: string): string {
 }
 
 /**
+ * A day (YYYY-MM-DD) in words with its month and year, in the user's language ("May 26, 2026",
+ * "26. Mai 2026"); anything else stays (UI review 2026-11-26 F1).
+ */
+export function formatLongDate(value: string, language: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+  try {
+    return new Intl.DateTimeFormat(language || 'en', {
+      year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC',
+    }).format(new Date(`${value}T00:00:00Z`));
+  } catch (e) {
+    return value;
+  }
+}
+
+/**
  * A day (YYYY-MM-DD) as Matomo's graphs write it, in the user's language: on the axis short
  * ("Tue, Sep 15"), in the tooltip in full ("Tuesday, September 15, 2026"); anything else stays.
  */

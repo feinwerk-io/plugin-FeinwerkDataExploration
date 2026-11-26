@@ -324,6 +324,21 @@ class ExplorationQueryBuilderTest extends TestCase
         $this->assertStringEndsWith(' GROUP BY fwde_a.fwde_k2) AS fwde_g ORDER BY nb_visits DESC, fwde_k2 ASC LIMIT 3', $quirk['sql']);
     }
 
+    /**
+     * The archive's totals per pivot value (archived reports, 2026-11-25): bounded like the archive's other queries,
+     * sorted by a stored column (a rate's alias is not selected in archive mode, only its pair).
+     */
+    public function testArchivedPivotValuesAreBounded(): void
+    {
+        [$definition, $dimensions, $context, $builder] = $this->parts('{"dimensions": ["browser"], "metrics": ["bounce_rate", "nb_visits"],'
+            . ' "pivot": {"dimension": "deviceType", "limit": 3}}');
+        $pivot = $this->dimensions()->get(1, 'deviceType');
+        $query = $builder->withArchiveColumns()->buildPivotValues($definition, $dimensions, $pivot, 1, $context, [], 50000, false, 'nb_visits');
+        $this->assertStringEndsWith(' GROUP BY fwde_a.fwde_k2 ORDER BY nb_visits DESC, fwde_k2 ASC LIMIT 50000', $query['sql']);
+        $this->assertStringContainsString('AS bounce_rate__n', $query['sql']);
+        $this->assertStringNotContainsString('AS bounce_rate,', $query['sql']);
+    }
+
     /** the cells of the shown rows by pivot value, and the Others group of the rest */
     public function testPivotCellsAndOthers(): void
     {

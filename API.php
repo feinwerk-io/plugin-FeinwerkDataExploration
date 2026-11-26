@@ -12,7 +12,10 @@ namespace Piwik\Plugins\FeinwerkDataExploration;
 use Piwik\Date;
 use Piwik\Site;
 use Piwik\DataTable;
+use Piwik\Period;
 use Piwik\Piwik;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\ArchivedExplorations;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\ArchiveSettings;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\DimensionCatalog;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\MetricCatalog;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\ComparisonList;
@@ -396,7 +399,8 @@ class API extends \Piwik\Plugin\API
      *               Referrers_Referrers, Goals_Ecommerce, Goals_Goals, FeinwerkDataExploration_Explorations, or null
      *               when it is not in the menu), canPlace (whether the user may change the menu place: as canDelete,
      *               always false for KPI cards and funnels), kind (table, funnel or kpi: a KPI card), updated (UTC),
-     *               state (the page's parameters) and segment
+     *               state (the page's parameters), segment and archived (true: Matomo archives it, so its report
+     *               covers any period; false: its report covers at most 31 days)
      */
     public function getSavedExplorations(int $idSite): array
     {
@@ -407,6 +411,15 @@ class API extends \Piwik\Plugin\API
         if (!FunnelSwitch::enabled()) {
             // funnels off: saved funnels stay stored and come back with the switch
             $rows = array_values(array_filter($rows, static fn (array $row): bool => !self::isFunnel($row['state'])));
+        }
+        // archived saved explorations (2026-11-25): their reports cover any period
+        try {
+            $archived = array_flip(array_map(
+                static fn ($exploration): int => $exploration->idSaved,
+                (new ArchivedExplorations(ArchiveSettings::fromConfig()))->forSite($idSite)
+            ));
+        } catch (\Throwable $e) {
+            $archived = [];
         }
         return array_map(fn (array $row) => [
             'id' => $row['idsaved'],
@@ -423,6 +436,7 @@ class API extends \Piwik\Plugin\API
             'updated' => $row['ts_updated'],
             'state' => $row['state'],
             'segment' => $row['segment'],
+            'archived' => isset($archived[(int) $row['idsaved']]),
         ], $rows);
     }
 
@@ -508,23 +522,33 @@ class API extends \Piwik\Plugin\API
     }
 
     /**
-     * A saved exploration as a Matomo report (saved reports, 2026-11-24): its table computed live from the raw data for
-     * one period, with the exploration's dimensions, metrics, filters, sorting, row limit and segment. This is the
-     * report behind the exploration's dashboard widget, scheduled e-mail reports and menu entry (API.getReportMetadata
-     * lists it as module FeinwerkDataExploration, action getSavedReport, parameter idSaved).
+     * A saved exploration as a Matomo report (saved reports, 2026-11-24): its table for one period, with the
+     * exploration's dimensions, metrics, filters, sorting, row limit and segment. This is the report behind the
+     * exploration's dashboard widget, scheduled e-mail reports and menu entry (API.getReportMetadata lists it as module
+     * FeinwerkDataExploration, action getSavedReport, parameter idSaved).
+     *
+     * Archived explorations (getSavedExplorations: archived = true; archived reports, 2026-11-25) answer any single
+     * period: complete periods and periods longer than the plugin's days come from Matomo's archive (table metadata
+     * fwde_archived = true; when the archive does not hold every day with visits yet, fwde_archive_coverage =
+     * [days held, days with visits]); an incomplete period of up to the plugin's days is computed live from the raw
+     * data. Unique visitors cannot be added up across days: they come for days and live periods only and are left out of
+     * longer ones. Explorations that are not archived (archiving off, over the per-website cap, a KPI card) are computed
+     * live and cover at most the plugin's days.
      *
      * One dimension without a pivot: one row per value. Otherwise one level per dimension (up to three) and the pivot
      * dimension as the last level (up to four levels): the first level has one row per value of the first dimension
      * with its totals over what the text filters let through, each with a sub table (idSubtable, from the row) holding
-     * its rows of the next dimension, and so on; the id comes from the value path, so it stays when the order changes.
+     * its rows of the next dimension, and so on. Live, the id comes from the value path, so it stays when the order
+     * changes; from the archive it is Matomo's id of the stored sub table, valid for that period's archive only.
      * The pivot level holds the exploration's top pivot values under every row (0 for counts without data), then an
      * "Others" row when values were cut and every metric adds up across them. flat=1 gives one row per path. A metric
      * of a goal the website no longer has is left out. Visible to the owner (private) or to everyone who may use
      * explorations (shared); Email Reports Pro names the owner with fwReportOwner.
      *
      * @param int $idSite the exploration's website
-     * @param 'day'|'week'|'month'|'range' $period one period of at most the plugin's limit (31 days by default); more
-     *                                           than one period (date=last7 with period=day) is refused
+     * @param 'day'|'week'|'month'|'year'|'range' $period one period; archived explorations any length, the others at
+     *                                                  most the plugin's days (31 by default); more than one period
+     *                                                  (date=last7 with period=day) is refused except for KPI cards
      * @param string $date a day (YYYY-MM-DD, today, yesterday) or for period=range "YYYY-MM-DD,YYYY-MM-DD"
      * @param int $idSaved the saved exploration (getSavedExplorations: id)
      * @param string $segment a Matomo segment: it narrows the exploration's own segment further (both apply)
@@ -536,8 +560,9 @@ class API extends \Piwik\Plugin\API
      *                   currency, rates as fractions, seconds). A KPI card (kind "kpi") is a report without a dimension:
      *                   one row with its metric for the period, or for period day with a date range or lastN (at most
      *                   the plugin's days) one such table per day, keyed by the day
-     * @throws SavedReportUnavailable 400 when the period is refused or the exploration no longer resolves on the website
-     *                                (a dimension gone, no metric left); the message is translated
+     * @throws SavedReportUnavailable 400 when the period is refused (ArchiveNotArchived: a period longer than the
+     *                                plugin's days for an exploration that is not archived) or the exploration no longer
+     *                                resolves on the website (a dimension gone, no metric left); the message is translated
      * @throws ExplorationException 404 when the exploration does not exist or the user may not see it, 503 when the
      *                              database is busy (after waiting for a free slot)
      */
@@ -566,8 +591,14 @@ class API extends \Piwik\Plugin\API
         );
         try {
             $card = KpiCardSettings::isCard($row['state']) ? KpiCardSettings::fromState($row['state'], $definition->metricIds) : null;
+            // archived saved explorations (2026-11-25) answer any period; the others at most maxDays days
+            $archived = $card === null ? ArchivedExplorations::cachedFind($idSite, $idSaved, ArchiveSettings::fromConfig()) : null;
+            if ($card === null && $archived === null && !Period::isMultiplePeriod(trim($date), trim($period))
+                && SavedReportTable::periodDays($idSite, trim($period), trim($date)) > $limits->maxDays) {
+                throw new SavedReportUnavailable('FeinwerkDataExploration_ArchiveNotArchived', [$limits->maxDays]);
+            }
             return (new SavedReportTable(new Explorer($dimensions, $metrics, $limits), new ReportLevels($dimensions, $metrics, $limits), $dimensions, $metrics, $limits))
-                ->build($idSite, trim($period), trim($date), $definition, (string) $row['segment'], $segment, $idSubtable, $card);
+                ->build($idSite, trim($period), trim($date), $definition, (string) $row['segment'], $segment, $idSubtable, $card, $archived);
         } catch (ExplorationException $e) {
             if (in_array($e->getTranslationKey(), ['FeinwerkDataExploration_ErrorPeriodNotSupported', 'FeinwerkDataExploration_ErrorPeriodTooLong'], true)) {
                 throw new SavedReportUnavailable($e->getTranslationKey(), $e->getParams());

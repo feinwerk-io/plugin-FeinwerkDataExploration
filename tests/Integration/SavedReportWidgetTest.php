@@ -92,6 +92,24 @@ class SavedReportWidgetTest extends IntegrationTestCase
         $this->assertSame('', (new Controller())->reportFooter());
     }
 
+    /** UI review 2026-11-26 F2: a period longer than an exploration covers opens its last days, never the error */
+    public function testFooterOpensTheLastDaysOfALongPeriod(): void
+    {
+        $shared = $this->save('anna', 'Team view', 1);
+        FakeAccess::clearAccess(false, [], [1], 'bert');
+        $_GET['idSaved'] = $shared;
+        $_GET['period'] = 'year';
+        $_GET['date'] = '2025-06-15';
+        $html = html_entity_decode((new Controller())->reportFooter());
+        $this->assertSame(2, substr_count($html, 'period=range&date=2025-12-01,2025-12-31'), 'in the address and its hash');
+        $this->assertStringNotContainsString('period=year', $html);
+
+        // 30 days fit: the period stays
+        $_GET['period'] = 'month';
+        $html = html_entity_decode((new Controller())->reportFooter());
+        $this->assertStringContainsString('period=month&date=2025-06-15', $html);
+    }
+
     /** the KPI card widget (2026-11-24): the card's entry for visible cards, no support link, nothing otherwise */
     public function testCardWidgetAction(): void
     {

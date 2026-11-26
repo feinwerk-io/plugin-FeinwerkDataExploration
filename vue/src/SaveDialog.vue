@@ -29,7 +29,7 @@
       <form
         id="fwde-savedialog-form"
         class="fwde-savedialog__form"
-        @submit.prevent="save(!canChange)"
+        @submit.prevent="save(!canChange || !!historyLostFrom)"
       >
         <p
           v-if="current && !current.canEdit"
@@ -200,6 +200,11 @@
             >{{ translate('General_Cancel') }}</button>
           </template>
         </div>
+        <div
+          v-if="canChange && historyLostFrom"
+          class="alert alert-warning fwde-savedialog__history"
+          role="note"
+        >{{ translate('FeinwerkDataExploration_ArchiveHistoryLost', historyLostFrom) }}</div>
       </form>
       <template #footer>
         <button
@@ -208,17 +213,23 @@
           @click="close()"
         >{{ translate('General_Cancel') }}</button>
         <template v-if="canChange">
+          <!-- a change that restarts the history: "Save as new" is the default
+               (UI review 2026-11-26 F1) -->
           <button
-            type="button"
-            class="fwde-button fwde-savedialog__asnew"
+            :type="historyLostFrom ? 'submit' : 'button'"
+            :form="historyLostFrom ? 'fwde-savedialog-form' : undefined"
+            :class="historyLostFrom ? 'btn' : 'fwde-button'"
+            class="fwde-savedialog__asnew"
             :disabled="busy"
-            @click="save(true)"
+            @click="historyLostFrom ? undefined : save(true)"
           >{{ translate('FeinwerkDataExploration_SaveAsNew') }}</button>
           <button
-            type="submit"
-            form="fwde-savedialog-form"
-            class="btn fwde-savedialog__changes"
+            :type="historyLostFrom ? 'button' : 'submit'"
+            :form="historyLostFrom ? undefined : 'fwde-savedialog-form'"
+            :class="historyLostFrom ? 'fwde-button' : 'btn'"
+            class="fwde-savedialog__changes"
             :disabled="busy"
+            @click="historyLostFrom ? save(false) : undefined"
           >{{ translate('FeinwerkDataExploration_SaveChanges') }}</button>
         </template>
         <button
@@ -257,6 +268,11 @@ export default defineComponent({
     menuSections: { type: Array as PropType<MenuSection[]>, default: () => [] },
     /** the exploration's metrics with their names: with them it can be saved as a KPI card too */
     metrics: { type: Array as PropType<{ id: string, name: string }[]>, default: () => [] },
+    /**
+     * an archived exploration whose change starts its history again, where raw data is deleted:
+     * the first day that can be rebuilt (archived saved explorations, 2026-11-25); empty otherwise
+     */
+    historyLostFrom: { type: String, default: '' },
   },
   emits: ['save', 'delete', 'open'],
   data() {

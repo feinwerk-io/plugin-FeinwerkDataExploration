@@ -33,7 +33,8 @@
             :can-manage="canManage"
             :menu-sections="menuSections"
             @open="openSaved"
-            @deleted="loadSavedList()"
+            @deleted="savedDeleted($event)"
+            @changed="loadSavedList()"
           />
         </section>
         <section class="fwde-section">
@@ -137,6 +138,7 @@
               :error="saveError"
               :menu-sections="menuSections"
               :metrics="saveMetrics"
+              :history-lost-from="historyLostFrom"
               @open="saveError = ''"
               @save="saveExploration"
               @delete="deleteCurrent"
@@ -205,6 +207,23 @@
                 >{{ suggestedPeriodLabel }}</button>
               </template>
               <template v-else>{{ translate(noSmallerPeriodKey) }}</template>
+              <!-- archived saved explorations (2026-11-25): their report covers any
+                   period; on its own line (UI review 2026-11-26 F3) -->
+              <div
+                v-if="archivedHint"
+                class="fwde-archived-hint"
+              >
+                <button
+                  v-if="archivedHint === 'open'"
+                  type="button"
+                  class="fwde-alert-link fwde-archived-report"
+                  @click="openArchivedReport"
+                >{{ translate('FeinwerkDataExploration_ArchivedOpenReport') }}</button>
+                <span
+                  v-else
+                  class="fwde-archived-place"
+                >{{ translate('FeinwerkDataExploration_ArchivedPlaceInMenu') }}</span>
+              </div>
             </Alert>
             <ActivityIndicator
               :loading="loading"
@@ -349,7 +368,7 @@
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
 import {
-  ActivityIndicator, Alert, ComparisonsStoreInstance, MatomoUrl, translate,
+  ActivityIndicator, Alert, ComparisonsStoreInstance, Matomo, MatomoUrl, translate,
 } from 'CoreHome';
 import { RUN_DELAY_MS, needsSmallerPeriod } from './hints';
 import {
@@ -374,6 +393,8 @@ import {
 import { exportUrl } from './exportLink';
 import ExplorationToolbar from './ExplorationToolbar.vue';
 import SavedPicker from './SavedPicker.vue';
+import { archivedReportHint, historyLostFrom } from './archiveShape';
+import { formatLongDate } from './format';
 import SaveDialog from './SaveDialog.vue';
 import FeedbackBar from './FeedbackBar.vue';
 import PromoLine, { PromoVariables } from './PromoLine.vue';
@@ -515,6 +536,7 @@ export default defineComponent({
     canManage: { type: Boolean, default: false },
     /** Matomo's sections a saved exploration can show in as a report (saved reports, 2026-11-24) */
     menuSections: { type: Array as PropType<MenuSection[]>, default: () => [] },
+    archiveHistoryFrom: { type: String, default: null },
     promo: {
       type: Object as PropType<PromoVariables|null>,
       default: null,
@@ -835,6 +857,19 @@ export default defineComponent({
     showRawDataWarning(): boolean {
       return showsRawDataWarning(this.rawDataFrom);
     },
+    /** the archived exploration's report hint for a period it cannot cover (archived reports) */
+    archivedHint(): ''|'open'|'place' {
+      return archivedReportHint(this.currentSaved);
+    },
+    /**
+     * the first day a changed archived exploration rebuilds (archive_history_months or the raw
+     * data's start): a change of what shapes its archive starts its history again (the panel warns)
+     */
+    historyLostFrom(): string {
+      const hash = MatomoUrl.hashParsed.value as Record<string, unknown>;
+      const from = historyLostFrom(this.currentSaved, hash, String(hash.segment || ''), this.archiveHistoryFrom);
+      return from ? formatLongDate(from, Matomo.language) : '';
+    },
   },
   watch: {
     donutNeedsOthers(needed: boolean) {
@@ -920,6 +955,17 @@ export default defineComponent({
         this.suggestedPeriod = suggestion || {};
       }).catch(() => undefined);
     },
+    /** The archived exploration's own menu page, for the same period (archived reports). */
+    openArchivedReport() {
+      const saved = this.currentSaved;
+      if (saved && saved.menu) {
+        MatomoUrl.updateHash({
+          ...MatomoUrl.hashParsed.value,
+          category: saved.menu,
+          subcategory: `fwdeSaved${saved.id}`,
+        });
+      }
+    },
     /** Another period for the same exploration: a range of days (the page reloads its widget). */
     showFrom(range: string) {
       MatomoUrl.updateHash({ ...MatomoUrl.hashParsed.value, period: 'range', date: range });
@@ -938,6 +984,18 @@ export default defineComponent({
           this.openSaved(linked);
         }
       }).catch(() => undefined);
+    },
+    /**
+     * A delete in the manage panel: the list again, and the open exploration, when it was the one,
+     * stays on screen as a new one, as after a delete in the save panel (deleteCurrent).
+     */
+    savedDeleted(id: number) {
+      this.loadSavedList().then(() => {
+        const hash = MatomoUrl.hashParsed.value;
+        if (String(hash.fwdeSaved || '') === String(id)) {
+          MatomoUrl.updateHash({ ...hash, fwdeSaved: '' });
+        }
+      });
     },
     /** Opens a saved exploration (its state and segment), or a new one with the default state. */
     openSaved(saved: SavedExploration|null) {

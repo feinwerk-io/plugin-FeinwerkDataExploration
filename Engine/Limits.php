@@ -37,6 +37,14 @@ final class Limits
     ) {
     }
 
+    /** The same limits with another statement time limit (archived reports, 2026-11-25: archive_query_seconds). */
+    public function withTimeoutSeconds(int $seconds): self
+    {
+        $values = get_object_vars($this);
+        $values['timeoutSeconds'] = max(1, $seconds);
+        return new self(...$values);
+    }
+
     /** The same limits with another wait for a slot. */
     public function withSlotWait(int $seconds): self
     {

@@ -1,5 +1,20 @@
 # Changelog
 
+## 6.3.0
+
+- "Manage explorations" (before: "Manage shared explorations") lists your own explorations too, private ones
+  included, each with Delete and its menu place, for every user who has saved one; administrators still see the
+  explorations others shared.
+- Saved explorations with two or more dimensions as Matomo reports: in the flat view each dimension column carries its
+  dimension's name (before, the titles were empty or alike).
+- Saved explorations are archived by Matomo like its own reports: their reports, dashboard widgets and scheduled emails
+  cover any period, also weeks, months, years and date ranges. A new or changed exploration's last 6 months are built
+  in the background; while days are missing, periods of up to 31 days are answered live and longer ones show how many
+  of their days the report holds. Settings in `config.ini.php`, section `[FeinwerkDataExploration]` (see the README).
+- The exploration page links to an exploration's report for periods longer than 31 days, and the save panel says when a
+  change cannot keep a report's history (with "Save as new" as the default then).
+- "Open in exploration" under a saved report for a period longer than 31 days opens the last 31 days of that period.
+
 ## 6.2.0
 
 - Filters: new conditions "is empty" and "is not empty" for every dimension, for example to keep only rows with a
