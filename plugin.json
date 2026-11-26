@@ -1,7 +1,7 @@
 {
     "name": "FeinwerkDataExploration",
     "description": "Ad hoc analysis from your raw data: free-form tables with a second dimension, trends and comparisons, without setting up a report.",
-    "version": "5.6.0",
+    "version": "5.7.0",
     "theme": false,
     "keywords": [
         "exploration",

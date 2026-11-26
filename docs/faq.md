@@ -1,7 +1,7 @@
 __How is this different from archived reports?__
-Archived reports last, keep a long history and serve dashboard widgets and scheduled emails. Feinwerk Data
-Exploration is for questions you ask once or now: no setup, no waiting for archiving, at most 31 days, nothing is
-saved as a report.
+An exploration is for questions you ask once or now: no setup, no waiting for archiving, at most 31 days. Save it, and
+it becomes an archived report itself: Matomo builds it in the background like its own reports, with a history, for
+dashboard widgets, scheduled emails and any period.
 
 __How do I compare goals?__
 Each goal of your website has its own conversions, conversion rate and revenue in the metric list, under the goal's
@@ -26,20 +26,54 @@ chart type (bars, trend or donut), and its segment. Not the period: it opens wit
 well as today. A private exploration is seen only by you; a shared one by everyone who may use explorations on the website (never by
 anonymous users). Sharing needs at least write access to the website; with view access you save explorations for
 yourself. Only the person who saved it, or a super user, can change it; administrators of the website can also delete
-shared ones. Each person can save up to 100 explorations per website.
+shared ones. Under **Manage explorations** (below the list of saved explorations) you see all of your own
+explorations, private and shared, and delete or place them in the menu; administrators also see the ones others
+shared. Each person can save up to 100 explorations per website.
 
 __Where do saved explorations appear as reports?__
 Every saved exploration is a Matomo report for the people who see it: a private one for you only, a shared one for
 everyone who may use explorations on the website. You find it in the dashboard's widgets (under Explorations or the
 section you chose), in Matomo's scheduled email reports, in Feinwerk Email Reports Pro and, with a place chosen under
 **Show in menu**, as its own menu entry. Administrators of the website can change the place of shared explorations
-under **Manage shared explorations**. Explorations saved before this version are not in the menu until you choose a
+under **Manage explorations**. Explorations saved before this version are not in the menu until you choose a
 place. A report with two or three dimensions shows the first one and opens each row into the next; a dimension under
 **Columns (pivot)** is the last level there, with the same top values under every row and "Others" where every metric
-adds up. Reports cover at most
-31 days, as explorations do: daily, weekly and monthly emails work, yearly ones do not. Matomo's own scheduled email
-leaves out a report it cannot build (an exploration that was deleted or that the email's owner can no longer see, or
-a period that is too long); Feinwerk Email Reports Pro shows a note in its place.
+adds up. Matomo archives
+saved explorations like its own reports, so their reports cover any period: weeks, months, years and date ranges, in
+emails too (see "How far back do saved reports go?"). KPI cards, explorations over the limit per website and all of
+them while archiving is switched off stay live reports of at most 31 days. Matomo's own scheduled email leaves out a
+report it cannot build (an exploration that was deleted or that the email's owner can no longer see, or a period that
+is too long); Feinwerk Email Reports Pro shows a note in its place.
+
+__How far back do saved reports go?__
+Matomo builds a saved exploration's report day by day in its regular archiving (core:archive), and adds up weeks,
+months and years from the days. When you save an exploration, or change what it shows (dimensions, metrics, filters,
+segment, the pivot's dimension), its last 6 months are built in the background within the next hours, a few
+explorations per hour; renaming it or moving it in the menu changes nothing. Days before Matomo deleted its raw data
+cannot be built; when a change would lose them, the save panel says so and you can save it as a new exploration
+instead. While days are missing, a period of up to 31 days is answered live as before, and a longer one shows how many
+of its days with visits the report holds. Unique visitors and unique pageviews cannot be added up across days: a
+period of up to 31 days counts them live as before, a longer one leaves them out. A condition on a metric (for example "visits greater than 100")
+applies to the whole period; the archive keeps at most 1,000 rows per day on the first level and 100 per row below it,
+the rest as "Others".
+
+Administrators can change this in Matomo's `config.ini.php`, section `[FeinwerkDataExploration]`, for example
+`./console config:set --section=FeinwerkDataExploration --key=archive_history_months --value=12`:
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `archive_reports` | 1 | 0: saved explorations are not archived and their reports cover at most 31 days |
+| `archive_history_months` | 6 | months built for a new or changed exploration; 0: none |
+| `archive_history_segments` | 0 | 1: the history for your pre-processed segments too (more work for core:archive) |
+| `archive_segments` | 0 | 1: build the reports in core:archive's runs for pre-processed segments too |
+| `archive_history_batch` | 5 | explorations whose history is queued per hour |
+| `archive_max_explorations_per_site` | 50 | archived explorations per website (shared ones first, then the most recently changed); 0: no limit |
+| `archive_max_rows` | 1000 | rows per day on a report's first level |
+| `archive_max_rows_subtable` | 100 | rows per row below it (second and third dimension, pivot) |
+| `archive_query_seconds` | 300 | time limit of one exploration's query for one day in core:archive |
+
+The history needs Matomo's core:archive (a cron job); where reports are archived when someone opens them, a saved
+report is built then, within the explorations' usual limits.
 
 __What does a KPI card compare?__
 A KPI card shows one metric of an exploration for the dashboard's period (its segment and filters included) and
@@ -62,8 +96,8 @@ seven days. The rows keep their sorting by a dimension or by a metric's total. W
 the columns pause and come back when the comparison ends. Exports name the columns "value: metric".
 
 __Why at most 31 days?__
-Explorations read raw data. A month keeps the queries fast and protects your database. For long periods, archived
-reports are the right tool.
+Explorations read raw data. A month keeps the queries fast and protects your database. For long periods, save the
+exploration: its report is archived and covers any period.
 
 __Why can anonymous users not use explorations?__
 Explorations query raw data and can be expensive, so they are only for signed-in users, even when anonymous users

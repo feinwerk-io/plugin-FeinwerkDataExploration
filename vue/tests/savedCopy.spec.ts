@@ -100,12 +100,39 @@ describe('managing shared explorations in the side panel (UI item 3)', () => {
     await wrapper.find('.fwde-saved__manage').trigger('click');
     await wrapper.vm.$nextTick();
     const panel = document.querySelector('section.fwde-sidepanel') as HTMLElement;
-    expect(panel.querySelector('h2')?.textContent).toBe('FeinwerkDataExploration_ManageShared');
+    expect(panel.querySelector('h2')?.textContent).toBe('FeinwerkDataExploration_ManageExplorations');
     expect(panel.querySelector('.fwde-manage .fwde-manage__name')?.textContent).toBe('Team view');
     expect(wrapper.find('.fwde-saved .fwde-manage').exists()).toBe(false);
     (panel.querySelector('.fwde-sidepanel__close') as HTMLElement).click();
     await wrapper.vm.$nextTick();
     expect(document.querySelector('section.fwde-sidepanel')).toBeNull();
     wrapper.unmount();
+  });
+});
+
+// Peter, 2026-11-25: everyone manages (and deletes) their own explorations in the panel
+describe('the manage link without admin access', () => {
+  const own = {
+    id: 3, name: 'Mine', shared: false, owner: 'anna', canEdit: true, canDelete: true, kind: 'table' as const,
+    updated: '2026-11-20 10:00:00', state: {}, segment: '',
+  };
+
+  it('shows for a user with explorations of their own, and not without', () => {
+    const mine = mount(SavedPicker, {
+      props: {
+        saved: [own], current: null, login: 'anna', canCopy: false, canManage: false,
+      },
+    });
+    expect(mine.find('.fwde-saved__manage').text()).toBe('FeinwerkDataExploration_ManageExplorations');
+    const none = mount(SavedPicker, {
+      props: {
+        saved: [{ ...own, owner: 'ben', shared: true, canDelete: false }],
+        current: null,
+        login: 'anna',
+        canCopy: false,
+        canManage: false,
+      },
+    });
+    expect(none.find('.fwde-saved__manage').exists()).toBe(false);
   });
 });

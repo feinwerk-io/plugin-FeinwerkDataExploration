@@ -13,6 +13,8 @@ use Piwik\Common;
 use Piwik\DataTable;
 use Piwik\Plugin\Manager;
 use Piwik\Piwik;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\ArchiveRun;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\StoredMetrics;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\DimensionCatalog;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\DimensionDefinition;
 use Piwik\Plugins\FeinwerkDataExploration\Catalog\MetricCatalog;
@@ -60,6 +62,60 @@ final class Explorer
             $this->useReadableColumnNames($table, $definition, $dimensions, $definition->scope($this->dimensions, $this->metrics, $idSite), $idSite);
         }
         return $table;
+    }
+
+    /**
+     * One site-local day of an exploration for the archive (archived reports, design 2026-11-25): every combination of
+     * the row dimensions (fwde_k1, fwde_k2, fwde_k3 raw keys) with the stored columns of each metric (rates and averages
+     * as their pair, Archive/StoredMetrics.php), at most ArchiveRun::MAX_DAY_COMBINATIONS, the first stored sum largest
+     * first. Only the conditions the archive applies may be in $definition (Archive/FilterSplit.php). No result cache,
+     * no 31-day check; the run decides the time limit, the slot and the cost guard. With $level (1 to the dimensions - 1)
+     * one upper level: grouped by the first $level keys, every dimension's conditions still applied.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function archiveDay(int $idSite, string $day, ExplorationDefinition $definition, string $segment, ArchiveRun $run, int $level = 0, ?DimensionDefinition $pivot = null, bool $pivotTotals = false): array
+    {
+        $limits = $run->limits;
+        $window = ExplorationWindow::for($idSite, 'day', $day, $limits);
+        $rowDimensions = array_map(fn (string $id) => $this->dimensions->get($idSite, $id), $definition->dimensionIds);
+        // a pivot (rows and pivot, archived): one more key after the row dimensions, in the pivot's scope
+        $dimensions = $pivot !== null ? array_merge($rowDimensions, [$pivot]) : $rowDimensions;
+        $scope = $pivot !== null ? $this->pivotScope($definition, $pivot, $idSite) : $definition->scope($this->dimensions, $this->metrics, $idSite);
+        $context = new QueryContext($scope, $window->timezone, $window->startUtc, $window->endUtc);
+        $segmentObject = new Segment($segment, [$idSite], $window->start, $window->end);
+        $slot = $run->usesSlot ? new LazySlot($limits) : null;
+        try {
+            $slot?->acquire();
+            $runner = new QueryRunner($limits);
+            if ($run->checksCost) {
+                (new CostGuard($runner))->check($idSite, $context->windowStartUtc, $context->windowEndUtc, $limits, 0);
+            }
+            $builder = (new ExplorationQueryBuilder(
+                static fn (string $select, array $from, string $where, array $bind, ?string $groupBy): array =>
+                    $segmentObject->getSelectQuery($select, $from, $where, $bind, false, $groupBy ?? false),
+                static fn (string $table): string => Common::prefixTable($table),
+                $this->metrics
+            ))->withArchiveColumns();
+            $resolvedFilters = $this->resolveLabelFilters($definition, $dimensions, $idSite, $context, $runner, 0);
+            $ops = StoredMetrics::aggregationOps($definition->metricIds);
+            $sums = array_keys(array_filter($ops, static fn (string $op): bool => $op === 'sum'));
+            $sortColumn = $sums[0] ?? (string) array_key_first($ops);
+            $archiveDefinition = $definition->forArchive(ArchiveRun::MAX_DAY_COMBINATIONS, $sortColumn);
+            $quirk = GroupingQuirk::applies($runner->serverVersion());
+            if ($pivot !== null && $pivotTotals) {
+                // per pivot value over every row (a visit once per value), bounded like the other archive queries
+                $query = $builder->buildPivotValues($archiveDefinition, $rowDimensions, $pivot, $idSite, $context, $resolvedFilters,
+                    ArchiveRun::MAX_DAY_COMBINATIONS, $quirk, $sortColumn);
+            } else {
+                $query = $level > 0 && $level < count($dimensions)
+                    ? $builder->buildArchiveLevel($archiveDefinition, $dimensions, $idSite, $context, $resolvedFilters, $level, $quirk)
+                    : $builder->build($archiveDefinition, $dimensions, $idSite, $context, $resolvedFilters, $quirk);
+            }
+            return $runner->fetchAll($query);
+        } finally {
+            $slot?->release();
+        }
     }
 
     /**

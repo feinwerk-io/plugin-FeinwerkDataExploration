@@ -315,7 +315,14 @@ class ApiSavedReportTest extends IntegrationTestCase
         $id = $this->save('anna', ['fwdeDims' => 'browser', 'fwdeMetrics' => 'nb_visits']);
 
         $this->assertUnavailable('FeinwerkDataExploration_ErrorPeriodNotSupported', fn () => API::getInstance()->getSavedReport(1, 'day', 'last7', $id));
-        $this->assertUnavailable('FeinwerkDataExploration_ErrorPeriodTooLong', fn () => API::getInstance()->getSavedReport(1, 'range', '2026-02-01,2026-03-27', $id));
+        // archived (2026-11-25): a long range answers; not archived, it is refused as such
+        $this->assertGreaterThan(0, API::getInstance()->getSavedReport(1, 'range', '2026-02-01,2026-03-27', $id)->getRowsCount());
+        \Piwik\Config::getInstance()->FeinwerkDataExploration = ['archive_reports' => 0];
+        try {
+            $this->assertUnavailable('FeinwerkDataExploration_ArchiveNotArchived', fn () => API::getInstance()->getSavedReport(1, 'range', '2026-02-01,2026-03-27', $id));
+        } finally {
+            \Piwik\Config::getInstance()->FeinwerkDataExploration = [];
+        }
     }
 
     public function testAnotherUsersPrivateExplorationIsNotFound(): void

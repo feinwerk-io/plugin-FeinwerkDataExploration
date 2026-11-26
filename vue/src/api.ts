@@ -90,6 +90,8 @@ export interface SavedExploration {
   menu?: string|null;
   /** whether the user may change the menu place (as canDelete) */
   canPlace?: boolean;
+  /** archived by Matomo, its report covers any period (archived saved explorations, 2026-11-25) */
+  archived?: boolean;
 }
 
 /** A section of Matomo's reporting menu a saved exploration can be placed in. */

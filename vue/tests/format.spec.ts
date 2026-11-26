@@ -2,9 +2,7 @@
  * Matomo - free/libre analytics platform
  * @license https://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
  */
-import {
-  formatDay, formatHour, formatMetric, formatDuration, Formatters, rowCountKey,
-} from '../src/format';
+import { formatDay, formatHour, formatMetric, formatDuration, Formatters, rowCountKey, formatLongDate } from '../src/format';
 
 describe('formatHour', () => {
   it('writes a bare hour as a time of day', () => {
@@ -83,5 +81,14 @@ describe('rowCountKey', () => {
     expect(rowCountKey(1)).toBe('FeinwerkDataExploration_RowCountOne');
     expect(rowCountKey(0)).toBe('FeinwerkDataExploration_RowCount');
     expect(rowCountKey(7)).toBe('FeinwerkDataExploration_RowCount');
+  });
+});
+
+// UI review 2026-11-26 F1: the save panel names the day in the user's language
+describe('a day in words', () => {
+  it('writes the day with its month and year', () => {
+    expect(formatLongDate('2026-05-26', 'de')).toBe('26. Mai 2026');
+    expect(formatLongDate('2026-05-26', 'en')).toBe('May 26, 2026');
+    expect(formatLongDate('not a day', 'en')).toBe('not a day');
   });
 });

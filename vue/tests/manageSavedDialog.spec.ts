@@ -116,7 +116,7 @@ describe('managing shared explorations (design 2026-11-20)', () => {
     const readOnly = mount(ManageSavedDialog, { props: { remove, saved: [saved({ canDelete: false })] } });
     expect(readOnly.find('button.fwde-manage__delete').exists()).toBe(false);
     const empty = mount(ManageSavedDialog, { props: { remove, saved: [saved({ shared: false })] } });
-    expect(empty.find('.fwde-manage__empty').text()).toBe('FeinwerkDataExploration_ManageSharedEmpty');
+    expect(empty.find('.fwde-manage__empty').text()).toBe('FeinwerkDataExploration_ManageEmpty');
   });
 
   it('Delete moves the focus to its confirmation, and Cancel back to Delete', async () => {
@@ -141,5 +141,54 @@ describe('managing shared explorations (design 2026-11-20)', () => {
     await flushPromises();
     expect(wrapper.find('.fwde-manage__error').text()).toBe('Not allowed 8');
     expect(wrapper.emitted('deleted')).toBeUndefined();
+  });
+});
+
+// Peter, 2026-11-25: "Das delete über den save button ist so überhaupt nicht praktisch": the panel
+// lists the user's own explorations too, private ones included, each with Delete
+describe('managing my own explorations', () => {
+  const remove = jest.fn((id: number) => Promise.resolve({ id }));
+  const list = [
+    saved({ id: 2, name: 'Mine', owner: 'anna', shared: false }),
+    saved({ id: 3, name: 'Mine for the team', owner: 'anna' }),
+    saved({ id: 4, name: 'Team view', owner: 'ben' }),
+    saved({ id: 5, name: 'Read only', owner: 'carla', canDelete: false, canPlace: false }),
+  ];
+
+  it('lists my explorations, private and shared, apart from the ones shared by others', () => {
+    const wrapper = mount(ManageSavedDialog, { props: { remove, login: 'anna', saved: list } });
+    const ids = (selector: string) => wrapper.findAll(`${selector} tbody tr`).map((row) => row.attributes('data-id'));
+    expect(ids('.fwde-manage__mine')).toEqual(['2', '3']);
+    expect(ids('.fwde-manage__others')).toEqual(['4']);
+    expect(wrapper.find('.fwde-manage__mine .fwde-manage__heading').text()).toBe('FeinwerkDataExploration_MyExplorations');
+    expect(wrapper.find('.fwde-manage__others .fwde-manage__heading').text())
+      .toBe('FeinwerkDataExploration_SharedByOthers');
+    expect(wrapper.find('tr[data-id="2"] .fwde-manage__kind').text()).toBe('FeinwerkDataExploration_FreeFormTable');
+    expect(wrapper.find('tr[data-id="3"] .fwde-manage__kind').text())
+      .toBe('FeinwerkDataExploration_SavedShared FeinwerkDataExploration_FreeFormTable');
+    expect(wrapper.find('.fwde-manage__mine').text()).not.toContain('FeinwerkDataExploration_ColumnOwner');
+    expect(wrapper.find('tr[data-id="4"]').text()).toContain('ben');
+    expect(wrapper.findAll('.fwde-manage__mine button.fwde-manage__delete').length).toBe(2);
+  });
+
+  it('a private one is deleted after a plain question, a shared one "for everyone"', async () => {
+    const wrapper = mount(ManageSavedDialog, { props: { remove, login: 'anna', saved: list } });
+    await wrapper.find('tr[data-id="2"] button.fwde-manage__delete').trigger('click');
+    const question = wrapper.find('tr[data-id="2"] .fwde-manage__confirm').text();
+    expect(question).toContain('FeinwerkDataExploration_SavedDeleteConfirm Mine');
+    expect(question).not.toContain('FeinwerkDataExploration_ManageSharedConfirm');
+    await wrapper.find('tr[data-id="2"] button.fwde-manage__confirm-yes').trigger('click');
+    await flushPromises();
+    expect(remove).toHaveBeenCalledWith(2);
+    expect(wrapper.emitted('deleted')).toEqual([[2]]);
+    await wrapper.find('tr[data-id="3"] button.fwde-manage__delete').trigger('click');
+    expect(wrapper.find('tr[data-id="3"] .fwde-manage__confirm').text())
+      .toContain('FeinwerkDataExploration_ManageSharedConfirm Mine for the team');
+  });
+
+  it('says there is nothing to manage when nothing is mine and nothing shared may be changed', () => {
+    const wrapper = mount(ManageSavedDialog, { props: { remove, login: 'dora', saved: [list[3]] } });
+    expect(wrapper.find('.fwde-manage__empty').text()).toBe('FeinwerkDataExploration_ManageEmpty');
+    expect(wrapper.find('table').exists()).toBe(false);
   });
 });

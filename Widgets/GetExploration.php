@@ -12,6 +12,9 @@ namespace Piwik\Plugins\FeinwerkDataExploration\Widgets;
 use Piwik\Plugins\FeinwerkDataExploration\Saved\SavedExplorationRules;
 use Piwik\Piwik;
 use Piwik\Common;
+use Piwik\Date;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\ArchiveSettings;
+use Piwik\Plugins\FeinwerkDataExploration\Archive\HistoryQueue;
 use Piwik\Plugins\FeinwerkDataExploration\Definition\ComparisonList;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\AccessPolicy;
 use Piwik\Plugins\FeinwerkDataExploration\Engine\LimitsProvider;
@@ -73,7 +76,20 @@ class GetExploration extends Widget
             'currencySymbol' => Site::getCurrencySymbolFor($idSite),
             'hourLabels' => self::hourLabels(),
             'menuSections' => self::menuSections($idSite),
+            'archiveHistoryFrom' => self::archiveHistoryFrom($idSite),
         ]);
+    }
+
+    /**
+     * The first day a changed archived exploration's history reaches again (final review 2026-11-26): the save panel
+     * names it before a change starts the history again; null while archiving is off or when nothing is lost.
+     */
+    private static function archiveHistoryFrom(int $idSite): ?string
+    {
+        $settings = ArchiveSettings::fromConfig();
+        return $settings->reports
+            ? (new HistoryQueue())->lostBefore($idSite, $settings->historyMonths, Date::factory('today')->toString())
+            : null;
     }
 
     /**

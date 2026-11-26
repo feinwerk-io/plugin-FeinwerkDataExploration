@@ -89,11 +89,25 @@ class WidgetTest extends IntegrationTestCase
         $this->assertSame(100, $props['defaultRows']);
         $this->assertSame(31, $props['maxDays']);
         $this->assertNull($props['rawDataFrom']);
+        // a change of an archived exploration loses the days before this one (final review 2026-11-26)
+        $this->assertSame(
+            \Piwik\Plugins\FeinwerkDataExploration\Archive\HistoryQueue::monthsBefore(\Piwik\Date::factory('today')->toString(), 6),
+            $props['archiveHistoryFrom']
+        );
         $this->assertSame('$', $props['currencySymbol']);
         // the chart orders hours by the labels the API writes (12- or 24-hour clock)
         $this->assertCount(24, $props['hourLabels']);
         $this->assertSame(\Piwik\Plugins\VisitTime\getTimeLabel(13), $props['hourLabels'][13]);
         $this->assertTrue($widget->isWide());
+    }
+
+    /** archiving off: no archived exploration, no history to lose */
+    public function testNoHistoryBoundWithoutArchiving(): void
+    {
+        FakeAccess::clearAccess(false, [], [1], 'viewer');
+        Config::getInstance()->FeinwerkDataExploration = ['archive_reports' => 0];
+
+        $this->assertNull($this->widget()->getClientSideProps()['archiveHistoryFrom']);
     }
 
     public function testWidgetHiddenForRefusedUsers(): void

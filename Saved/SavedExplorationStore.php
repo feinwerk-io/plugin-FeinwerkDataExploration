@@ -74,6 +74,17 @@ final class SavedExplorationStore
         return array_map([self::class, 'row'], $rows);
     }
 
+    /**
+     * Every website's saved explorations (archived reports, 2026-11-25: one query for the hourly history task).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function listEverySite(): array
+    {
+        $rows = Db::fetchAll('SELECT * FROM `' . $this->table() . '` ORDER BY idsite ASC, idsaved ASC');
+        return array_map([self::class, 'row'], $rows);
+    }
+
     /** @return array<string, mixed>|null */
     public function get(int $id): ?array
     {

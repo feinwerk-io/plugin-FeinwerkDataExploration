@@ -301,6 +301,39 @@ class SavedReportMetadataTest extends IntegrationTestCase
         $this->assertSame(['Home - Chrome' => 1, 'Home - Firefox' => 2, 'Shop - Chrome' => 1, 'Shop - Firefox' => 2], $flat($pivoted));
     }
 
+    /**
+     * Peter, 2026-11-25: "dimension1 und dimension2 namen sind immer noch gleich". In Matomo's flat view each level of a
+     * saved report is a dimension column (FeinwerkDataExploration_<dimension>), which the table must title with that
+     * dimension's name.
+     */
+    public function testFlatViewNamesEachDimensionColumn(): void
+    {
+        $id = $this->save('anna', 'Pages by browser', ['fwdeDims' => 'pageTitle,browser', 'fwdeMetrics' => 'nb_visits']);
+        FakeAccess::clearAccess(false, [], [1], 'anna');
+        Cache::getTransientCache()->flushAll();
+        $catalog = new DimensionCatalog();
+        $names = [$catalog->get(1, 'pageTitle')->name, $catalog->get(1, 'browser')->name];
+        $this->assertNotSame($names[0], $names[1]);
+
+        $params = ['idSite' => 1, 'period' => 'day', 'date' => self::DAY, 'idSaved' => $id, 'flat' => 1, 'show_dimensions' => 1];
+        $table = Request::processRequest('FeinwerkDataExploration.getSavedReport', $params);
+        $this->assertSame(['FeinwerkDataExploration_pageTitle', 'FeinwerkDataExploration_browser'], $table->getMetadata('dimensions'));
+
+        // Matomo's table titles a flat view's dimension columns only for its own registered dimensions (HtmlTable), so
+        // the report names its levels itself: the flat label "Page Title - Browser", or one column per dimension
+        $_GET = array_merge($_GET, $params, ['module' => 'FeinwerkDataExploration', 'action' => 'getSavedReport']);
+        try {
+            $view = \Piwik\ViewDataTable\Factory::build('table', 'FeinwerkDataExploration.getSavedReport', 'FeinwerkDataExploration.getSavedReport', true);
+        } finally {
+            foreach (array_merge(array_keys($params), ['module', 'action']) as $key) {
+                unset($_GET[$key]);
+            }
+        }
+        $translations = $view->config->translations;
+        $this->assertSame($names, [$translations['FeinwerkDataExploration_pageTitle'] ?? null,
+            $translations['FeinwerkDataExploration_browser'] ?? null]);
+    }
+
     public function testProcessedReportFormatsAndFlattens(): void
     {
         $id = $this->save('anna', 'Pages by browser', ['fwdeDims' => 'pageTitle,browser',

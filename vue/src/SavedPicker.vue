@@ -58,19 +58,20 @@
       </div>
     </div>
     <button
-      v-if="canManage"
+      v-if="showManage"
       type="button"
       class="fwde-saved__manage"
       aria-haspopup="dialog"
       :aria-expanded="managing ? 'true' : 'false'"
       @click="managing = true"
-    >{{ translate('FeinwerkDataExploration_ManageShared') }}</button>
+    >{{ translate('FeinwerkDataExploration_ManageExplorations') }}</button>
     <SidePanel
-      v-if="canManage"
+      v-if="showManage || managing"
       :open="managing"
-      :title="translate('FeinwerkDataExploration_ManageShared')"
+      :title="translate('FeinwerkDataExploration_ManageExplorations')"
       :close-label="translate('General_Close')"
       scope-class="fwde-page fwde-managepanel"
+      initial-focus="panel"
       @update:open="managing = $event"
     >
       <ManageSavedDialog
@@ -78,8 +79,9 @@
         :remove="removeSaved"
         :place="placeSaved"
         :menu-sections="menuSections"
+        :login="login"
         @deleted="$emit('deleted', $event)"
-        @placed="$emit('deleted', $event)"
+        @placed="$emit('changed', $event)"
       />
     </SidePanel>
   </div>
@@ -107,18 +109,22 @@ export default defineComponent({
     login: { type: String, required: true },
     /** write access on some website: Matomo's copy dialog lists only those */
     canCopy: { type: Boolean, default: false },
-    /** admin access to the website: manage its shared explorations (design 2026-11-20) */
+    /** admin access to the website: also manage others' shared explorations (design 2026-11-20) */
     canManage: { type: Boolean, default: false },
     /** Matomo's sections a saved exploration can show in as a report (saved reports, 2026-11-24) */
     menuSections: { type: Array as PropType<MenuSection[]>, default: () => [] },
   },
-  emits: ['open', 'deleted'],
+  emits: ['open', 'deleted', 'changed'],
   data() {
     return { managing: false };
   },
   computed: {
     groups(): { mine: SavedExploration[], shared: SavedExploration[] } {
       return groupSaved(this.saved, this.login);
+    },
+    /** admins manage the website's shared ones, everyone their own (Peter, 2026-11-25) */
+    showManage(): boolean {
+      return this.canManage || this.groups.mine.length > 0;
     },
     /** null on Matomo before 5.14: no copy action */
     copy(): CopySupport | null {
